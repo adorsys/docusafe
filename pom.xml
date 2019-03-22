@@ -26,6 +26,17 @@
         <crypt.version>0.23.13</crypt.version>
         <spring.aspects.version>5.1.2.RELEASE</spring.aspects.version>
         <powermock.version>1.7.4</powermock.version>
+
+        <!-- Sonar dependencies -->
+        <sonar.core.coveragePlugin>jacoco</sonar.core.coveragePlugin>
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+        <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
+        <sonar.language>java</sonar.language>
+        <sonar.exclusions>file:**/generated-sources/**</sonar.exclusions>
+        <sonar.coverage.exclusions>
+            **/*Entity.java,**/*TO.java,**/*BO.java,**/*Application.java,**/*Exception.java,**/*Config.java
+        </sonar.coverage.exclusions>
     </properties>
 
     <scm>
@@ -154,6 +165,11 @@
                 <pluginManagement>
                     <plugins>
                         <plugin>
+                            <groupId>org.sonarsource.scanner.maven</groupId>
+                            <artifactId>sonar-maven-plugin</artifactId>
+                            <version>3.6.0.1398</version>
+                        </plugin>
+                        <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-project-info-reports-plugin</artifactId>
                             <version>2.7</version>
@@ -170,6 +186,35 @@
                                 <docencoding>${project.build.sourceEncoding}</docencoding>
                                 <additionalparam>-Xdoclint:none</additionalparam>
                             </configuration>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.jacoco</groupId>
+                            <artifactId>jacoco-maven-plugin</artifactId>
+                            <version>0.8.2</version>
+                            <configuration>
+                                <destFile>${sonar.jacoco.reportPath}</destFile>
+                                <dataFile>${sonar.jacoco.reportPath}</dataFile>
+                                <append>true</append>
+                                <excludes>
+                                    <exclude>**/generated-sources/**</exclude>
+                                </excludes>
+
+                            </configuration>
+                            <executions>
+                                <execution>
+                                    <id>jacoco-initialize</id>
+                                    <goals>
+                                        <goal>prepare-agent</goal>
+                                    </goals>
+                                </execution>
+                                <execution>
+                                    <id>jacoco-site</id>
+                                    <phase>package</phase>
+                                    <goals>
+                                        <goal>report</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
                         </plugin>
                         <plugin>
                             <artifactId>maven-release-plugin</artifactId>
