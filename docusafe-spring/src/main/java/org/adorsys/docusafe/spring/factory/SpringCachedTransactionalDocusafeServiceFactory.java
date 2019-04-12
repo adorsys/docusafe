@@ -1,7 +1,6 @@
 package org.adorsys.docusafe.spring.factory;
 
 import org.adorsys.docusafe.business.DocumentSafeService;
-import org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl;
 import org.adorsys.docusafe.cached.transactional.CachedTransactionalDocumentSafeService;
 import org.adorsys.docusafe.cached.transactional.impl.CachedTransactionalDocumentSafeServiceImpl;
 import org.adorsys.docusafe.spring.SimpleRequestMemoryContextImpl;

@@ -4,20 +4,14 @@ import org.adorsys.cryptoutils.exceptions.BaseException;
 import org.adorsys.cryptoutils.storeconnectionfactory.ReadArguments;
 import org.adorsys.docusafe.business.DocumentSafeService;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
-import org.adorsys.docusafe.business.types.complex.DSDocumentMetaInfo;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
-import org.adorsys.docusafe.business.types.complex.UserIDAuth;
 import org.adorsys.docusafe.service.impl.UserMetaDataUtil;
-import org.adorsys.docusafe.transactional.exceptions.TxRacingConditionException;
 import org.adorsys.docusafe.transactional.impl.helper.*;
 import org.adorsys.docusafe.transactional.types.TxID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
 
 /**
  * Created by peter on 11.06.18 at 15:48.

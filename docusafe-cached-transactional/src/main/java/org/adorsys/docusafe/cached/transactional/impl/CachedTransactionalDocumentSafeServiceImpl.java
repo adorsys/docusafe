@@ -2,13 +2,10 @@ package org.adorsys.docusafe.cached.transactional.impl;
 
 import org.adorsys.docusafe.business.DocumentSafeService;
 import org.adorsys.docusafe.business.types.MoveType;
-import org.adorsys.docusafe.business.types.UserID;
-import org.adorsys.docusafe.business.types.complex.BucketContentFQNWithUserMetaData;
+import org.adorsys.docusafe.service.api.types.UserID;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
-import org.adorsys.docusafe.business.types.complex.DSDocumentMetaInfo;
 import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
-import org.adorsys.docusafe.business.types.complex.UserIDAuth;
 import org.adorsys.docusafe.cached.transactional.CachedTransactionalDocumentSafeService;
 import org.adorsys.docusafe.cached.transactional.exceptions.CacheException;
 import org.adorsys.docusafe.service.types.DocumentContent;
@@ -20,7 +17,6 @@ import org.adorsys.docusafe.transactional.impl.TransactionalDocumentSafeServiceI
 import org.adorsys.docusafe.transactional.types.TxBucketContentFQN;
 import org.adorsys.docusafe.transactional.types.TxDocumentFQNVersion;
 import org.adorsys.docusafe.transactional.types.TxID;
-import org.adorsys.encobject.domain.Payload;
 import org.adorsys.encobject.filesystem.exceptions.FileNotFoundException;
 import org.adorsys.encobject.types.ListRecursiveFlag;
 import org.adorsys.encobject.types.OverwriteFlag;

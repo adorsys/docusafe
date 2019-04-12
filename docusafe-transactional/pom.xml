@@ -19,9 +19,9 @@
             <version>0.5.23-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>de.adorsys.cryptoutils</groupId>
-            <artifactId>storeconnectionfactory</artifactId>
-            <version>${crypt.version}</version>
+            <groupId>de.adorsys</groupId>
+            <artifactId>dfs-connection-api</artifactId>
+            <version>${dfs-connection.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -46,32 +46,6 @@
                     </execution>
                 </executions>
             </plugin>
-<!--
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>aspectj-maven-plugin</artifactId>
-                <version>1.11</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                    <complianceLevel>1.8</complianceLevel>
-
-                    <aspectLibraries>
-                        <aspectLibrary>
-                            <groupId>de.electronicpeter</groupId>
-                            <artifactId>aspectj.test.timelogger</artifactId>
-                        </aspectLibrary>
-                    </aspectLibraries>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-compile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
--->
         </plugins>
     </build>
     

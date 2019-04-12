@@ -15,12 +15,6 @@
     <dependencies>
 
         <dependency>
-            <groupId>de.adorsys.cryptoutils</groupId>
-            <artifactId>basetypes</artifactId>
-            <version>${crypt.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>de.adorsys</groupId>
             <artifactId>docusafe-service</artifactId>
             <version>${project.version}</version>
@@ -30,13 +24,6 @@
                     <artifactId>slf4j-simple</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>de.adorsys.cryptoutils</groupId>
-            <artifactId>storeconnectionfactory</artifactId>
-            <version>${crypt.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>

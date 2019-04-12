@@ -1,13 +1,6 @@
 package org.adorsys.docusafe.transactional;
 
-import org.adorsys.docusafe.business.types.MoveType;
-import org.adorsys.docusafe.business.types.UserID;
-import org.adorsys.docusafe.business.types.complex.BucketContentFQN;
-import org.adorsys.docusafe.business.types.complex.BucketContentFQNWithUserMetaData;
-import org.adorsys.docusafe.business.types.complex.DSDocument;
-import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
-import org.adorsys.docusafe.business.types.complex.UserIDAuth;
+import org.adorsys.docusafe.service.api.types.UserID;
 import org.adorsys.encobject.types.ListRecursiveFlag;
 import org.adorsys.encobject.types.OverwriteFlag;
 import org.adorsys.encobject.types.PublicKeyJWK;

@@ -1,9 +1,9 @@
 package org.adorsys.docusafe.business.types.complex;
 
-import org.adorsys.cryptoutils.basetypes.BaseTypeString;
-import org.adorsys.cryptoutils.exceptions.BaseException;
-import org.adorsys.encobject.complextypes.BucketDirectory;
-import org.adorsys.encobject.complextypes.BucketPath;
+import de.adorsys.common.basetypes.BaseTypeString;
+import de.adorsys.common.exceptions.BaseException;
+import de.adorsys.dfs.connection.api.complextypes.BucketDirectory;
+import de.adorsys.dfs.connection.api.complextypes.BucketPath;
 
 /**
  * Created by peter on 20.01.18 at 07:29.

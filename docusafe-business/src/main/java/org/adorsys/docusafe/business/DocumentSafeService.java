@@ -1,16 +1,15 @@
 package org.adorsys.docusafe.business;
 
+import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import org.adorsys.docusafe.business.types.MoveType;
-import org.adorsys.docusafe.business.types.UserID;
-import org.adorsys.docusafe.business.types.complex.BucketContentFQNWithUserMetaData;
+import org.adorsys.docusafe.service.api.types.UserID;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.business.types.complex.DSDocumentStream;
 import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
-import org.adorsys.docusafe.business.types.complex.UserIDAuth;
-import org.adorsys.encobject.types.ListRecursiveFlag;
-import org.adorsys.encobject.types.OverwriteFlag;
-import org.adorsys.encobject.types.PublicKeyJWK;
+import org.adorsys.docusafe.service.api.types.UserIDAuth;
+
+import java.util.List;
 
 /**
  * Created by peter on 19.01.18 at 16:30.
@@ -24,11 +23,6 @@ public interface DocumentSafeService {
     void destroyUser(UserIDAuth userIDAuth);
 
     boolean userExists(UserID userID);
-
-    /**
-     * returns the user public encryption key of the given user.
-     */
-    PublicKeyJWK findPublicEncryptionKey(UserID userID);
 
     /**
      * Document
@@ -47,12 +41,12 @@ public interface DocumentSafeService {
 
     void deleteFolder(UserIDAuth userIDAuth, DocumentDirectoryFQN documentDirectoryFQN);
 
-    BucketContentFQNWithUserMetaData list(UserIDAuth userIDAuth, DocumentDirectoryFQN documentDirectoryFQN, ListRecursiveFlag recursiveFlag);
+    List<DocumentFQN> list(UserIDAuth userIDAuth, DocumentDirectoryFQN documentDirectoryFQN, ListRecursiveFlag recursiveFlag);
 
     /**
      * InboxStuff
      */
-    BucketContentFQNWithUserMetaData listInbox(UserIDAuth userIDAuth);
+    List<DocumentFQN> listInbox(UserIDAuth userIDAuth);
 
     void writeDocumentToInboxOfUser(UserID receiverUserID, DSDocument document, DocumentFQN destDocumentFQN);
 
@@ -65,6 +59,6 @@ public interface DocumentSafeService {
      */
     void moveDocumnetToInboxOfUser(UserIDAuth userIDAuth, UserID receiverUserID, DocumentFQN sourceDocumentFQN, DocumentFQN destDocumentFQN, MoveType moveType);
 
-    DSDocument moveDocumentFromInbox(UserIDAuth userIDAuth, DocumentFQN source, DocumentFQN destination, OverwriteFlag overwriteFlag);
+   // DSDocument moveDocumentFromInbox(UserIDAuth userIDAuth, DocumentFQN source, DocumentFQN destination, OverwriteFlag overwriteFlag);
 }
 

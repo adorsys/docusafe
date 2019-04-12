@@ -3,7 +3,6 @@ package org.adorsys.docusafe.transactional;
 import com.googlecode.catchexception.CatchException;
 import lombok.extern.slf4j.Slf4j;
 import org.adorsys.cryptoutils.storeconnectionfactory.ExtendedStoreConnectionFactory;
-import org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl;
 import org.adorsys.docusafe.business.types.complex.*;
 import org.adorsys.docusafe.service.types.DocumentContent;
 import org.adorsys.docusafe.transactional.impl.TransactionalDocumentSafeServiceImpl;

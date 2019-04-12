@@ -8,16 +8,10 @@ import java.io.InputStream;
 public class DSDocumentStream {
     private DocumentFQN documentFQN;
     private InputStream documentStream;
-    private DSDocumentMetaInfo dsDocumentMetaInfo;
-
-    public DSDocumentStream(DocumentFQN documentFQN, InputStream documentStream, DSDocumentMetaInfo documentMetaInfo) {
-        this.documentFQN = documentFQN;
-        this.documentStream = documentStream;
-        this.dsDocumentMetaInfo = documentMetaInfo;
-    }
 
     public DSDocumentStream(DocumentFQN documentFQN, InputStream documentStream) {
-        this(documentFQN, documentStream, new DSDocumentMetaInfo());
+        this.documentFQN = documentFQN;
+        this.documentStream = documentStream;
     }
 
     public DocumentFQN getDocumentFQN() {
@@ -28,7 +22,4 @@ public class DSDocumentStream {
         return documentStream;
     }
 
-    public DSDocumentMetaInfo getDsDocumentMetaInfo() {
-        return dsDocumentMetaInfo;
-    }
 }

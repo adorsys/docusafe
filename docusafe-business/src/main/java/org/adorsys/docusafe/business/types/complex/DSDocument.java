@@ -1,6 +1,6 @@
 package org.adorsys.docusafe.business.types.complex;
 
-import org.adorsys.docusafe.service.types.DocumentContent;
+import org.adorsys.docusafe.service.api.types.DocumentContent;
 
 /**
  * Created by peter on 22.01.18 at 08:14.
@@ -9,12 +9,10 @@ import org.adorsys.docusafe.service.types.DocumentContent;
 public class DSDocument {
     private DocumentFQN documentFQN;
     private DocumentContent documentContent;
-    private DSDocumentMetaInfo dsDocumentMetaInfo;
 
-    public DSDocument(DocumentFQN documentFQN, DocumentContent documentContent, DSDocumentMetaInfo dsDocumentMetaInfo) {
+    public DSDocument(DocumentFQN documentFQN, DocumentContent documentContent) {
         this.documentFQN = documentFQN;
         this.documentContent = documentContent;
-        this.dsDocumentMetaInfo = dsDocumentMetaInfo;
     }
 
     public DocumentFQN getDocumentFQN() {
@@ -23,12 +21,5 @@ public class DSDocument {
 
     public DocumentContent getDocumentContent() {
         return documentContent;
-    }
-
-    public DSDocumentMetaInfo getDsDocumentMetaInfo() {
-        if (dsDocumentMetaInfo == null) {
-            dsDocumentMetaInfo = new DSDocumentMetaInfo();
-        }
-        return dsDocumentMetaInfo;
     }
 }

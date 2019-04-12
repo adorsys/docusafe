@@ -23,8 +23,10 @@
         <catch.exception.version>2.0.0-beta-1</catch.exception.version>
         <junit.version>4.12</junit.version>
         <guava.version>26.0-jre</guava.version>
-        <crypt.version>0.23.13</crypt.version>
+        <dfs-connection.version>0.0.4</dfs-connection.version>
+        <common-basetypes.version>0.0.7</common-basetypes.version>
         <spring.aspects.version>5.1.2.RELEASE</spring.aspects.version>
+        <lombok.version>1.16.18.1</lombok.version>
         <powermock.version>1.7.4</powermock.version>
 
         <!-- Sonar dependencies -->
@@ -275,7 +277,7 @@
                         <plugin>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok-maven-plugin</artifactId>
-                            <version>1.16.18.1</version>
+                            <version>${lombok.version}</version>
                         </plugin>
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>

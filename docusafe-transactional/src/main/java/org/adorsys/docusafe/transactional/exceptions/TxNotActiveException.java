@@ -1,6 +1,6 @@
 package org.adorsys.docusafe.transactional.exceptions;
 
-import org.adorsys.docusafe.business.types.UserID;
+import org.adorsys.docusafe.service.api.types.UserID;
 
 /**
  * Created by peter on 29.09.18 at 11:43.

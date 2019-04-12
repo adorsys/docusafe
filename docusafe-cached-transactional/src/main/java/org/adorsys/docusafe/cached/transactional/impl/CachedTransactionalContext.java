@@ -1,11 +1,8 @@
 package org.adorsys.docusafe.cached.transactional.impl;
 
-import org.adorsys.docusafe.business.impl.BucketContentFQNImpl;
-import org.adorsys.docusafe.business.types.complex.BucketContentFQN;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
-import org.adorsys.docusafe.business.types.complex.UserIDAuth;
 import org.adorsys.docusafe.cached.transactional.exceptions.CacheException;
 import org.adorsys.docusafe.transactional.TransactionalDocumentSafeService;
 import org.adorsys.docusafe.transactional.impl.TxBucketContentFQNImpl;

@@ -22,7 +22,7 @@ The interface of this layer is ***DocumentSafeService.*** Just to give you an id
     import org.adorsys.cryptoutils.exceptions.BaseException;
     import org.adorsys.cryptoutils.storeconnectionfactory.ExtendedStoreConnectionFactory;
     import org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl;
-    import org.adorsys.docusafe.business.types.UserID;
+    import org.adorsys.docusafe.service.api.types.UserID;
     import org.adorsys.docusafe.business.types.complex.DSDocument;
     import org.adorsys.docusafe.business.types.complex.DocumentFQN;
     import org.adorsys.docusafe.business.types.complex.UserIDAuth;
@@ -80,7 +80,7 @@ import org.adorsys.cryptoutils.exceptions.BaseException;
 import org.adorsys.cryptoutils.storeconnectionfactory.ExtendedStoreConnectionFactory;
 import org.adorsys.docusafe.business.DocumentSafeService;
 import org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl;
-import org.adorsys.docusafe.business.types.UserID;
+import org.adorsys.docusafe.service.api.types.UserID;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
 import org.adorsys.docusafe.business.types.complex.UserIDAuth;
