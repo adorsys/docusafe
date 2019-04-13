@@ -1,7 +1,8 @@
 package org.adorsys.docusafe.transactional;
 
 import com.googlecode.catchexception.CatchException;
-import org.adorsys.cryptoutils.storeconnectionfactory.ExtendedStoreConnectionFactory;
+import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
+import org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.transactional.impl.TransactionalDocumentSafeServiceImpl;
 import org.junit.Assert;
@@ -16,7 +17,7 @@ public class SameUserSameTimeDifferentRequestsTest extends TransactionalDocument
     private final static Logger LOGGER = LoggerFactory.getLogger(SameUserSameTimeDifferentRequestsTest.class);
 
     SimpleRequestMemoryContextImpl secondRequestMemoryContext = new SimpleRequestMemoryContextImpl();
-    TransactionalDocumentSafeService secondTransactionalDocumentSafeService = new TransactionalDocumentSafeServiceImpl(secondRequestMemoryContext, new DocumentSafeServiceImpl(ExtendedStoreConnectionFactory.get()));
+    TransactionalDocumentSafeService secondTransactionalDocumentSafeService = new TransactionalDocumentSafeServiceImpl(secondRequestMemoryContext, new DocumentSafeServiceImpl(DFSConnectionFactory.get()));
 
     @Test
     @SuppressWarnings("Duplicates")

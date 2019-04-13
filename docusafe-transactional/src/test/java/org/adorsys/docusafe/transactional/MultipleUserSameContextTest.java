@@ -2,7 +2,6 @@ package org.adorsys.docusafe.transactional;
 
 import com.googlecode.catchexception.CatchException;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
-import org.adorsys.docusafe.service.types.DocumentContent;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;

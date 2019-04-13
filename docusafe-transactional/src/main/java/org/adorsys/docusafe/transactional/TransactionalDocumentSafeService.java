@@ -5,10 +5,10 @@ import org.adorsys.docusafe.service.api.types.UserID;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+import org.adorsys.docusafe.service.api.types.UserIDAuth;
 import org.adorsys.docusafe.transactional.types.TxBucketContentFQN;
 import org.adorsys.docusafe.transactional.types.TxDocumentFQNVersion;
-import org.adorsys.encobject.types.ListRecursiveFlag;
-import org.adorsys.encobject.types.OverwriteFlag;
+import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 
 /**
  * Created by peter on 11.06.18 at 14:56.
@@ -111,8 +111,7 @@ public interface TransactionalDocumentSafeService extends NonTransactionalDocume
      * @param userIDAuth user and password
      * @param source file path in the inbox
      * @param destination file path in the tx space
-     * @param overwriteFlag determines, if the file will overwrite an existing file in the tx space
      * @return the document, that has been moved
      */
-    DSDocument txMoveDocumentFromInbox(UserIDAuth userIDAuth, DocumentFQN source, DocumentFQN destination, OverwriteFlag overwriteFlag);
+    DSDocument txMoveDocumentFromInbox(UserIDAuth userIDAuth, DocumentFQN source, DocumentFQN destination);
 }

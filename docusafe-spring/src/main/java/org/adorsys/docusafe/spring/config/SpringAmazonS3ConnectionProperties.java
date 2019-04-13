@@ -1,13 +1,11 @@
 package org.adorsys.docusafe.spring.config;
 
-import org.adorsys.cryptoutils.exceptions.BaseException;
-import org.adorsys.cryptoutils.exceptions.BaseExceptionHandler;
-import org.adorsys.encobject.types.BucketPathEncryptionPassword;
-import org.adorsys.encobject.types.connection.AmazonS3AccessKey;
-import org.adorsys.encobject.types.connection.AmazonS3Region;
-import org.adorsys.encobject.types.connection.AmazonS3RootBucketName;
-import org.adorsys.encobject.types.connection.AmazonS3SecretKey;
-import org.adorsys.encobject.types.properties.AmazonS3ConnectionProperties;
+import de.adorsys.common.exceptions.BaseExceptionHandler;
+import de.adorsys.dfs.connection.api.types.connection.AmazonS3AccessKey;
+import de.adorsys.dfs.connection.api.types.connection.AmazonS3Region;
+import de.adorsys.dfs.connection.api.types.connection.AmazonS3RootBucketName;
+import de.adorsys.dfs.connection.api.types.connection.AmazonS3SecretKey;
+import de.adorsys.dfs.connection.api.types.properties.AmazonS3ConnectionProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;

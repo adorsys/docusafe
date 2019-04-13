@@ -1,9 +1,10 @@
 package org.adorsys.docusafe.transactional;
 
+import org.adorsys.docusafe.business.types.complex.DocumentFQN;
 import org.adorsys.docusafe.service.api.types.UserID;
-import org.adorsys.encobject.types.ListRecursiveFlag;
-import org.adorsys.encobject.types.OverwriteFlag;
-import org.adorsys.encobject.types.PublicKeyJWK;
+import org.adorsys.docusafe.service.api.types.UserIDAuth;
+
+import java.util.List;
 
 /**
  * Created by peter on 15.08.18 at 11:55.
@@ -14,7 +15,6 @@ public interface NonTransactionalDocumentSafeService {
     void createUser(UserIDAuth userIDAuth);
     void destroyUser(UserIDAuth userIDAuth);
     boolean userExists(UserID userID);
-    PublicKeyJWK findPublicEncryptionKey(UserID userID);
 
     // INBOX STUFF
     /**
@@ -24,6 +24,6 @@ public interface NonTransactionalDocumentSafeService {
      * @param userIDAuth user and password
      * @return the recursive list of files found in the inbox
      */
-    BucketContentFQNWithUserMetaData nonTxListInbox(UserIDAuth userIDAuth);
+    List<DocumentFQN> nonTxListInbox(UserIDAuth userIDAuth);
 
 }

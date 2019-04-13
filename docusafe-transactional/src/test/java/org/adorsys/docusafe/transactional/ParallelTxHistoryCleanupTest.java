@@ -1,21 +1,24 @@
 package org.adorsys.docusafe.transactional;
 
 import com.googlecode.catchexception.CatchException;
+import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
-import org.adorsys.cryptoutils.storeconnectionfactory.ExtendedStoreConnectionFactory;
+import org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl;
 import org.adorsys.docusafe.business.types.complex.*;
-import org.adorsys.docusafe.service.types.DocumentContent;
+import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.adorsys.docusafe.transactional.impl.TransactionalDocumentSafeServiceImpl;
-import org.adorsys.encobject.types.ListRecursiveFlag;
+import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.List;
 
 @Slf4j
 public class ParallelTxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTest {
     private final static int MAX_COMMITED_TX_FOR_CLEANUP = 5;
     private SimpleRequestMemoryContextImpl secondRequestMemoryContext = new SimpleRequestMemoryContextImpl();
-    private TransactionalDocumentSafeService secondTransactionalDocumentSafeService = new TransactionalDocumentSafeServiceImpl(secondRequestMemoryContext, new DocumentSafeServiceImpl(ExtendedStoreConnectionFactory.get()));
+    private TransactionalDocumentSafeService secondTransactionalDocumentSafeService = new TransactionalDocumentSafeServiceImpl(secondRequestMemoryContext, new DocumentSafeServiceImpl(DFSConnectionFactory.get()));
 
     @Test
     public void cleanUpWithParallelTransactionsTest() {
@@ -36,8 +39,7 @@ public class ParallelTxHistoryCleanupTest extends TransactionalDocumentSafeServi
         DSDocument dsDocument = transactionalDocumentSafeService.txReadDocument(userIDAuth, new DocumentFQN("0"));
         DSDocument dsDocumentChanged = new DSDocument(
                 dsDocument.getDocumentFQN(),
-                new DocumentContent((new String(dsDocument.getDocumentContent().getValue()) + " updated").getBytes()),
-                new DSDocumentMetaInfo());
+                new DocumentContent((new String(dsDocument.getDocumentContent().getValue()) + " updated").getBytes()));
 
         transactionalDocumentSafeService.txStoreDocument(userIDAuth, dsDocumentChanged);
 
@@ -53,7 +55,7 @@ public class ParallelTxHistoryCleanupTest extends TransactionalDocumentSafeServi
         CatchException.catchException(() -> secondTransactionalDocumentSafeService.endTransaction(userIDAuth));
         Assert.assertNotNull(CatchException.caughtException());
 
-        BucketContentFQN list = dss.list(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE);
+        List<DocumentFQN> list = dss.list(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE);
         log.debug("LIST OF FILES IN DOCUMENTSAFE: " + list.toString());
         st.stop();
         log.debug("time for test " + st.toString());

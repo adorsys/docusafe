@@ -1,12 +1,13 @@
 package org.adorsys.docusafe.transactional.impl;
 
-import org.adorsys.cryptoutils.exceptions.BaseException;
+import de.adorsys.common.exceptions.BaseException;
 import org.adorsys.docusafe.business.DocumentSafeService;
 import org.adorsys.docusafe.business.types.MoveType;
 import org.adorsys.docusafe.service.api.types.UserID;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+import org.adorsys.docusafe.service.api.types.UserIDAuth;
 import org.adorsys.docusafe.transactional.RequestMemoryContext;
 import org.adorsys.docusafe.transactional.TransactionalDocumentSafeService;
 import org.adorsys.docusafe.transactional.exceptions.TxInnerException;
@@ -14,10 +15,8 @@ import org.adorsys.docusafe.transactional.exceptions.TxNotActiveException;
 import org.adorsys.docusafe.transactional.types.TxBucketContentFQN;
 import org.adorsys.docusafe.transactional.types.TxDocumentFQNVersion;
 import org.adorsys.docusafe.transactional.types.TxID;
-import org.adorsys.encobject.filesystem.exceptions.FileNotFoundException;
-import org.adorsys.encobject.types.ListRecursiveFlag;
-import org.adorsys.encobject.types.OverwriteFlag;
-import org.adorsys.encobject.types.PublicKeyJWK;
+import de.adorsys.dfs.connection.api.filesystem.exceptions.FileNotFoundException;
+import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +71,7 @@ public class TransactionalDocumentSafeServiceImpl extends NonTransactionalDocume
         TxID txidOfDocument = getCurrentTxIDHashMap(userIDAuth.getUserID()).getTxIDOfDocument(documentFQN);
         DSDocument dsDocument = documentSafeService.readDocument(userIDAuth, modifyTxDocumentName(documentFQN, txidOfDocument));
         markDocumentRead(userIDAuth, documentFQN, txidOfDocument);
-        return new DSDocument(documentFQN, dsDocument.getDocumentContent(), dsDocument.getDsDocumentMetaInfo());
+        return new DSDocument(documentFQN, dsDocument.getDocumentContent());
     }
 
     @Override
@@ -162,16 +161,16 @@ public class TransactionalDocumentSafeServiceImpl extends NonTransactionalDocume
 
     @Override
     @SuppressWarnings("Duplicates")
-    public DSDocument txMoveDocumentFromInbox(UserIDAuth userIDAuth, DocumentFQN source, DocumentFQN destination, OverwriteFlag overwriteFlag) {
+    public DSDocument txMoveDocumentFromInbox(UserIDAuth userIDAuth, DocumentFQN source, DocumentFQN destination) {
         // kopiert aus der TransactionalDocumenetSafeServiceImpl
-        LOGGER.debug("start nonTxReadFromInbox for " + userIDAuth +  " " + source + " to " + destination + " overwrite:" + overwriteFlag);
+        LOGGER.debug("start nonTxReadFromInbox for " + userIDAuth +  " " + source + " to " + destination);
 
         // Hier kann die Methode des documentSafeService nicht benutzt werden, da es nicht im Transaktionskontext geschieht
         // Also muss das Document hier von Hand aus der Inbox geholt und gespeichert werden.
 
         // Holen des Documentens, aber ändern des Pfades
         DSDocument documentFromInbox = documentSafeService.readDocumentFromInbox(userIDAuth, source);
-        DSDocument dsDocument = new DSDocument(destination, documentFromInbox.getDocumentContent(), documentFromInbox.getDsDocumentMetaInfo());
+        DSDocument dsDocument = new DSDocument(destination, documentFromInbox.getDocumentContent());
 
         // Speichern des Documents
         txStoreDocument(userIDAuth, dsDocument);
@@ -179,15 +178,11 @@ public class TransactionalDocumentSafeServiceImpl extends NonTransactionalDocume
         // Merken, dass es aus der Inbox nach dem Commit gelöscht werden muss
         getCurrentTransactionData(userIDAuth.getUserID()).addNonTxInboxFileToBeDeletedAfterCommit(source);
 
-        LOGGER.debug("finishdd nonTxReadFromInbox for " + userIDAuth +  " " + source + " to " + destination + " overwrite:" + overwriteFlag);
+        LOGGER.debug("finishdd nonTxReadFromInbox for " + userIDAuth +  " " + source + " to " + destination);
         // Anstatt das locale Object zurückzugeben rufen wir die richtige Methode auf, die es ja nur aus Map lesen sollte.
         return txReadDocument(userIDAuth, destination);
     }
 
-    @Override
-    public PublicKeyJWK findPublicEncryptionKey(UserID userID) {
-        return documentSafeService.findPublicEncryptionKey(userID);
-    }
 
     // ============================================================================================
     // PRIVATE STUFF
@@ -196,8 +191,7 @@ public class TransactionalDocumentSafeServiceImpl extends NonTransactionalDocume
     public static DSDocument modifyTxDocument(DSDocument dsDocument, TxID txid) {
         return new DSDocument(
                 modifyTxDocumentName(dsDocument.getDocumentFQN(), txid),
-                dsDocument.getDocumentContent(),
-                dsDocument.getDsDocumentMetaInfo());
+                dsDocument.getDocumentContent());
     }
 
     public static DocumentFQN modifyTxDocumentName(DocumentFQN origName, TxID txid) {

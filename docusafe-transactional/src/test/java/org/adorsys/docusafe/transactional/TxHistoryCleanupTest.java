@@ -1,8 +1,8 @@
 package org.adorsys.docusafe.transactional;
 
 import org.adorsys.docusafe.business.types.complex.*;
-import org.adorsys.docusafe.service.types.DocumentContent;
-import org.adorsys.encobject.types.ListRecursiveFlag;
+import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
+import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -50,8 +51,7 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
                 transactionalDocumentSafeService.beginTransaction(userIDAuth);
                 for (int j = 0; j < numberOfFilesToCreatePerTx; j++) {
                     DSDocument document = new DSDocument(documentDirectoryFQN.addName("file_" + staticCounter++ + ".TXT"),
-                            new DocumentContent(("Content of File " + i).getBytes()),
-                            new DSDocumentMetaInfo());
+                            new DocumentContent(("Content of File " + i).getBytes()));
                     transactionalDocumentSafeService.txStoreDocument(userIDAuth, document);
                     memoryMap.put(document.getDocumentFQN(), document.getDocumentContent());
                 }
@@ -89,8 +89,7 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
                     int indexToOverwrite = getRandomInRange(currentNumberOfFiles);
                     DSDocument dsDocument = transactionalDocumentSafeService.txReadDocument(userIDAuth, bucketContentFQN.getFiles().get(indexToOverwrite));
                     DSDocument newDsDocument = new DSDocument(dsDocument.getDocumentFQN(),
-                            new DocumentContent((new String(dsDocument.getDocumentContent().getValue()) + " overwritten in tx ").getBytes()),
-                            new DSDocumentMetaInfo());
+                            new DocumentContent((new String(dsDocument.getDocumentContent().getValue()) + " overwritten in tx ").getBytes()));
                     transactionalDocumentSafeService.txStoreDocument(userIDAuth, newDsDocument);
                     memoryMap.put(newDsDocument.getDocumentFQN(), newDsDocument.getDocumentContent());
                 }
@@ -112,7 +111,7 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
         }
 
         // Nun gehen wir direkt auf das Filesystem. Hier gibt es nun alle Dateien zu sehen
-        BucketContentFQN list = dss.list(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE);
+        List<DocumentFQN> list = dss.list(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE);
         LOGGER.debug("LIST OF FILES IN DOCUMENTSAFE: " + list.toString());
 //        Assert.assertEquals(numberOfFiles, list.getFiles().size());
         st.stop();

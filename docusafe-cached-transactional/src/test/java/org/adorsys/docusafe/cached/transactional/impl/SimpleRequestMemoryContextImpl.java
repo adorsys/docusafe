@@ -1,6 +1,6 @@
 package org.adorsys.docusafe.cached.transactional.impl;
 
-import org.adorsys.cryptoutils.exceptions.BaseException;
+import de.adorsys.common.exceptions.BaseException;
 import org.adorsys.docusafe.transactional.RequestMemoryContext;
 
 import java.util.HashMap;

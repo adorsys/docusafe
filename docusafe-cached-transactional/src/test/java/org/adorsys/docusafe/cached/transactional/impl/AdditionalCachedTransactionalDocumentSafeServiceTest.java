@@ -1,18 +1,20 @@
 package org.adorsys.docusafe.cached.transactional.impl;
 
-import org.adorsys.cryptoutils.storeconnectionfactory.ExtendedStoreConnectionFactory;
+import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
 import org.adorsys.docusafe.business.DocumentSafeService;
+import org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl;
+import org.adorsys.docusafe.service.api.keystore.types.ReadKeyPassword;
+import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.adorsys.docusafe.service.api.types.UserID;
 import org.adorsys.docusafe.business.types.complex.BucketContentFQN;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
-import org.adorsys.docusafe.service.types.DocumentContent;
+import org.adorsys.docusafe.service.api.types.UserIDAuth;
 import org.adorsys.docusafe.transactional.RequestMemoryContext;
 import org.adorsys.docusafe.transactional.TransactionalDocumentSafeService;
 import org.adorsys.docusafe.transactional.impl.TransactionalDocumentSafeServiceImpl;
 import org.adorsys.docusafe.transactional.types.TxBucketContentFQN;
-import org.adorsys.encobject.domain.ReadKeyPassword;
-import org.adorsys.encobject.types.ListRecursiveFlag;
+import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,7 +32,7 @@ import java.util.List;
 public class AdditionalCachedTransactionalDocumentSafeServiceTest {
     private final static Logger LOGGER = LoggerFactory.getLogger(AdditionalCachedTransactionalDocumentSafeServiceTest.class);
     private RequestMemoryContext memoryContext = new SimpleRequestMemoryContextImpl();
-    private DocumentSafeService dss = new DocumentSafeServiceImpl(ExtendedStoreConnectionFactory.get());
+    private DocumentSafeService dss = new DocumentSafeServiceImpl(DFSConnectionFactory.get());
     private TransactionalDocumentSafeServiceTestWrapper wrapper = new TransactionalDocumentSafeServiceTestWrapper(new TransactionalDocumentSafeServiceImpl(memoryContext, dss));
     private TransactionalDocumentSafeService cachedService = new CachedTransactionalDocumentSafeServiceImpl(memoryContext, wrapper, dss );
     private List<UserIDAuth> userIDAuthList = new ArrayList<>();
@@ -65,8 +67,7 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
         {
             DSDocument dsDocumentWrite = new DSDocument(
                     documentFQN,
-                    new DocumentContent("content of file".getBytes()),
-                    new DSDocumentMetaInfo()
+                    new DocumentContent("content of file".getBytes())
             );
             cachedService.txStoreDocument(userIDAuth, dsDocumentWrite);
             DSDocument dsDocumentRead = cachedService.txReadDocument(userIDAuth, documentFQN);
@@ -100,8 +101,7 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
         {
             DSDocument dsDocumentWrite = new DSDocument(
                     documentFQN,
-                    new DocumentContent("content of file".getBytes()),
-                    new DSDocumentMetaInfo()
+                    new DocumentContent("content of file".getBytes())
             );
             cachedService.txStoreDocument(userIDAuth, dsDocumentWrite);
             DSDocument dsDocumentRead = cachedService.txReadDocument(userIDAuth, documentFQN);
@@ -112,8 +112,7 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
         {
             DSDocument dsDocumentWrite = new DSDocument(
                     documentFQN,
-                    new DocumentContent("another content of file".getBytes()),
-                    new DSDocumentMetaInfo()
+                    new DocumentContent("another content of file".getBytes())
             );
             cachedService.txStoreDocument(userIDAuth, dsDocumentWrite);
             DSDocument dsDocumentRead = cachedService.txReadDocument(userIDAuth, documentFQN);
@@ -146,8 +145,7 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
             Assert.assertTrue(bucketContentFQN.getDirectories().isEmpty());
             DSDocument dsDocumentWrite = new DSDocument(
                     documentFQN,
-                    new DocumentContent("content of file".getBytes()),
-                    new DSDocumentMetaInfo()
+                    new DocumentContent("content of file".getBytes())
             );
             cachedService.txStoreDocument(userIDAuth, dsDocumentWrite);
             DSDocument dsDocumentRead = cachedService.txReadDocument(userIDAuth, documentFQN);
@@ -158,8 +156,7 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
             cachedService.beginTransaction(userIDAuth);
             DSDocument dsDocumentWrite = new DSDocument(
                     documentFQN,
-                    new DocumentContent("content of file 2".getBytes()),
-                    new DSDocumentMetaInfo()
+                    new DocumentContent("content of file 2".getBytes())
             );
             cachedService.txStoreDocument(userIDAuth, dsDocumentWrite);
             DSDocument dsDocumentRead = cachedService.txReadDocument(userIDAuth, documentFQN);

@@ -5,12 +5,11 @@ import org.adorsys.docusafe.service.api.types.UserID;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+import org.adorsys.docusafe.service.api.types.UserIDAuth;
 import org.adorsys.docusafe.transactional.TransactionalDocumentSafeService;
 import org.adorsys.docusafe.transactional.types.TxBucketContentFQN;
 import org.adorsys.docusafe.transactional.types.TxDocumentFQNVersion;
-import org.adorsys.encobject.types.ListRecursiveFlag;
-import org.adorsys.encobject.types.OverwriteFlag;
-import org.adorsys.encobject.types.PublicKeyJWK;
+import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -83,13 +82,7 @@ public class TransactionalDocumentSafeServiceTestWrapper implements Transactiona
     }
 
     @Override
-    public PublicKeyJWK findPublicEncryptionKey(UserID userID) {
-        inc(FIND_PUBLIC_KEY);
-        return realTransactionalFileStorage.findPublicEncryptionKey(userID);
-    }
-
-    @Override
-    public BucketContentFQNWithUserMetaData nonTxListInbox(UserIDAuth userIDAuth) {
+    public List<DocumentFQN> nonTxListInbox(UserIDAuth userIDAuth) {
         inc(NON_TX_LIST_INBOX);
         return realTransactionalFileStorage.nonTxListInbox(userIDAuth);
     }
@@ -156,9 +149,9 @@ public class TransactionalDocumentSafeServiceTestWrapper implements Transactiona
     }
 
     @Override
-    public DSDocument txMoveDocumentFromInbox(UserIDAuth userIDAuth, DocumentFQN source, DocumentFQN destination, OverwriteFlag overwriteFlag) {
+    public DSDocument txMoveDocumentFromInbox(UserIDAuth userIDAuth, DocumentFQN source, DocumentFQN destination) {
         inc(TX_MOVE_FROM_INBOX);
-        return realTransactionalFileStorage.txMoveDocumentFromInbox(userIDAuth, source, destination, overwriteFlag);
+        return realTransactionalFileStorage.txMoveDocumentFromInbox(userIDAuth, source, destination);
     }
 
     private void inc(String s) {

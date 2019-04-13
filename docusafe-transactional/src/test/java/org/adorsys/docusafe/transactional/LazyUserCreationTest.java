@@ -2,7 +2,8 @@ package org.adorsys.docusafe.transactional;
 
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
-import org.adorsys.docusafe.service.types.DocumentContent;
+import org.adorsys.docusafe.service.api.types.DocumentContent;
+import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +23,7 @@ public class LazyUserCreationTest extends TransactionalDocumentSafeServiceBaseTe
         transactionalDocumentSafeService.createUser(userIDAuth);
         DocumentFQN documentFQN = new DocumentFQN("testxTFolder/first.txt");
         DocumentContent documentContent = new DocumentContent("very first".getBytes());
-        DSDocumentMetaInfo documentMetaInfo = new DSDocumentMetaInfo();
-        DSDocument document = new DSDocument(documentFQN, documentContent, documentMetaInfo);
+        DSDocument document = new DSDocument(documentFQN, documentContent);
 
         Assert.assertFalse(transactionalDocumentSafeService.txDocumentExists(userIDAuth, documentFQN));
         transactionalDocumentSafeService.txStoreDocument(userIDAuth, document);

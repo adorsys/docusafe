@@ -1,6 +1,5 @@
 package org.adorsys.docusafe.service.api.types;
 
-
 import org.adorsys.docusafe.service.api.keystore.types.ReadKeyPassword;
 
 /**

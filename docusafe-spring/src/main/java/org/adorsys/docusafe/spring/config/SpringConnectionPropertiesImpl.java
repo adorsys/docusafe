@@ -1,8 +1,8 @@
 package org.adorsys.docusafe.spring.config;
 
-import org.adorsys.encobject.types.BucketPathEncryptionPassword;
-import org.adorsys.encobject.types.properties.BucketPathEncryptionFilenameOnly;
-import org.adorsys.encobject.types.properties.ConnectionProperties;
+import de.adorsys.dfs.connection.api.types.BucketPathEncryptionPassword;
+import de.adorsys.dfs.connection.api.types.properties.BucketPathEncryptionFilenameOnly;
+import de.adorsys.dfs.connection.api.types.properties.ConnectionProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;

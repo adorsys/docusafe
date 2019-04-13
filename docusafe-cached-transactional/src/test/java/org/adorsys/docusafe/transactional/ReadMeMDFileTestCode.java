@@ -1,16 +1,18 @@
 package org.adorsys.docusafe.transactional;
 
-import org.adorsys.cryptoutils.exceptions.BaseException;
-import org.adorsys.cryptoutils.storeconnectionfactory.ExtendedStoreConnectionFactory;
+import de.adorsys.common.exceptions.BaseException;
+import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
 import org.adorsys.docusafe.business.DocumentSafeService;
+import org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl;
+import org.adorsys.docusafe.service.api.keystore.types.ReadKeyPassword;
+import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.adorsys.docusafe.service.api.types.UserID;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
 import org.adorsys.docusafe.cached.transactional.CachedTransactionalDocumentSafeService;
 import org.adorsys.docusafe.cached.transactional.impl.CachedTransactionalDocumentSafeServiceImpl;
-import org.adorsys.docusafe.service.types.DocumentContent;
+import org.adorsys.docusafe.service.api.types.UserIDAuth;
 import org.adorsys.docusafe.transactional.impl.TransactionalDocumentSafeServiceImpl;
-import org.adorsys.encobject.domain.ReadKeyPassword;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,7 +26,7 @@ public class ReadMeMDFileTestCode {
         CachedTransactionalDocumentSafeService cachedTransactionalDocumentSafeService;
         {
             org.adorsys.docusafe.cached.transactional.impl.SimpleRequestMemoryContextImpl simpleRequestMemoryContext = new org.adorsys.docusafe.cached.transactional.impl.SimpleRequestMemoryContextImpl();
-            DocumentSafeService documentSafeService = new DocumentSafeServiceImpl(ExtendedStoreConnectionFactory.get());
+            DocumentSafeService documentSafeService = new DocumentSafeServiceImpl(DFSConnectionFactory.get());
             TransactionalDocumentSafeService transactionalDocumentSafeService = new TransactionalDocumentSafeServiceImpl(simpleRequestMemoryContext, documentSafeService);
             cachedTransactionalDocumentSafeService = new CachedTransactionalDocumentSafeServiceImpl(simpleRequestMemoryContext, transactionalDocumentSafeService, documentSafeService);
         }
@@ -39,7 +41,7 @@ public class ReadMeMDFileTestCode {
         // create document
         DocumentFQN documentFQN = new DocumentFQN("first/document.txt");
         DocumentContent documentContent = new DocumentContent(("programming is the mirror of your mind").getBytes());
-        DSDocument dsDocument = new DSDocument(documentFQN, documentContent, null);
+        DSDocument dsDocument = new DSDocument(documentFQN, documentContent);
         cachedTransactionalDocumentSafeService.txStoreDocument(userIDAuth, dsDocument);
 
         // read the document again

@@ -11,13 +11,11 @@ import org.springframework.validation.annotation.Validated;
 @Component
 @ConfigurationProperties(prefix = "docusafe.storeconnection")
 @Validated
-public class SpringDocusafeStoreconnectionProperties {
+public class SpringDFSConnectionProperties {
     @Nullable
     private SpringAmazonS3ConnectionProperties amazons3;
     @Nullable
     private SpringFilesystemConnectionProperties filesystem;
-    @Nullable
-    private SpringMongoConnectionProperties mongo;
 
 
     public SpringAmazonS3ConnectionProperties getAmazons3() {
@@ -36,11 +34,4 @@ public class SpringDocusafeStoreconnectionProperties {
         this.filesystem = filesystem;
     }
 
-    public SpringMongoConnectionProperties getMongo() {
-        return mongo;
-    }
-
-    public void setMongo(SpringMongoConnectionProperties mongo) {
-        this.mongo = mongo;
-    }
 }

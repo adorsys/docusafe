@@ -1,8 +1,8 @@
 package org.adorsys.docusafe.spring.config;
 
-import org.adorsys.cryptoutils.exceptions.BaseException;
-import org.adorsys.encobject.types.connection.FilesystemRootBucketName;
-import org.adorsys.encobject.types.properties.FilesystemConnectionProperties;
+import de.adorsys.common.exceptions.BaseException;
+import de.adorsys.dfs.connection.api.types.connection.FilesystemRootBucketName;
+import de.adorsys.dfs.connection.api.types.properties.FilesystemConnectionProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;

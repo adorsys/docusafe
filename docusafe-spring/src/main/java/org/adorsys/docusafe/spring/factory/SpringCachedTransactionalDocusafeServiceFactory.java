@@ -1,13 +1,14 @@
 package org.adorsys.docusafe.spring.factory;
 
+import de.adorsys.dfs.connection.api.service.api.DFSConnection;
 import org.adorsys.docusafe.business.DocumentSafeService;
+import org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl;
 import org.adorsys.docusafe.cached.transactional.CachedTransactionalDocumentSafeService;
 import org.adorsys.docusafe.cached.transactional.impl.CachedTransactionalDocumentSafeServiceImpl;
 import org.adorsys.docusafe.spring.SimpleRequestMemoryContextImpl;
 import org.adorsys.docusafe.transactional.RequestMemoryContext;
 import org.adorsys.docusafe.transactional.TransactionalDocumentSafeService;
 import org.adorsys.docusafe.transactional.impl.TransactionalDocumentSafeServiceImpl;
-import org.adorsys.encobject.service.api.ExtendedStoreConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,13 +20,13 @@ import java.util.Map;
  */
 public class SpringCachedTransactionalDocusafeServiceFactory {
     private final static Logger LOGGER = LoggerFactory.getLogger(SpringCachedTransactionalDocusafeServiceFactory.class);
-    private SpringExtendedStoreConnectionFactory connectionFactory;
+    private SpringDFSConnectionFactory connectionFactory;
     private static int instanceCounter = 0;
     final private int instanceId;
     private Map<String, CachedTransactionalDocumentSafeService> map = new HashMap<>();
 
 
-    public SpringCachedTransactionalDocusafeServiceFactory(SpringExtendedStoreConnectionFactory connectionFactory) {
+    public SpringCachedTransactionalDocusafeServiceFactory(SpringDFSConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
         instanceId = ++instanceCounter;
         if (instanceId > 1) {
@@ -39,7 +40,7 @@ public class SpringCachedTransactionalDocusafeServiceFactory {
             return map.get(basedir);
         }
         LOGGER.info("getExtendedStoreConnection");
-        ExtendedStoreConnection extendedStoreConnection = connectionFactory.getExtendedStoreConnectionWithSubDir(basedir);
+        DFSConnection extendedStoreConnection = connectionFactory.getExtendedStoreConnectionWithSubDir(basedir);
         LOGGER.info(CachedTransactionalDocumentSafeService.class.getName() + " is required as @Bean");
         LOGGER.debug("create documentSafeService");
         DocumentSafeService documentSafeService = new DocumentSafeServiceImpl(extendedStoreConnection);

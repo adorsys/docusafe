@@ -1,11 +1,11 @@
 package org.adorsys.docusafe.transactional.impl;
 
-import org.adorsys.cryptoutils.exceptions.BaseException;
-import org.adorsys.cryptoutils.storeconnectionfactory.ReadArguments;
+import de.adorsys.common.exceptions.BaseException;
+import de.adorsys.dfs.connection.impl.factory.ReadArguments;
 import org.adorsys.docusafe.business.DocumentSafeService;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
-import org.adorsys.docusafe.service.impl.UserMetaDataUtil;
+import org.adorsys.docusafe.service.api.types.UserIDAuth;
 import org.adorsys.docusafe.transactional.impl.helper.*;
 import org.adorsys.docusafe.transactional.types.TxID;
 import org.slf4j.Logger;
@@ -37,12 +37,7 @@ public class TxIDLog {
             if (size > MAX_COMMITED_TX_FOR_CLEANUP) {
                 txIDLog.txidList = CleanupLogic.cleaupTxHistory(documentSafeService, userIDAuth, txIDLog.txidList);
                 size = txIDLog.txidList.size();
-                DSDocumentMetaInfo metaInfo = new DSDocumentMetaInfo();
-                if (dontEncrypt) {
-                    LOGGER.debug("save " + txidLogFilename + " unencrypted");
-                    UserMetaDataUtil.setNoEncryption(metaInfo);
-                }
-                DSDocument document = new DSDocument(txidLogFilename, new Class2JsonHelper().txidLogToContent(txIDLog), metaInfo);
+                DSDocument document = new DSDocument(txidLogFilename, new Class2JsonHelper().txidLogToContent(txIDLog));
                 documentSafeService.storeDocument(userIDAuth, document);
             }
             TransactionInformation lastTuple = txIDLog.txidList.get(size - 1);
@@ -58,15 +53,9 @@ public class TxIDLog {
         synchronized (userIDAuth.getUserID().getValue()) {
             TxIDHashMapWrapper joinedTx = null;
             TxIDLog txIDLog = new TxIDLog();
-            DSDocumentMetaInfo metaInfo = new DSDocumentMetaInfo();
-            if (dontEncrypt) {
-                LOGGER.debug("save " + txidLogFilename + " encrypted");
-                UserMetaDataUtil.setNoEncryption(metaInfo);
-            }
             if (documentSafeService.documentExists(userIDAuth, txidLogFilename)) {
                 DSDocument dsDocument = documentSafeService.readDocument(userIDAuth, txidLogFilename);
                 txIDLog = new Class2JsonHelper().txidLogFromContent(dsDocument.getDocumentContent());
-                metaInfo = dsDocument.getDsDocumentMetaInfo();
             }
             if (!txIDLog.txidList.isEmpty()) {
                 TransactionInformation lastTuple = txIDLog.txidList.get(txIDLog.txidList.size() - 1);
@@ -95,7 +84,7 @@ public class TxIDLog {
                 Date finished = joinedTx.getEndTx();
                 txIDLog.txidList.add(new TransactionInformation(start, finished, previousTxID, currentTxID));
             }
-            DSDocument document = new DSDocument(txidLogFilename, new Class2JsonHelper().txidLogToContent(txIDLog), metaInfo);
+            DSDocument document = new DSDocument(txidLogFilename, new Class2JsonHelper().txidLogToContent(txIDLog));
             documentSafeService.storeDocument(userIDAuth, document);
             LOGGER.debug("successfully wrote new Version to " + txidLogFilename);
         }

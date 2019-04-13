@@ -1,6 +1,6 @@
 package org.adorsys.docusafe.cached.transactional.exceptions;
 
-import org.adorsys.cryptoutils.exceptions.BaseException;
+import de.adorsys.common.exceptions.BaseException;
 
 /**
  * Created by peter on 21.06.18 at 12:43.

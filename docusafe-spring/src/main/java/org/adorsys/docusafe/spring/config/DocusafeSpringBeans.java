@@ -1,9 +1,9 @@
 package org.adorsys.docusafe.spring.config;
 
+import de.adorsys.dfs.connection.api.service.api.DFSConnection;
 import org.adorsys.docusafe.cached.transactional.CachedTransactionalDocumentSafeService;
 import org.adorsys.docusafe.spring.factory.SpringCachedTransactionalDocusafeServiceFactory;
-import org.adorsys.docusafe.spring.factory.SpringExtendedStoreConnectionFactory;
-import org.adorsys.encobject.service.api.ExtendedStoreConnection;
+import org.adorsys.docusafe.spring.factory.SpringDFSConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,19 +22,19 @@ public class DocusafeSpringBeans {
     }
 
     @Bean
-    public ExtendedStoreConnection extendedStoreConnection(SpringExtendedStoreConnectionFactory factory) {
-        LOGGER.info(ExtendedStoreConnection.class.getName() + " is required as @Bean");
+    public DFSConnection extendedStoreConnection(SpringDFSConnectionFactory factory) {
+        LOGGER.info(DFSConnection.class.getName() + " is required as @Bean");
         return factory.getExtendedStoreConnectionWithSubDir(null);
     }
 
     @Bean
-    public SpringExtendedStoreConnectionFactory springExtendedStoreConnectionFactory(SpringDocusafeStoreconnectionProperties properties) {
-        LOGGER.info(SpringExtendedStoreConnectionFactory.class.getName() + " is required as @Bean");
-        return new SpringExtendedStoreConnectionFactory(properties);
+    public SpringDFSConnectionFactory springExtendedStoreConnectionFactory(SpringDFSConnectionProperties properties) {
+        LOGGER.info(SpringDFSConnectionFactory.class.getName() + " is required as @Bean");
+        return new SpringDFSConnectionFactory(properties);
     }
 
     @Bean
-    public SpringCachedTransactionalDocusafeServiceFactory springCachedTransactionalDocusafeServiceFactory(SpringExtendedStoreConnectionFactory connectionFactory) {
+    public SpringCachedTransactionalDocusafeServiceFactory springCachedTransactionalDocusafeServiceFactory(SpringDFSConnectionFactory connectionFactory) {
         LOGGER.info(SpringCachedTransactionalDocusafeServiceFactory.class.getName() + " is required as @Bean");
         return new SpringCachedTransactionalDocusafeServiceFactory(connectionFactory);
     }

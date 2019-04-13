@@ -1,10 +1,12 @@
 package org.adorsys.docusafe.transactional;
 
-import org.adorsys.cryptoutils.exceptions.BaseExceptionHandler;
-import org.adorsys.cryptoutils.storeconnectionfactory.ExtendedStoreConnectionFactory;
+import de.adorsys.common.exceptions.BaseExceptionHandler;
+import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
+import org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
-import org.adorsys.docusafe.service.types.DocumentContent;
+import org.adorsys.docusafe.service.api.types.DocumentContent;
+import org.adorsys.docusafe.service.api.types.UserIDAuth;
 import org.adorsys.docusafe.transactional.impl.TransactionalDocumentSafeServiceImpl;
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,7 +31,7 @@ public class ParallelCommitTxTest extends TransactionalDocumentSafeServiceBaseTe
     @Test
     public void parallelCommits() {
         ThreadMemoryContextImpl requestMemoryContext = new ThreadMemoryContextImpl();
-        DocumentSafeServiceImpl dssi = new DocumentSafeServiceImpl(ExtendedStoreConnectionFactory.get());
+        DocumentSafeServiceImpl dssi = new DocumentSafeServiceImpl(DFSConnectionFactory.get());
         TransactionalDocumentSafeService transactionalFileStorage = new TransactionalDocumentSafeServiceImpl(requestMemoryContext, dssi);
 
         try {
@@ -50,8 +52,7 @@ public class ParallelCommitTxTest extends TransactionalDocumentSafeServiceBaseTe
 
                 DocumentFQN documentFQN = new DocumentFQN(FILENAME);
                 DocumentContent documentContent = new DocumentContent("very first".getBytes());
-                DSDocumentMetaInfo documentMetaInfo = new DSDocumentMetaInfo();
-                DSDocument document = new DSDocument(documentFQN, documentContent, documentMetaInfo);
+                DSDocument document = new DSDocument(documentFQN, documentContent);
 
                 transactionalFileStorage.beginTransaction(userIDAuth);
                 LOGGER.debug("FIRST TXID");
@@ -125,8 +126,7 @@ public class ParallelCommitTxTest extends TransactionalDocumentSafeServiceBaseTe
             try {
                 DocumentFQN documentFQN = new DocumentFQN(FILENAME);
                 DocumentContent documentContent = new DocumentContent(("Thread Number " + instanceID).getBytes());
-                DSDocumentMetaInfo documentMetaInfo = new DSDocumentMetaInfo();
-                DSDocument document = new DSDocument(documentFQN, documentContent, documentMetaInfo);
+                DSDocument document = new DSDocument(documentFQN, documentContent);
 
                 sem.acquire();
 

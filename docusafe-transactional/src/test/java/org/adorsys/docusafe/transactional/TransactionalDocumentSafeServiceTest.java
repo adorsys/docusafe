@@ -6,18 +6,19 @@ import org.adorsys.docusafe.business.types.complex.BucketContentFQN;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
-import org.adorsys.docusafe.service.types.DocumentContent;
+import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.adorsys.docusafe.transactional.exceptions.TxInnerException;
 import org.adorsys.docusafe.transactional.exceptions.TxNotActiveException;
 import org.adorsys.docusafe.transactional.exceptions.TxRacingConditionException;
 import org.adorsys.docusafe.transactional.types.TxBucketContentFQN;
 import org.adorsys.docusafe.transactional.types.TxDocumentFQNVersion;
-import org.adorsys.encobject.types.ListRecursiveFlag;
-import org.adorsys.encobject.types.OverwriteFlag;
+import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * Created by peter on 12.06.18 at 08:44.
@@ -40,7 +41,7 @@ public class TransactionalDocumentSafeServiceTest extends TransactionalDocumentS
 
         LOGGER.debug("System user erstellt document");
         DocumentContent documentContent = new DocumentContent("content for in put box".getBytes());
-        transactionalDocumentSafeService.txStoreDocument(systemUserIDAuth, new DSDocument(systemUserSourceDocFileName, documentContent, new DSDocumentMetaInfo()));
+        transactionalDocumentSafeService.txStoreDocument(systemUserIDAuth, new DSDocument(systemUserSourceDocFileName, documentContent));
 
         LOGGER.debug("System sucht Document");
         TxBucketContentFQN txBucketContentFQN = transactionalDocumentSafeService.txListDocuments(systemUserIDAuth, systemUserSourceDocFileName.getDocumentDirectory(), ListRecursiveFlag.TRUE);
@@ -51,15 +52,14 @@ public class TransactionalDocumentSafeServiceTest extends TransactionalDocumentS
         transactionalDocumentSafeService.beginTransaction(userIDAuth);
 
         LOGGER.debug("Peter hat noch nix in der Inbox");
-        BucketContentFQNWithUserMetaData bucketContentFQNWithUserMetaData = transactionalDocumentSafeService.nonTxListInbox(userIDAuth);
-        Assert.assertEquals(0, bucketContentFQNWithUserMetaData.getFiles().size());
-        Assert.assertEquals(0, bucketContentFQNWithUserMetaData.getDirectories().size());
+        List<DocumentFQN> list = transactionalDocumentSafeService.nonTxListInbox(userIDAuth);
+        Assert.assertEquals(0, list.size());
 
         LOGGER.debug("systemUser sendet Document an peter");
         transactionalDocumentSafeService.txMoveDocumentToInboxOfUser(systemUserIDAuth, userIDAuth.getUserID(), systemUserSourceDocFileName, petersInboxFileName, MoveType.MOVE);
 
         LOGGER.debug("peter lädt das document");
-        transactionalDocumentSafeService.txMoveDocumentFromInbox(userIDAuth, petersInboxFileName, petersTxFileName, OverwriteFlag.FALSE);
+        transactionalDocumentSafeService.txMoveDocumentFromInbox(userIDAuth, petersInboxFileName, petersTxFileName);
 
         LOGGER.debug("peter liest das document aus seinem tx space");
         transactionalDocumentSafeService.txReadDocument(userIDAuth, petersTxFileName);
@@ -73,8 +73,7 @@ public class TransactionalDocumentSafeServiceTest extends TransactionalDocumentS
         transactionalDocumentSafeService.createUser(userIDAuth);
         DocumentFQN documentFQN = new DocumentFQN("testxTFolder/first.txt");
         DocumentContent documentContent = new DocumentContent("very first".getBytes());
-        DSDocumentMetaInfo documentMetaInfo = new DSDocumentMetaInfo();
-        DSDocument document = new DSDocument(documentFQN, documentContent, documentMetaInfo);
+        DSDocument document = new DSDocument(documentFQN, documentContent);
 
         TxDocumentFQNVersion version = null;
         {
@@ -106,8 +105,7 @@ public class TransactionalDocumentSafeServiceTest extends TransactionalDocumentS
         transactionalDocumentSafeService.createUser(userIDAuth);
         DocumentFQN documentFQN = new DocumentFQN("testxTFolder/first.txt");
         DocumentContent documentContent = new DocumentContent("very first".getBytes());
-        DSDocumentMetaInfo documentMetaInfo = new DSDocumentMetaInfo();
-        DSDocument document = new DSDocument(documentFQN, documentContent, documentMetaInfo);
+        DSDocument document = new DSDocument(documentFQN, documentContent);
 
         {
             transactionalDocumentSafeService.beginTransaction(userIDAuth);
@@ -132,7 +130,7 @@ public class TransactionalDocumentSafeServiceTest extends TransactionalDocumentS
             Assert.assertEquals(1, bucketContentFQN.getFiles().size());
             Assert.assertEquals(documentFQN, bucketContentFQN.getFiles().get(0));
             DSDocument dsDocument = transactionalDocumentSafeService.txReadDocument(userIDAuth, documentFQN);
-            newDocument = new DSDocument(documentFQN, new DocumentContent("new content".getBytes()), dsDocument.getDsDocumentMetaInfo());
+            newDocument = new DSDocument(documentFQN, new DocumentContent("new content".getBytes()));
             transactionalDocumentSafeService.txStoreDocument(userIDAuth, newDocument);
             transactionalDocumentSafeService.endTransaction(userIDAuth);
         }
@@ -161,8 +159,7 @@ public class TransactionalDocumentSafeServiceTest extends TransactionalDocumentS
         DocumentFQN documentFQN = new DocumentFQN("testxTFolder/first.txt");
         DocumentContent documentContent1 = new DocumentContent("very first".getBytes());
         DocumentContent documentContent2 = new DocumentContent("second".getBytes());
-        DSDocumentMetaInfo documentMetaInfo = new DSDocumentMetaInfo();
-        DSDocument document = new DSDocument(documentFQN, documentContent1, documentMetaInfo);
+        DSDocument document = new DSDocument(documentFQN, documentContent1);
 
         // Lege erste Version von first.txt an
         {
@@ -182,7 +179,7 @@ public class TransactionalDocumentSafeServiceTest extends TransactionalDocumentS
             LOGGER.debug("SECOND TXID ");
             DSDocument dsDocument = transactionalDocumentSafeService.txReadDocument(userIDAuth, documentFQN);
             Assert.assertEquals(new String(documentContent1.getValue()), new String(dsDocument.getDocumentContent().getValue()));
-            DSDocument document2 = new DSDocument(documentFQN, documentContent2, documentMetaInfo);
+            DSDocument document2 = new DSDocument(documentFQN, documentContent2);
             transactionalDocumentSafeService.txStoreDocument(userIDAuth, document2);
 
             // Beginne dritte Transaktion VOR Ende der zweiten
@@ -234,8 +231,7 @@ public class TransactionalDocumentSafeServiceTest extends TransactionalDocumentS
             for (int i = 0; i < N; i++) {
                 DocumentFQN docFQN = new DocumentFQN("folder1/file_" + i + ".txt");
                 DocumentContent docContent = new DocumentContent(("Content_" + i).getBytes());
-                DSDocumentMetaInfo docMetaInfo = new DSDocumentMetaInfo();
-                DSDocument doc = new DSDocument(docFQN, docContent, docMetaInfo);
+                DSDocument doc = new DSDocument(docFQN, docContent);
                 transactionalDocumentSafeService.txStoreDocument(userIDAuth, doc);
             }
             transactionalDocumentSafeService.endTransaction(userIDAuth);
@@ -308,8 +304,7 @@ public class TransactionalDocumentSafeServiceTest extends TransactionalDocumentS
         transactionalDocumentSafeService.createUser(userIDAuth);
         DocumentFQN documentFQN = new DocumentFQN("testxTFolder/first.txt");
         DocumentContent documentContent = new DocumentContent("very first".getBytes());
-        DSDocumentMetaInfo documentMetaInfo = new DSDocumentMetaInfo();
-        DSDocument document = new DSDocument(documentFQN, documentContent, documentMetaInfo);
+        DSDocument document = new DSDocument(documentFQN, documentContent);
 
         transactionalDocumentSafeService.beginTransaction(userIDAuth);
         LOGGER.debug("FIRST TXID ");

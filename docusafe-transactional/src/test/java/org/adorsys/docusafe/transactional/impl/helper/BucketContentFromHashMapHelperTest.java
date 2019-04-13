@@ -6,7 +6,7 @@ import org.adorsys.docusafe.business.types.complex.DocumentFQN;
 import org.adorsys.docusafe.transactional.types.TxBucketContentFQN;
 import org.adorsys.docusafe.transactional.types.TxDocumentFQNVersion;
 import org.adorsys.docusafe.transactional.types.TxID;
-import org.adorsys.encobject.types.ListRecursiveFlag;
+import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

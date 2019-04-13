@@ -3,8 +3,8 @@ package org.adorsys.docusafe.transactional.impl;
 import lombok.*;
 import org.adorsys.docusafe.business.DocumentSafeService;
 import org.adorsys.docusafe.business.types.complex.*;
-import org.adorsys.docusafe.service.impl.UserMetaDataUtil;
-import org.adorsys.docusafe.service.types.DocumentContent;
+import org.adorsys.docusafe.service.api.types.DocumentContent;
+import org.adorsys.docusafe.service.api.types.UserIDAuth;
 import org.adorsys.docusafe.transactional.exceptions.NoTxFoundForDocumentException;
 import org.adorsys.docusafe.transactional.exceptions.TxAlreadyClosedException;
 import org.adorsys.docusafe.transactional.exceptions.TxNotFoundException;
@@ -12,7 +12,7 @@ import org.adorsys.docusafe.transactional.impl.helper.BucketContentFromHashMapHe
 import org.adorsys.docusafe.transactional.impl.helper.Class2JsonHelper;
 import org.adorsys.docusafe.transactional.types.TxBucketContentFQN;
 import org.adorsys.docusafe.transactional.types.TxID;
-import org.adorsys.encobject.types.ListRecursiveFlag;
+import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,11 +98,7 @@ public class TxIDHashMapWrapper {
         DocumentFQN file = TransactionalDocumentSafeServiceImpl.modifyTxMetaDocumentName(filenamebase, currentTxID);
         LOGGER.debug("save " + file.getValue());
         DocumentContent documentContent = new Class2JsonHelper().txidHashMapToContent(this);
-        DSDocument dsDocument = new DSDocument(file, documentContent, new DSDocumentMetaInfo());
-        if (TxIDLog.dontEncrypt) {
-            LOGGER.debug("save " + file.getValue() + " encrypted");
-            UserMetaDataUtil.setNoEncryption(dsDocument.getDsDocumentMetaInfo());
-        }
+        DSDocument dsDocument = new DSDocument(file, documentContent);
         documentSafeService.storeDocument(userIDAuth, dsDocument);
     }
 

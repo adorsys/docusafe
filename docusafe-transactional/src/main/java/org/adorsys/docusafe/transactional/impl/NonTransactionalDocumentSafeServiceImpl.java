@@ -1,14 +1,14 @@
 package org.adorsys.docusafe.transactional.impl;
 
-import org.adorsys.cryptoutils.exceptions.BaseException;
 import org.adorsys.docusafe.business.DocumentSafeService;
+import org.adorsys.docusafe.business.types.complex.DocumentFQN;
 import org.adorsys.docusafe.service.api.types.UserID;
+import org.adorsys.docusafe.service.api.types.UserIDAuth;
 import org.adorsys.docusafe.transactional.NonTransactionalDocumentSafeService;
-import org.adorsys.encobject.types.ListRecursiveFlag;
-import org.adorsys.encobject.types.OverwriteFlag;
-import org.adorsys.encobject.types.PublicKeyJWK;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * Created by peter on 15.08.18 at 11:57.
@@ -39,16 +39,11 @@ public class NonTransactionalDocumentSafeServiceImpl implements NonTransactional
         return documentSafeService.userExists(userID);
     }
 
-    @Override
-    public PublicKeyJWK findPublicEncryptionKey(UserID userID) {
-        return documentSafeService.findPublicEncryptionKey(userID);
-    }
-
     // ============================================================================================
     // INBOX STUFF
     // ============================================================================================
     @Override
-    public BucketContentFQNWithUserMetaData nonTxListInbox(UserIDAuth userIDAuth) {
+    public List<DocumentFQN> nonTxListInbox(UserIDAuth userIDAuth) {
         return documentSafeService.listInbox(userIDAuth);
     }
 
