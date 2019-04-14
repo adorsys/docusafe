@@ -46,7 +46,6 @@ public class TransactionalDocumentSafeServiceTest extends TransactionalDocumentS
         LOGGER.debug("System sucht Document");
         TxBucketContentFQN txBucketContentFQN = transactionalDocumentSafeService.txListDocuments(systemUserIDAuth, systemUserSourceDocFileName.getDocumentDirectory(), ListRecursiveFlag.TRUE);
         Assert.assertEquals(1, txBucketContentFQN.getFiles().size());
-        Assert.assertEquals(0, txBucketContentFQN.getDirectories().size());
 
         LOGGER.debug("Peter beginnt Transaction");
         transactionalDocumentSafeService.beginTransaction(userIDAuth);
@@ -210,10 +209,8 @@ public class TransactionalDocumentSafeServiceTest extends TransactionalDocumentS
         }
         requestMemoryContext.switchToUser(4);
         BucketContentFQN list = transactionalDocumentSafeService.txListDocuments(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE);
-        list.getDirectories().forEach(dir -> LOGGER.debug("directory : " + dir));
         list.getFiles().forEach(file -> LOGGER.debug("file:" + file));
         Assert.assertEquals(1, list.getFiles().size());
-        Assert.assertEquals(1, list.getDirectories().size());
     }
 
     @Test

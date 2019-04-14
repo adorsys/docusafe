@@ -11,5 +11,4 @@ import java.util.List;
 
 public interface BucketContentFQN {
     List<DocumentFQN> getFiles();
-    List<DocumentDirectoryFQN> getDirectories();
 }

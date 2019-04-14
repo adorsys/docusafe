@@ -12,16 +12,10 @@ import java.util.List;
  */
 public class BucketContentFQNImpl implements BucketContentFQN {
     private List<DocumentFQN> files = new ArrayList<>();
-    private List<DocumentDirectoryFQN> directories = new ArrayList();
 
     @Override
     public List<DocumentFQN> getFiles() {
         return files;
-    }
-
-    @Override
-    public List<DocumentDirectoryFQN> getDirectories() {
-        return directories;
     }
 
     @Override
@@ -32,9 +26,7 @@ public class BucketContentFQNImpl implements BucketContentFQN {
         sb.append("files=");
         sb.append("\n");
         files.forEach(file -> sb.append("   " + file.getValue() + "\n"));
-        sb.append("directories=");
         sb.append("\n");
-        directories.forEach(file -> sb.append("   " + file.getValue() + "\n"));
         sb.append("}");
         return sb.toString();
     }

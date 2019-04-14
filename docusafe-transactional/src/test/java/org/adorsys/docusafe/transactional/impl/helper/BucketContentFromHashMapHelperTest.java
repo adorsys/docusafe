@@ -41,9 +41,7 @@ public class BucketContentFromHashMapHelperTest {
 
         BucketContentFQN a = BucketContentFromHashMapHelper.list(keys, new DocumentDirectoryFQN("a"), ListRecursiveFlag.TRUE);
         a.getFiles().forEach(file -> LOGGER.debug("file: " + file));
-        a.getDirectories().forEach(dir -> LOGGER.debug("dir: " + dir));
         Assert.assertEquals(6, a.getFiles().size());
-        Assert.assertEquals(2, a.getDirectories().size());
     }
 
     @Test
@@ -52,9 +50,7 @@ public class BucketContentFromHashMapHelperTest {
 
         BucketContentFQN a = BucketContentFromHashMapHelper.list(keys, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE);
         a.getFiles().forEach(file -> LOGGER.debug("file: " + file));
-        a.getDirectories().forEach(dir -> LOGGER.debug("dir: " + dir));
         Assert.assertEquals(6, a.getFiles().size());
-        Assert.assertEquals(3, a.getDirectories().size());
     }
 
     @Test
@@ -63,9 +59,7 @@ public class BucketContentFromHashMapHelperTest {
 
         BucketContentFQN a = BucketContentFromHashMapHelper.list(keys, new DocumentDirectoryFQN("/b"), ListRecursiveFlag.TRUE);
         a.getFiles().forEach(file -> LOGGER.debug("file: " + file));
-        a.getDirectories().forEach(dir -> LOGGER.debug("dir: " + dir));
         Assert.assertEquals(0, a.getFiles().size());
-        Assert.assertEquals(0, a.getDirectories().size());
     }
 
     @Test
@@ -73,9 +67,7 @@ public class BucketContentFromHashMapHelperTest {
 
         BucketContentFQN a = BucketContentFromHashMapHelper.list(keys, new DocumentDirectoryFQN("a"), ListRecursiveFlag.FALSE);
         a.getFiles().forEach(file -> LOGGER.debug("file: " + file));
-        a.getDirectories().forEach(dir -> LOGGER.debug("dir: " + dir));
         Assert.assertEquals(2, a.getFiles().size());
-        Assert.assertEquals(1, a.getDirectories().size());
     }
 
     @Test
@@ -84,9 +76,7 @@ public class BucketContentFromHashMapHelperTest {
 
         BucketContentFQN a = BucketContentFromHashMapHelper.list(keys, new DocumentDirectoryFQN("/"), ListRecursiveFlag.FALSE);
         a.getFiles().forEach(file -> LOGGER.debug("file: " + file));
-        a.getDirectories().forEach(dir -> LOGGER.debug("dir: " + dir));
         Assert.assertEquals(0, a.getFiles().size());
-        Assert.assertEquals(1, a.getDirectories().size());
     }
 
     @Test
@@ -95,9 +85,7 @@ public class BucketContentFromHashMapHelperTest {
 
         BucketContentFQN a = BucketContentFromHashMapHelper.list(keys, new DocumentDirectoryFQN("/b"), ListRecursiveFlag.FALSE);
         a.getFiles().forEach(file -> LOGGER.debug("file: " + file));
-        a.getDirectories().forEach(dir -> LOGGER.debug("dir: " + dir));
         Assert.assertEquals(0, a.getFiles().size());
-        Assert.assertEquals(0, a.getDirectories().size());
     }
 
 }

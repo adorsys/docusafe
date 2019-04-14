@@ -120,8 +120,6 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
 
     private void show(String description, BucketContentFQN bucketContentFQN) {
         LOGGER.info("--------------------------------- begin " + description);
-        LOGGER.info("directories" + bucketContentFQN.getDirectories().size());
-        bucketContentFQN.getDirectories().forEach(dir -> LOGGER.info(dir.toString()));
         LOGGER.info("files" + bucketContentFQN.getFiles().size());
         bucketContentFQN.getFiles().forEach(dir -> LOGGER.info(dir.toString()));
         LOGGER.info("--------------------------------- end " + description);

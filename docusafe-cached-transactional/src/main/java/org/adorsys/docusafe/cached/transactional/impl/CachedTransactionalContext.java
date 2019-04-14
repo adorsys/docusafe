@@ -92,19 +92,6 @@ class CachedTransactionalContext {
                 }
             }
         });
-        // Nun werden alle Directories rausgefiltert, die nicht auf den Pfad passen
-        bucketContent.getDirectories().forEach(dir -> {
-            if (dir.getValue().startsWith(documentDirectoryFQN.getValue())) {
-                if (recursiveFlag.equals(ListRecursiveFlag.TRUE)) {
-                    ret.getDirectories().add(dir);
-                } else {
-                    String dirWithoutRoot = dir.getValue().substring(documentDirectoryFQN.getValue().length());
-                    if (dirWithoutRoot.lastIndexOf(BucketPath.BUCKET_SEPARATOR) == 0) {
-                        ret.getDirectories().add(dir);
-                    }
-                }
-            }
-        });
 
         // Nun werden alle rausgefiltert, die bereits gelöscht wurden
         ret.getFiles().removeAll(setToDelete);

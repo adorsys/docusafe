@@ -60,7 +60,6 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
         Assert.assertEquals(new Integer(0), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_LIST_DOCUMENTS));
         BucketContentFQN bucketContentFQN = cachedService.txListDocuments(userIDAuth, documentFQN.getDocumentDirectory(), ListRecursiveFlag.TRUE);
         Assert.assertTrue(bucketContentFQN.getFiles().isEmpty());
-        Assert.assertTrue(bucketContentFQN.getDirectories().isEmpty());
         Assert.assertFalse(cachedService.txDocumentExists(userIDAuth, documentFQN));
 
         // document speichern
@@ -75,7 +74,6 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
         }
         BucketContentFQN bucketContentFQN2 = cachedService.txListDocuments(userIDAuth, documentFQN.getDocumentDirectory(), ListRecursiveFlag.TRUE);
         Assert.assertEquals(1, bucketContentFQN2.getFiles().size());
-        Assert.assertTrue(bucketContentFQN2.getDirectories().isEmpty());
         Assert.assertTrue(cachedService.txDocumentExists(userIDAuth, documentFQN));
 
         Assert.assertEquals(new Integer(0), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_STORE_DOCUMENT));
@@ -142,7 +140,6 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
             Assert.assertFalse(cachedService.txDocumentExists(userIDAuth, documentFQN));
             TxBucketContentFQN bucketContentFQN = cachedService.txListDocuments(userIDAuth, documentFQN.getDocumentDirectory(), ListRecursiveFlag.TRUE);
             Assert.assertTrue(bucketContentFQN.getFiles().isEmpty());
-            Assert.assertTrue(bucketContentFQN.getDirectories().isEmpty());
             DSDocument dsDocumentWrite = new DSDocument(
                     documentFQN,
                     new DocumentContent("content of file".getBytes())
@@ -163,7 +160,6 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
             Assert.assertArrayEquals(dsDocumentWrite.getDocumentContent().getValue(), dsDocumentRead.getDocumentContent().getValue());
             TxBucketContentFQN bucketContentFQN = cachedService.txListDocuments(userIDAuth, documentFQN.getDocumentDirectory(), ListRecursiveFlag.TRUE);
             Assert.assertEquals(1, bucketContentFQN.getFiles().size());
-            Assert.assertEquals(1, bucketContentFQN.getDirectories().size());
             cachedService.endTransaction(userIDAuth);
         }
         {
@@ -175,7 +171,6 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
             cachedService.beginTransaction(userIDAuth);
             TxBucketContentFQN bucketContentFQN = cachedService.txListDocuments(userIDAuth, documentFQN.getDocumentDirectory(), ListRecursiveFlag.TRUE);
             Assert.assertEquals(0, bucketContentFQN.getFiles().size());
-            Assert.assertEquals(0, bucketContentFQN.getDirectories().size());
             cachedService.endTransaction(userIDAuth);
         }
 

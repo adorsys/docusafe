@@ -35,8 +35,6 @@ public class BucketContentFromHashMapHelper {
         // result:    /a/b/
         //            /a/b/c
 
-        Set<DocumentDirectoryFQN> dirCandidates = new HashSet<>();
-
         candidates.forEach(candidate -> {
             DocumentFQN remainder = new DocumentFQN(candidate.getDocumentFQN().getValue().substring(documentDirectoryFQN.getValue().length()));
             // candidate /a/b/c/file1
@@ -52,17 +50,12 @@ public class BucketContentFromHashMapHelper {
             }
             while (st.hasMoreElements()) {
                 dirbase = dirbase + BucketPath.BUCKET_SEPARATOR + st.nextToken();
-                dirCandidates.add(new DocumentDirectoryFQN(dirbase));
-                // fügt erst /a/b
-                // dann      /a/b/c
-                // ein
             }
         });
 
         if (recursiveFlag.equals(ListRecursiveFlag.TRUE)) {
             TxBucketContentFQN bucketContentFQN = new TxBucketContentFQNImpl();
             candidates.forEach(candidate -> bucketContentFQN.getFiles().add(candidate.getDocumentFQN()));
-            dirCandidates.forEach(dirCandidate -> bucketContentFQN.getDirectories().add(dirCandidate));
             candidates.forEach(candidate -> bucketContentFQN.getFilesWithVersion().add(candidate));
             return bucketContentFQN;
         }
@@ -81,17 +74,6 @@ public class BucketContentFromHashMapHelper {
             }
         });
 
-        HashSet<DocumentDirectoryFQN> dirs = new HashSet<>();
-        dirCandidates.forEach(dirCandidate -> {
-            DocumentDirectoryFQN remainder = new DocumentDirectoryFQN(dirCandidate.getValue().substring(documentDirectoryFQN.getValue().length()));
-            // dirCandidate /a/b/c
-            // search       /a
-            // remainder      /b/c
-            if (remainder.getValue().lastIndexOf(BucketPath.BUCKET_SEPARATOR) == 0) {
-                dirs.add(remainder);
-            }
-        });
-        dirs.forEach(dir -> bucketContentFQN.getDirectories().add(dir));
         return bucketContentFQN;
     }
 }
