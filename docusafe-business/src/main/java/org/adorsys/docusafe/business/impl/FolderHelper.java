@@ -21,4 +21,8 @@ public class FolderHelper {
     public static BucketPath getPublicKeyListPath(UserID userID) {
         return getRootDirectory(userID).appendName("publicKeys");
     }
+
+    public static BucketDirectory getHomeDirectory(UserID userID) {
+        return getRootDirectory(userID).appendDirectory("home");
+    }
 }

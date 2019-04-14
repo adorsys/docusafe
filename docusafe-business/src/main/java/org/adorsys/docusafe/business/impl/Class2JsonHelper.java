@@ -47,7 +47,9 @@ public class Class2JsonHelper {
 
     public Payload keyListToContent(final List<PublicKeyIDWithPublicKey> list) {
         try {
-            String s = gson.toJson(list);
+            PublicKeyList publicKeyList = new PublicKeyList();
+            publicKeyList.addAll(list);
+            String s = gson.toJson(publicKeyList);
             return new SimplePayloadImpl(s.getBytes(CHARSET));
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
@@ -56,9 +58,8 @@ public class Class2JsonHelper {
 
     public List<PublicKeyIDWithPublicKey> contentToKeyList(Payload payload) {
         try {
-            List<PublicKeyIDWithPublicKey> list = new ArrayList<>();
             String jsonString = new String(payload.getData(), CHARSET);
-            return gson.fromJson(jsonString, list.getClass());
+            return  gson.fromJson(jsonString, PublicKeyList.class);
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
         }
