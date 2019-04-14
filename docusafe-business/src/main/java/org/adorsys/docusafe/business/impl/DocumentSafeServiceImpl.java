@@ -1,25 +1,83 @@
 package org.adorsys.docusafe.business.impl;
 
+import com.amazonaws.services.s3.model.Bucket;
+import de.adorsys.common.exceptions.BaseExceptionHandler;
+import de.adorsys.dfs.connection.api.complextypes.BucketPath;
+import de.adorsys.dfs.connection.api.domain.Payload;
+import de.adorsys.dfs.connection.api.filesystem.FilesystemConnectionPropertiesImpl;
 import de.adorsys.dfs.connection.api.service.api.DFSConnection;
+import de.adorsys.dfs.connection.api.service.impl.SimplePayloadImpl;
 import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
+import de.adorsys.dfs.connection.api.types.properties.ConnectionProperties;
+import de.adorsys.dfs.connection.impl.amazons3.AmazonS3ConnectionProperitesImpl;
+import de.adorsys.dfs.connection.impl.factory.ReadArguments;
 import org.adorsys.docusafe.business.DocumentSafeService;
+import org.adorsys.docusafe.business.exceptions.UserExistsException;
 import org.adorsys.docusafe.business.types.MoveType;
 import org.adorsys.docusafe.business.types.complex.DSDocument;
 import org.adorsys.docusafe.business.types.complex.DSDocumentStream;
 import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
 import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+import org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptionService;
+import org.adorsys.docusafe.service.api.keystore.KeyStoreService;
+import org.adorsys.docusafe.service.api.keystore.types.*;
+import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.adorsys.docusafe.service.api.types.UserID;
 import org.adorsys.docusafe.service.api.types.UserIDAuth;
+import org.adorsys.docusafe.service.impl.bucketpathencryption.BucketPathEncryptionServiceImpl;
+import org.adorsys.docusafe.service.impl.keystore.service.KeyStoreServiceImpl;
 
+import javax.crypto.SecretKey;
+import java.io.ByteArrayOutputStream;
+import java.security.KeyStore;
 import java.util.List;
 
 public class DocumentSafeServiceImpl implements DocumentSafeService {
+    private final Class2JsonHelper class2JsonHelper = new Class2JsonHelper();
+    private final DFSConnection systemDFS;
+    private final BucketPathEncryptionService bucketPathEncryptionService = new BucketPathEncryptionServiceImpl();
+    private final DFSCredentials defaultUserDFSCredentials = getDefaultDFSCredentials();
+
+    private DFSCredentials getDefaultDFSCredentials() {
+        ConnectionProperties props = new ReadArguments().readEnvironment();
+        DFSCredentials dfsCredentials = new DFSCredentials();
+        if (props instanceof FilesystemConnectionPropertiesImpl) {
+            dfsCredentials.filesystem = (FilesystemConnectionPropertiesImpl) props;
+        } else {
+            dfsCredentials.amazons3 = (AmazonS3ConnectionProperitesImpl) props;
+        }
+        return dfsCredentials;
+    }
+
+    private final KeyStoreService keyStoreService = new KeyStoreServiceImpl();
     public DocumentSafeServiceImpl(DFSConnection dfsConnection) {
+        systemDFS = dfsConnection;
     }
 
     @Override
     public void createUser(UserIDAuth userIDAuth) {
+        try {
+            if (userExists(userIDAuth.getUserID())) {
+                throw new UserExistsException(userIDAuth.getUserID());
+            }
+            systemDFS.createContainer(FolderHelper.getRootDirectory(userIDAuth.getUserID()));
+            KeyStoreAuth keyStoreAuth = new KeyStoreAuth(new ReadStorePassword(userIDAuth.getReadKeyPassword().getValue()), userIDAuth.getReadKeyPassword());
+            KeyStore usersSystemKeyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, new KeyStoreCreationConfig(1, 0, 1));
 
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            usersSystemKeyStore.store(stream, userIDAuth.getReadKeyPassword().getValue().toCharArray());
+            Payload payload = new SimplePayloadImpl(stream.toByteArray());
+            // KeyStoreAccess keyStoreAccess = new KeyStoreAccess(usersSystemKeyStore, keyStoreAuth);
+            // SecretKeyIDWithKey randomSecretKeyID = keyStoreService.getRandomSecretKeyID(keyStoreAccess);
+
+            systemDFS.putBlob(FolderHelper.getKeyStorePath(userIDAuth.getUserID()), payload);
+            BucketPath dfsCredentialsPath = FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID());
+            DocumentContent dfsCredentialsAsDocumentContent = class2JsonHelper.dfsCredentialsToContent(defaultUserDFSCredentials);
+
+            systemDFS.putBlob(dfsCredentialsPath, new SimplePayloadImpl(dfsCredentialsAsDocumentContent.getValue()));
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
     }
 
     @Override
@@ -29,7 +87,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     @Override
     public boolean userExists(UserID userID) {
-        return false;
+        return (systemDFS.containerExists(FolderHelper.getRootDirectory(userID)));
     }
 
     @Override
