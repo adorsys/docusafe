@@ -2,6 +2,8 @@ package org.adorsys.docusafe.service.impl.cmsencryption.services;
 
 
 import de.adorsys.common.exceptions.BaseExceptionHandler;
+import de.adorsys.dfs.connection.api.domain.Payload;
+import de.adorsys.dfs.connection.api.service.impl.SimplePayloadImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService;
 import org.adorsys.docusafe.service.api.keystore.types.KeyID;
@@ -31,7 +33,7 @@ public class CMSEncryptionServiceImpl implements CMSEncryptionService {
     }
 
     @Override
-    public CMSEnvelopedData encrypt(DocumentContent data, PublicKey publicKey, KeyID publicKeyId) {
+    public CMSEnvelopedData encrypt(Payload payload, PublicKey publicKey, KeyID publicKeyId) {
         try {
             CMSEnvelopedDataGenerator cmsEnvelopedDataGenerator = new CMSEnvelopedDataGenerator();
             JceKeyTransRecipientInfoGenerator jceKey = new JceKeyTransRecipientInfoGenerator(
@@ -40,7 +42,7 @@ public class CMSEncryptionServiceImpl implements CMSEncryptionService {
             );
 
             cmsEnvelopedDataGenerator.addRecipientInfoGenerator(jceKey);
-            CMSTypedData msg = new CMSProcessableByteArray(data.getValue());
+            CMSTypedData msg = new CMSProcessableByteArray(payload.getData());
             OutputEncryptor encryptor = new JceCMSContentEncryptorBuilder(CMSAlgorithm.AES128_CBC)
                     .setProvider(BouncyCastleProvider.PROVIDER_NAME)
                     .build();
@@ -51,7 +53,7 @@ public class CMSEncryptionServiceImpl implements CMSEncryptionService {
     }
 
     @Override
-    public DocumentContent decrypt(CMSEnvelopedData cmsEnvelopedData, KeyStoreAccess keyStoreAccess) {
+    public Payload decrypt(CMSEnvelopedData cmsEnvelopedData, KeyStoreAccess keyStoreAccess) {
         try {
 
             RecipientInformationStore recipients = cmsEnvelopedData.getRecipientInfos();
@@ -76,7 +78,7 @@ public class CMSEncryptionServiceImpl implements CMSEncryptionService {
 
             JceKeyTransRecipient recipient = new JceKeyTransEnvelopedRecipient(privateKey);
 
-            return new DocumentContent(recipientInfo.getContent(recipient));
+            return new SimplePayloadImpl(recipientInfo.getContent(recipient));
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
         }

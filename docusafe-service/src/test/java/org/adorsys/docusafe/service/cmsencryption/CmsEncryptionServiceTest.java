@@ -1,6 +1,8 @@
 package org.adorsys.docusafe.service.cmsencryption;
 
 
+import de.adorsys.dfs.connection.api.domain.Payload;
+import de.adorsys.dfs.connection.api.service.impl.SimplePayloadImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService;
 import org.adorsys.docusafe.service.api.keystore.KeyStoreService;
@@ -36,11 +38,11 @@ public class CmsEncryptionServiceTest {
             PublicKey publicKey = publicKeyIDWithPublicKey.getPublicKey();
             KeyID keyID = publicKeyIDWithPublicKey.getKeyID();
 
-            DocumentContent origMessage = new DocumentContent("message content".getBytes());
+            Payload origMessage = new SimplePayloadImpl("message content".getBytes());
             CMSEnvelopedData encrypted  = cmsEncryptionService.encrypt(origMessage, publicKey, keyID);
-            DocumentContent decrypted = cmsEncryptionService.decrypt(encrypted, keyStoreAccess);
+            Payload decrypted = cmsEncryptionService.decrypt(encrypted, keyStoreAccess);
 
-            Assert.assertArrayEquals(origMessage.getValue(),decrypted.getValue());
+            Assert.assertArrayEquals(origMessage.getData(),decrypted.getData());
             log.debug("en and decrypted successfully");
         }
     }

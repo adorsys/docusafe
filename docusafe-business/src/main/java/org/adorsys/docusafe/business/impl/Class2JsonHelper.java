@@ -2,11 +2,17 @@ package org.adorsys.docusafe.business.impl;
 
 import com.google.gson.*;
 import de.adorsys.common.exceptions.BaseExceptionHandler;
+import de.adorsys.dfs.connection.api.domain.Payload;
+import de.adorsys.dfs.connection.api.service.impl.SimplePayloadImpl;
+import org.adorsys.docusafe.service.api.keystore.types.PublicKeyIDWithPublicKey;
 import org.adorsys.docusafe.service.api.types.DocumentContent;
+import org.adorsys.docusafe.service.api.types.PublicKeyWithId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by peter on 11.06.18 at 17:04.
@@ -21,19 +27,38 @@ public class Class2JsonHelper {
             .setDateFormat(DATE_FORMAT_STRING)
             .create();
 
-    public DocumentContent dfsCredentialsToContent(final DFSCredentials dfsConnection) {
+    public Payload dfsCredentialsToContent(final DFSCredentials dfsConnection) {
         try {
             String s = gson.toJson(dfsConnection);
-            return new DocumentContent(s.getBytes(CHARSET));
+            return new SimplePayloadImpl(s.getBytes(CHARSET));
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
         }
     }
 
-    public DFSCredentials contentToDFSConnection(DocumentContent documentContent) {
+    public DFSCredentials contentToDFSConnection(Payload payload) {
         try {
-            String jsonString = new String(documentContent.getValue(), CHARSET);
+            String jsonString = new String(payload.getData(), CHARSET);
             return gson.fromJson(jsonString, DFSCredentials.class);
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
+    }
+
+    public Payload keyListToContent(final List<PublicKeyIDWithPublicKey> list) {
+        try {
+            String s = gson.toJson(list);
+            return new SimplePayloadImpl(s.getBytes(CHARSET));
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
+    }
+
+    public List<PublicKeyIDWithPublicKey> contentToKeyList(Payload payload) {
+        try {
+            List<PublicKeyIDWithPublicKey> list = new ArrayList<>();
+            String jsonString = new String(payload.getData(), CHARSET);
+            return gson.fromJson(jsonString, list.getClass());
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
         }

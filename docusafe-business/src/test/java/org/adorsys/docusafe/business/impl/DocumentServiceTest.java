@@ -17,9 +17,12 @@ public class DocumentServiceTest {
     DocumentSafeService service = new DocumentSafeServiceImpl(DFSConnectionFactory.get());
     UserIDAuth userIDAuth = new UserIDAuth(new UserID("peter"), new ReadKeyPassword("affe"));
 
+
     @Test
     public void a() {
         service.createUser(userIDAuth);
         LOGGER.debug("OK ");
+        service.destroyUser(userIDAuth);
+
     }
 }

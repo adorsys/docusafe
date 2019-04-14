@@ -11,10 +11,14 @@ public class FolderHelper {
     }
 
     public static BucketPath getKeyStorePath(UserID userID) {
-        return getRootDirectory(userID).appendDirectory("keystore").appendName("keystore." + KeyStoreType.DEFAULT.getTypeName());
+        return getRootDirectory(userID).appendName("keystore." + KeyStoreType.DEFAULT.getValue());
     }
 
     public static BucketPath getDFSCredentialsPath(UserID userID) {
-        return getRootDirectory(userID).appendDirectory("dfscredentials").appendName("UserDFSCredentials");
+        return getRootDirectory(userID).appendName("UserDFSCredentials");
+    }
+
+    public static BucketPath getPublicKeyListPath(UserID userID) {
+        return getRootDirectory(userID).appendName("publicKeys");
     }
 }
