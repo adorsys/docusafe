@@ -23,6 +23,7 @@ import org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptio
 import org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService;
 import org.adorsys.docusafe.service.api.keystore.KeyStoreService;
 import org.adorsys.docusafe.service.api.keystore.types.*;
+import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.adorsys.docusafe.service.api.types.UserID;
 import org.adorsys.docusafe.service.api.types.UserIDAuth;
 import org.adorsys.docusafe.service.impl.bucketpathencryption.BucketPathEncryptionServiceImpl;
@@ -211,7 +212,26 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     @Override
     public DSDocument readDocument(UserIDAuth userIDAuth, DocumentFQN documentFQN) {
-        return null;
+        try {
+            final DFSConnection usersDFSConnection = getUsersDFS(userIDAuth);
+            SecretKeyIDWithKey pathEncryptionSecretKey = null;
+            {
+                KeyStoreAccess privateKeyStoreAccess = getKeyStoreAccess(usersDFSConnection, userIDAuth);
+                pathEncryptionSecretKey = keyStoreService.getRandomSecretKeyID(privateKeyStoreAccess);
+            }
+            BucketPath unencryptedPath = FolderHelper.getHomeDirectory(userIDAuth.getUserID()).appendName(documentFQN.getValue());
+            BucketPath encryptedBucketPath = bucketPathEncryptionService.encrypt(pathEncryptionSecretKey.getSecretKey(), unencryptedPath);
+
+            KeyStoreAccess usersPrivateKeyStoreAccess = getKeyStoreAccess(usersDFSConnection, userIDAuth);
+
+            Payload payload = usersDFSConnection.getBlob(encryptedBucketPath);
+            CMSEnvelopedData cmsEnvelopedData = new CMSEnvelopedData(payload.getData());
+            Payload decrypt = cmsEncryptionService.decrypt(cmsEnvelopedData, usersPrivateKeyStoreAccess);
+            return new DSDocument(documentFQN, new DocumentContent(decrypt.getData()));
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
+
     }
 
     @Override
@@ -240,7 +260,8 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     }
 
     @Override
-    public List<DocumentFQN> list(UserIDAuth userIDAuth, DocumentDirectoryFQN documentDirectoryFQN, ListRecursiveFlag recursiveFlag) {
+    public List<DocumentFQN> list(UserIDAuth userIDAuth, DocumentDirectoryFQN
+            documentDirectoryFQN, ListRecursiveFlag recursiveFlag) {
         return null;
     }
 
@@ -265,7 +286,8 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     }
 
     @Override
-    public void moveDocumnetToInboxOfUser(UserIDAuth userIDAuth, UserID receiverUserID, DocumentFQN sourceDocumentFQN, DocumentFQN destDocumentFQN, MoveType moveType) {
+    public void moveDocumnetToInboxOfUser(UserIDAuth userIDAuth, UserID receiverUserID, DocumentFQN
+            sourceDocumentFQN, DocumentFQN destDocumentFQN, MoveType moveType) {
 
     }
 

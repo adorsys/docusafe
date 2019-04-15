@@ -10,6 +10,7 @@ import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.adorsys.docusafe.service.api.types.UserID;
 import org.adorsys.docusafe.service.api.types.UserIDAuth;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -44,5 +45,7 @@ public class DocumentServiceTest {
         DocumentContent documentContent = new DocumentContent("affe".getBytes());
         DSDocument dsDocument = new DSDocument(documentFQN, documentContent);
         service.storeDocument(userIDAuth, dsDocument);
+        DSDocument dsDocument1 = service.readDocument(userIDAuth, dsDocument.getDocumentFQN());
+        Assert.assertArrayEquals(dsDocument.getDocumentContent().getValue(), dsDocument1.getDocumentContent().getValue());
     }
 }
