@@ -25,6 +25,7 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
         Cipher cipher = createCipher(secretKey, Cipher.ENCRYPT_MODE);
 
         List<String> subdirs = BucketPathUtil.split(BucketPathUtil.getAsString(bucketPath));
+        String first = subdirs.remove(0);
         StringBuilder encryptedPathString = new StringBuilder();
         for(String subdir : subdirs) {
             byte[] encrypt = new byte[0];
@@ -37,7 +38,8 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
             String encryptedString = HexUtil.convertBytesToHexString(encrypt);
             encryptedPathString.append(BucketPath.BUCKET_SEPARATOR).append(encryptedString);
         }
-        return new BucketPath(encryptedPathString.toString().toLowerCase());
+        String finalString = first + BucketPath.BUCKET_SEPARATOR + encryptedPathString.toString();
+        return new BucketPath(finalString.toLowerCase());
     }
 
     @Override
@@ -45,6 +47,7 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
         Cipher cipher = createCipher(secretKey, Cipher.DECRYPT_MODE);
 
         List<String> subdirs = BucketPathUtil.split(BucketPathUtil.getAsString(bucketPath));
+        String first = subdirs.remove(0);
         StringBuilder decryptedPathString = new StringBuilder();
         for(String subdir : subdirs) {
             byte[] decrypt = HexUtil.convertHexStringToBytes(subdir.toUpperCase());
@@ -56,7 +59,8 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
             }
             decryptedPathString.append(BucketPath.BUCKET_SEPARATOR).append(new String(decryptedBytes, UTF_8));
         }
-        return new BucketPath(decryptedPathString.toString());
+        String finalString = first + BucketPath.BUCKET_SEPARATOR + decryptedPathString.toString();
+        return new BucketPath(finalString);
     }
 
     private static Cipher createCipher(SecretKey secretKey, int cipherMode) {

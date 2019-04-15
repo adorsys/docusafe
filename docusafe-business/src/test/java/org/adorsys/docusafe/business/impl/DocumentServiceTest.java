@@ -37,7 +37,7 @@ public class DocumentServiceTest {
         LOGGER.debug("OK ");
     }
 
-    // @Test
+    @Test
     public void storeDocument() {
         LOGGER.debug("OK ");
         DocumentFQN documentFQN = new DocumentFQN("affe/file1.txt");

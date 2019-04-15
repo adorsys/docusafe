@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Type;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class Class2JsonHelper {
 
     private Gson gson = new GsonBuilder().setPrettyPrinting()
             .enableComplexMapKeySerialization()
+            .registerTypeAdapter(PublicKey.class, new PublicKeyJsonAdapter())
             .setDateFormat(DATE_FORMAT_STRING)
             .create();
 
