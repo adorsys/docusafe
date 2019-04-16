@@ -1,7 +1,10 @@
 package org.adorsys.docusafe.business.impl;
 
+import de.adorsys.common.exceptions.BaseException;
 import de.adorsys.common.exceptions.BaseExceptionHandler;
+import de.adorsys.dfs.connection.api.complextypes.BucketDirectory;
 import de.adorsys.dfs.connection.api.complextypes.BucketPath;
+import de.adorsys.dfs.connection.api.complextypes.BucketPathUtil;
 import de.adorsys.dfs.connection.api.domain.Payload;
 import de.adorsys.dfs.connection.api.filesystem.FilesystemConnectionPropertiesImpl;
 import de.adorsys.dfs.connection.api.service.api.DFSConnection;
@@ -11,9 +14,6 @@ import de.adorsys.dfs.connection.api.types.properties.ConnectionProperties;
 import de.adorsys.dfs.connection.impl.amazons3.AmazonS3ConnectionProperitesImpl;
 import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
 import de.adorsys.dfs.connection.impl.factory.ReadArguments;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.business.DocumentSafeService;
 import org.adorsys.docusafe.business.exceptions.UserExistsException;
@@ -34,6 +34,7 @@ import org.adorsys.docusafe.service.impl.cmsencryption.services.CMSEncryptionSer
 import org.adorsys.docusafe.service.impl.keystore.service.KeyStoreServiceImpl;
 import org.bouncycastle.cms.CMSEnvelopedData;
 
+import javax.crypto.SecretKey;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -41,6 +42,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -141,35 +143,9 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     @Override
     public void storeDocument(UserIDAuth userIDAuth, DSDocument dsDocument) {
-        try {
-            Payload payload = null;
-            {
-                // get random public key to encrypt
-                Payload publicKeysAsPayload = systemDFS.getBlob(FolderHelper.getPublicKeyListPath(userIDAuth.getUserID()));
-                List<PublicKeyIDWithPublicKey> publicKeys = class2JsonHelper.contentToKeyList(publicKeysAsPayload);
-                Random random = new Random();
-                int r = random.nextInt(publicKeys.size());
-                log.debug("size " + publicKeys.size() + " random:" + r);
-                PublicKeyIDWithPublicKey publicKeyIDWithPublicKey = publicKeys.get(r);
-                Payload unencryptedPayload = new SimplePayloadImpl(dsDocument.getDocumentContent().getValue());
-                CMSEnvelopedData cmsEnvelope = cmsEncryptionService.encrypt(unencryptedPayload, publicKeyIDWithPublicKey.getPublicKey(), publicKeyIDWithPublicKey.getKeyID());
-                payload = new SimplePayloadImpl(cmsEnvelope.getEncoded());
-            }
-
-            final DFSConnection usersDFSConnection = getUsersDFS(userIDAuth);
-            SecretKeyIDWithKey pathEncryptionSecretKey = null;
-            {
-                KeyStoreAccess privateKeyStoreAccess = getKeyStoreAccess(usersDFSConnection, userIDAuth);
-                pathEncryptionSecretKey = keyStoreService.getRandomSecretKeyID(privateKeyStoreAccess);
-            }
-
-            BucketPath unencryptedPath = FolderHelper.getHomeDirectory(userIDAuth.getUserID()).appendName(dsDocument.getDocumentFQN().getValue());
-            BucketPath encryptedBucketPath = bucketPathEncryptionService.encrypt(pathEncryptionSecretKey.getSecretKey(), unencryptedPath);
-
-            usersDFSConnection.putBlob(encryptedBucketPath, payload);
-        } catch (Exception e) {
-            throw BaseExceptionHandler.handle(e);
-        }
+        DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth, dsDocument.getDocumentFQN());
+        Payload payload = encryptDataForUserWithRandomKey(userIDAuth, new SimplePayloadImpl(dsDocument.getDocumentContent().getValue()));
+        dfsAndKeystoreAndPath.usersDFS.putBlob(dfsAndKeystoreAndPath.encryptedBucketPath, payload);
     }
 
     @Override
@@ -197,8 +173,8 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     @Override
     public void deleteDocument(UserIDAuth userIDAuth, DocumentFQN documentFQN) {
-                DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth, documentFQN);
-                dfsAndKeystoreAndPath.usersDFS.removeBlob(dfsAndKeystoreAndPath.encryptedBucketPath);
+        DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth, documentFQN);
+        dfsAndKeystoreAndPath.usersDFS.removeBlob(dfsAndKeystoreAndPath.encryptedBucketPath);
     }
 
     @Override
@@ -209,13 +185,26 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     @Override
     public void deleteFolder(UserIDAuth userIDAuth, DocumentDirectoryFQN documentDirectoryFQN) {
-
+        DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth, documentDirectoryFQN);
+        dfsAndKeystoreAndPath.usersDFS.removeBlobFolder(dfsAndKeystoreAndPath.encryptedBucketDirectory);
     }
 
     @Override
-    public List<DocumentFQN> list(UserIDAuth userIDAuth, DocumentDirectoryFQN
-            documentDirectoryFQN, ListRecursiveFlag recursiveFlag) {
-        return null;
+    public List<DocumentFQN> list(UserIDAuth userIDAuth, DocumentDirectoryFQN documentDirectoryFQN, ListRecursiveFlag recursiveFlag) {
+        DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth, documentDirectoryFQN);
+        List<BucketPath> list = dfsAndKeystoreAndPath.usersDFS.list(dfsAndKeystoreAndPath.encryptedBucketDirectory, recursiveFlag);
+        List<DocumentFQN> retList = new ArrayList<>();
+        String homeDirectoryAsString = BucketPathUtil.getAsString(FolderHelper.getHomeDirectory(userIDAuth.getUserID()));
+        for (BucketPath encryptedBucketPath : list) {
+            BucketPath unecryptedBucketPath = bucketPathEncryptionService.decrypt(dfsAndKeystoreAndPath.pathEncryptionKey, encryptedBucketPath);
+            String unecryptedBucketPathAsString = BucketPathUtil.getAsString(unecryptedBucketPath);
+            if (!unecryptedBucketPathAsString.startsWith(homeDirectoryAsString)) {
+                throw new BaseException("ProgrammingError:" + unecryptedBucketPathAsString + " does not start with " + homeDirectoryAsString);
+            }
+            String documentFQN = unecryptedBucketPathAsString.substring(homeDirectoryAsString.length());
+            retList.add(new DocumentFQN(documentFQN));
+        }
+        return retList;
     }
 
     @Override
@@ -296,23 +285,55 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     }
 
     private DFSAndKeystoreAndPath getUsersAccess(UserIDAuth userIDAuth, DocumentFQN documentFQN) {
+        return getUsersAccess(userIDAuth, null, documentFQN);
+    }
+
+    private DFSAndKeystoreAndPath getUsersAccess(UserIDAuth userIDAuth, DocumentDirectoryFQN documentDirectoryFQN) {
+        return getUsersAccess(userIDAuth, documentDirectoryFQN, null);
+    }
+
+    private DFSAndKeystoreAndPath getUsersAccess(UserIDAuth userIDAuth, DocumentDirectoryFQN documentDirectoryFQN, DocumentFQN documentFQN) {
         DFSAndKeystoreAndPath dfsAndKeystoreAndPath = new DFSAndKeystoreAndPath();
         dfsAndKeystoreAndPath.usersDFS = getUsersDFS(userIDAuth);
-        SecretKeyIDWithKey pathEncryptionSecretKey = null;
-        {
-            KeyStoreAccess privateKeyStoreAccess = getKeyStoreAccess(dfsAndKeystoreAndPath.usersDFS, userIDAuth);
-            pathEncryptionSecretKey = keyStoreService.getRandomSecretKeyID(privateKeyStoreAccess);
-        }
-        BucketPath unencryptedPath = FolderHelper.getHomeDirectory(userIDAuth.getUserID()).appendName(documentFQN.getValue());
-        dfsAndKeystoreAndPath.encryptedBucketPath = bucketPathEncryptionService.encrypt(pathEncryptionSecretKey.getSecretKey(), unencryptedPath);
+        KeyStoreAccess privateKeyStoreAccess = getKeyStoreAccess(dfsAndKeystoreAndPath.usersDFS, userIDAuth);
+        dfsAndKeystoreAndPath.pathEncryptionKey = keyStoreService.getRandomSecretKeyID(privateKeyStoreAccess).getSecretKey();
         dfsAndKeystoreAndPath.privateKeystoreAccess = getKeyStoreAccess(dfsAndKeystoreAndPath.usersDFS, userIDAuth);
+
+        if (documentFQN != null) {
+            BucketPath unencryptedPath = FolderHelper.getHomeDirectory(userIDAuth.getUserID()).appendName(documentFQN.getValue());
+            dfsAndKeystoreAndPath.encryptedBucketPath = bucketPathEncryptionService.encrypt(dfsAndKeystoreAndPath.pathEncryptionKey, unencryptedPath);
+        }
+        if (documentDirectoryFQN != null) {
+            BucketDirectory unencryptedDirectory = FolderHelper.getHomeDirectory(userIDAuth.getUserID()).appendDirectory(documentDirectoryFQN.getValue());
+            dfsAndKeystoreAndPath.encryptedBucketDirectory = bucketPathEncryptionService.encrypt(dfsAndKeystoreAndPath.pathEncryptionKey, unencryptedDirectory);
+        }
         return dfsAndKeystoreAndPath;
     }
+
 
     private final static class DFSAndKeystoreAndPath {
         DFSConnection usersDFS;
         KeyStoreAccess privateKeystoreAccess;
+        SecretKey pathEncryptionKey;
         BucketPath encryptedBucketPath;
+        BucketDirectory encryptedBucketDirectory;
 
     }
+
+    private Payload encryptDataForUserWithRandomKey(UserIDAuth userIDAuth, Payload unencryptedContent) {
+        try {
+            // get random public key to encrypt
+            Payload publicKeysAsPayload = systemDFS.getBlob(FolderHelper.getPublicKeyListPath(userIDAuth.getUserID()));
+            List<PublicKeyIDWithPublicKey> publicKeys = class2JsonHelper.contentToKeyList(publicKeysAsPayload);
+            Random random = new Random();
+            PublicKeyIDWithPublicKey publicKeyIDWithPublicKey = publicKeys.get(random.nextInt(publicKeys.size()));
+            Payload unencryptedPayload = new SimplePayloadImpl(unencryptedContent.getData());
+            CMSEnvelopedData cmsEnvelope = cmsEncryptionService.encrypt(unencryptedPayload, publicKeyIDWithPublicKey.getPublicKey(), publicKeyIDWithPublicKey.getKeyID());
+            return new SimplePayloadImpl(cmsEnvelope.getEncoded());
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
+    }
+
+
 }

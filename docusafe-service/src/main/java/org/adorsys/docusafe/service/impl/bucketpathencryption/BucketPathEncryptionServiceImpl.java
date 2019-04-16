@@ -2,6 +2,7 @@ package org.adorsys.docusafe.service.impl.bucketpathencryption;
 
 import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.common.utils.HexUtil;
+import de.adorsys.dfs.connection.api.complextypes.BucketDirectory;
 import de.adorsys.dfs.connection.api.complextypes.BucketPath;
 import de.adorsys.dfs.connection.api.complextypes.BucketPathUtil;
 import org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptionService;
@@ -23,44 +24,30 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
     @Override
     public BucketPath encrypt(SecretKey secretKey, BucketPath bucketPath) {
         Cipher cipher = createCipher(secretKey, Cipher.ENCRYPT_MODE);
-
-        List<String> subdirs = BucketPathUtil.split(BucketPathUtil.getAsString(bucketPath));
-        String first = subdirs.remove(0);
-        StringBuilder encryptedPathString = new StringBuilder();
-        for(String subdir : subdirs) {
-            byte[] encrypt = new byte[0];
-            try {
-                encrypt = cipher.doFinal(subdir.getBytes(UTF_8));
-            } catch (IllegalBlockSizeException | BadPaddingException e) {
-                e.printStackTrace();
-            }
-
-            String encryptedString = HexUtil.convertBytesToHexString(encrypt);
-            encryptedPathString.append(BucketPath.BUCKET_SEPARATOR).append(encryptedString);
-        }
-        String finalString = first + BucketPath.BUCKET_SEPARATOR + encryptedPathString.toString();
-        return new BucketPath(finalString.toLowerCase());
+        List<String> elements = BucketPathUtil.split(BucketPathUtil.getAsString(bucketPath));
+        return new BucketPath(encryptStringList(elements, cipher).toLowerCase());
     }
 
     @Override
     public BucketPath decrypt(SecretKey secretKey, BucketPath bucketPath) {
         Cipher cipher = createCipher(secretKey, Cipher.DECRYPT_MODE);
+        List<String> elements = BucketPathUtil.split(BucketPathUtil.getAsString(bucketPath));
+        return new BucketPath(decryptStringList(elements, cipher));
+    }
 
-        List<String> subdirs = BucketPathUtil.split(BucketPathUtil.getAsString(bucketPath));
-        String first = subdirs.remove(0);
-        StringBuilder decryptedPathString = new StringBuilder();
-        for(String subdir : subdirs) {
-            byte[] decrypt = HexUtil.convertHexStringToBytes(subdir.toUpperCase());
-            byte[] decryptedBytes = new byte[0];
-            try {
-                decryptedBytes = cipher.doFinal(decrypt);
-            } catch (IllegalBlockSizeException | BadPaddingException e) {
-                e.printStackTrace();
-            }
-            decryptedPathString.append(BucketPath.BUCKET_SEPARATOR).append(new String(decryptedBytes, UTF_8));
-        }
-        String finalString = first + BucketPath.BUCKET_SEPARATOR + decryptedPathString.toString();
-        return new BucketPath(finalString);
+
+    @Override
+    public BucketDirectory encrypt(SecretKey secretKey, BucketDirectory bucketDirectory) {
+        Cipher cipher = createCipher(secretKey, Cipher.ENCRYPT_MODE);
+        List<String> elements = BucketPathUtil.split(BucketPathUtil.getAsString(bucketDirectory));
+        return new BucketDirectory(encryptStringList(elements, cipher).toLowerCase());
+    }
+
+    @Override
+    public BucketDirectory decrypt(SecretKey secretKey, BucketDirectory bucketDirectory) {
+        Cipher cipher = createCipher(secretKey, Cipher.DECRYPT_MODE);
+        List<String> elements = BucketPathUtil.split(BucketPathUtil.getAsString(bucketDirectory));
+        return new BucketDirectory(decryptStringList(elements, cipher));
     }
 
     private static Cipher createCipher(SecretKey secretKey, int cipherMode) {
@@ -81,4 +68,38 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
         }
 
     }
+
+    private String encryptStringList(List<String> elements, Cipher cipher) {
+        String first = elements.remove(0);
+        StringBuilder encryptedPathString = new StringBuilder();
+        for(String subdir : elements) {
+            byte[] encrypt = new byte[0];
+            try {
+                encrypt = cipher.doFinal(subdir.getBytes(UTF_8));
+            } catch (IllegalBlockSizeException | BadPaddingException e) {
+                e.printStackTrace();
+            }
+
+            String encryptedString = HexUtil.convertBytesToHexString(encrypt);
+            encryptedPathString.append(BucketPath.BUCKET_SEPARATOR).append(encryptedString);
+        }
+        return first + BucketPath.BUCKET_SEPARATOR + encryptedPathString.toString();
+    }
+
+    private String decryptStringList(List<String> elements, Cipher cipher) {
+        String first = elements.remove(0);
+        StringBuilder decryptedPathString = new StringBuilder();
+        for(String subdir : elements) {
+            byte[] decrypt = HexUtil.convertHexStringToBytes(subdir.toUpperCase());
+            byte[] decryptedBytes = new byte[0];
+            try {
+                decryptedBytes = cipher.doFinal(decrypt);
+            } catch (IllegalBlockSizeException | BadPaddingException e) {
+                e.printStackTrace();
+            }
+            decryptedPathString.append(BucketPath.BUCKET_SEPARATOR).append(new String(decryptedBytes, UTF_8));
+        }
+        return first + BucketPath.BUCKET_SEPARATOR + decryptedPathString.toString();
+    }
+
 }
