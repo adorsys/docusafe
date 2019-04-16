@@ -26,6 +26,7 @@ public class DocumentServiceTest {
     @Before
     public void before() {
         service.createUser(userIDAuth);
+
     }
 
     @After
@@ -47,5 +48,6 @@ public class DocumentServiceTest {
         service.storeDocument(userIDAuth, dsDocument);
         DSDocument dsDocument1 = service.readDocument(userIDAuth, dsDocument.getDocumentFQN());
         Assert.assertArrayEquals(dsDocument.getDocumentContent().getValue(), dsDocument1.getDocumentContent().getValue());
+
     }
 }
