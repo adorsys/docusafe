@@ -25,4 +25,8 @@ public class FolderHelper {
     public static BucketDirectory getHomeDirectory(UserID userID) {
         return getRootDirectory(userID).appendDirectory("home");
     }
+
+    public static BucketDirectory getInboxDirectory(UserID userID) {
+        return getRootDirectory(userID).appendDirectory("inbox");
+    }
 }

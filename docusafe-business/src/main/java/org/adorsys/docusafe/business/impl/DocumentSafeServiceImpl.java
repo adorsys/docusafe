@@ -144,7 +144,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     @Override
     public void storeDocument(UserIDAuth userIDAuth, DSDocument dsDocument) {
         DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth, dsDocument.getDocumentFQN());
-        Payload payload = encryptDataForUserWithRandomKey(userIDAuth, new SimplePayloadImpl(dsDocument.getDocumentContent().getValue()));
+        Payload payload = encryptDataForUserWithRandomKey(userIDAuth.getUserID(), new SimplePayloadImpl(dsDocument.getDocumentContent().getValue()));
         dfsAndKeystoreAndPath.usersDFS.putBlob(dfsAndKeystoreAndPath.encryptedBucketPath, payload);
     }
 
@@ -191,9 +191,9 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     @Override
     public List<DocumentFQN> list(UserIDAuth userIDAuth, DocumentDirectoryFQN documentDirectoryFQN, ListRecursiveFlag recursiveFlag) {
+        List<DocumentFQN> retList = new ArrayList<>();
         DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth, documentDirectoryFQN);
         List<BucketPath> list = dfsAndKeystoreAndPath.usersDFS.list(dfsAndKeystoreAndPath.encryptedBucketDirectory, recursiveFlag);
-        List<DocumentFQN> retList = new ArrayList<>();
         String homeDirectoryAsString = BucketPathUtil.getAsString(FolderHelper.getHomeDirectory(userIDAuth.getUserID()));
         for (BucketPath encryptedBucketPath : list) {
             BucketPath unecryptedBucketPath = bucketPathEncryptionService.decrypt(dfsAndKeystoreAndPath.pathEncryptionKey, encryptedBucketPath);
@@ -209,27 +209,53 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     @Override
     public List<DocumentFQN> listInbox(UserIDAuth userIDAuth) {
-        return null;
+        List<DocumentFQN> retList = new ArrayList<>();
+        BucketDirectory inboxDirectory = FolderHelper.getInboxDirectory(userIDAuth.getUserID());
+        String inboxDirectoryAsString = BucketPathUtil.getAsString(inboxDirectory);
+        List<BucketPath> list = systemDFS.list(inboxDirectory, ListRecursiveFlag.TRUE);
+        for (BucketPath bucketPath : list) {
+            String bucketPathAsString = BucketPathUtil.getAsString(bucketPath);
+            if (!bucketPathAsString.startsWith(inboxDirectoryAsString)) {
+                throw new BaseException("ProgrammingError:" + bucketPathAsString + " does not start with " + inboxDirectoryAsString);
+            }
+            String documentFQN = bucketPathAsString.substring(inboxDirectoryAsString.length());
+            retList.add(new DocumentFQN(documentFQN));
+        }
+        return retList;
     }
 
     @Override
     public void writeDocumentToInboxOfUser(UserID receiverUserID, DSDocument document, DocumentFQN destDocumentFQN) {
-
+        Payload payload = encryptDataForUserWithRandomKey(receiverUserID, new SimplePayloadImpl(document.getDocumentContent().getValue()));
+        BucketDirectory inboxDirectory = FolderHelper.getInboxDirectory(receiverUserID);
+        BucketPath destination = inboxDirectory.appendName(destDocumentFQN.getValue());
+        systemDFS.putBlob(destination, payload);
     }
 
     @Override
     public DSDocument readDocumentFromInbox(UserIDAuth userIDAuth, DocumentFQN source) {
-        return null;
+        try {
+            BucketDirectory inboxDirectory = FolderHelper.getInboxDirectory(userIDAuth.getUserID());
+            BucketPath bucketPath = inboxDirectory.appendName(source.getValue());
+            Payload blob = systemDFS.getBlob(bucketPath);
+            DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth, source);
+            CMSEnvelopedData cmsEnvelopedData = new CMSEnvelopedData(blob.getData());
+            Payload decrypt = cmsEncryptionService.decrypt(cmsEnvelopedData, dfsAndKeystoreAndPath.privateKeystoreAccess);
+            return new DSDocument(source, new DocumentContent(decrypt.getData()));
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
     }
 
     @Override
     public void deleteDocumentFromInbox(UserIDAuth userIDAuth, DocumentFQN documentFQN) {
-
+        BucketDirectory inboxDirectory = FolderHelper.getInboxDirectory(userIDAuth.getUserID());
+        BucketPath bucketPath = inboxDirectory.appendName(documentFQN.getValue());
+        systemDFS.removeBlob(bucketPath);
     }
 
     @Override
-    public void moveDocumnetToInboxOfUser(UserIDAuth userIDAuth, UserID receiverUserID, DocumentFQN
-            sourceDocumentFQN, DocumentFQN destDocumentFQN, MoveType moveType) {
+    public void moveDocumnetToInboxOfUser(UserIDAuth userIDAuth, UserID receiverUserID, DocumentFQN sourceDocumentFQN, DocumentFQN destDocumentFQN, MoveType moveType) {
 
     }
 
@@ -320,10 +346,10 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     }
 
-    private Payload encryptDataForUserWithRandomKey(UserIDAuth userIDAuth, Payload unencryptedContent) {
+    private Payload encryptDataForUserWithRandomKey(UserID userID, Payload unencryptedContent) {
         try {
             // get random public key to encrypt
-            Payload publicKeysAsPayload = systemDFS.getBlob(FolderHelper.getPublicKeyListPath(userIDAuth.getUserID()));
+            Payload publicKeysAsPayload = systemDFS.getBlob(FolderHelper.getPublicKeyListPath(userID));
             List<PublicKeyIDWithPublicKey> publicKeys = class2JsonHelper.contentToKeyList(publicKeysAsPayload);
             Random random = new Random();
             PublicKeyIDWithPublicKey publicKeyIDWithPublicKey = publicKeys.get(random.nextInt(publicKeys.size()));
