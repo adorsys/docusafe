@@ -1,4 +1,4 @@
-package org.adorsys.docusafe.business.types.complex;
+package org.adorsys.docusafe.business.types;
 
 import org.adorsys.docusafe.service.api.types.DocumentContent;
 

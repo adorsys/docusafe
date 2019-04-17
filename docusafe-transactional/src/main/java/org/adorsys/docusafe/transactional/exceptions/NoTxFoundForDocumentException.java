@@ -1,6 +1,6 @@
 package org.adorsys.docusafe.transactional.exceptions;
 
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+import org.adorsys.docusafe.business.types.DocumentFQN;
 
 /**
  * Created by peter on 05.02.19 12:26.

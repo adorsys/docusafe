@@ -1,4 +1,4 @@
-package org.adorsys.docusafe.business.types.complex;
+package org.adorsys.docusafe.business.types;
 
 import de.adorsys.common.basetypes.BaseTypeString;
 import de.adorsys.common.exceptions.BaseException;

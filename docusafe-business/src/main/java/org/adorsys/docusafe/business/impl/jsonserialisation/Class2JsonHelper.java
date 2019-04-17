@@ -1,18 +1,17 @@
-package org.adorsys.docusafe.business.impl;
+package org.adorsys.docusafe.business.impl.jsonserialisation;
 
 import com.google.gson.*;
 import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.dfs.connection.api.domain.Payload;
 import de.adorsys.dfs.connection.api.service.impl.SimplePayloadImpl;
+import org.adorsys.docusafe.business.types.DFSCredentials;
+import org.adorsys.docusafe.service.api.keystore.types.PublicKeyList;
 import org.adorsys.docusafe.service.api.keystore.types.PublicKeyIDWithPublicKey;
-import org.adorsys.docusafe.service.api.types.DocumentContent;
-import org.adorsys.docusafe.service.api.types.PublicKeyWithId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Type;
 import java.security.PublicKey;
-import java.util.ArrayList;
 import java.util.List;
 
 /**

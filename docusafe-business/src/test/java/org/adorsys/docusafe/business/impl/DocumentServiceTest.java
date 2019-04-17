@@ -4,9 +4,9 @@ import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.business.DocumentSafeService;
-import org.adorsys.docusafe.business.types.complex.DSDocument;
-import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+import org.adorsys.docusafe.business.types.DSDocument;
+import org.adorsys.docusafe.business.types.DocumentDirectoryFQN;
+import org.adorsys.docusafe.business.types.DocumentFQN;
 import org.adorsys.docusafe.service.api.keystore.types.ReadKeyPassword;
 import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.adorsys.docusafe.service.api.types.UserID;
@@ -23,15 +23,12 @@ import java.util.List;
 
 @Slf4j
 public class DocumentServiceTest {
-    private final static Logger LOGGER = LoggerFactory.getLogger(DocumentServiceTest.class);
-
     DocumentSafeService service = new DocumentSafeServiceImpl(DFSConnectionFactory.get());
     UserIDAuth userIDAuth = new UserIDAuth(new UserID("peter"), new ReadKeyPassword("affe"));
 
     @Before
     public void before() {
         service.createUser(userIDAuth);
-
     }
 
     @After
@@ -41,12 +38,12 @@ public class DocumentServiceTest {
 
     @Test
     public void createAndDestroy() {
-        LOGGER.debug("OK ");
+        log.debug("OK ");
     }
 
     @Test
-    public void storeDocument() {
-        LOGGER.debug("OK ");
+    public void storeAndReadOneDocument() {
+        log.debug("OK ");
         DocumentFQN documentFQN = new DocumentFQN("affe/file1.txt");
         DocumentContent documentContent = new DocumentContent("affe".getBytes());
         DSDocument dsDocument = new DSDocument(documentFQN, documentContent);
@@ -56,7 +53,7 @@ public class DocumentServiceTest {
     }
 
     @Test
-    public void storeMoreDocuments() {
+    public void storeAndReadMoreDocuments() {
         List<DSDocument> list = new ArrayList<>();
         DocumentDirectoryFQN root = new DocumentDirectoryFQN("affe");
         createDocuments(root, 2, 2, 3, list);

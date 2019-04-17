@@ -17,11 +17,13 @@ import de.adorsys.dfs.connection.impl.factory.ReadArguments;
 import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.business.DocumentSafeService;
 import org.adorsys.docusafe.business.exceptions.UserExistsException;
+import org.adorsys.docusafe.business.impl.jsonserialisation.Class2JsonHelper;
+import org.adorsys.docusafe.business.types.DFSCredentials;
 import org.adorsys.docusafe.business.types.MoveType;
-import org.adorsys.docusafe.business.types.complex.DSDocument;
-import org.adorsys.docusafe.business.types.complex.DSDocumentStream;
-import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+import org.adorsys.docusafe.business.types.DSDocument;
+import org.adorsys.docusafe.business.types.DSDocumentStream;
+import org.adorsys.docusafe.business.types.DocumentDirectoryFQN;
+import org.adorsys.docusafe.business.types.DocumentFQN;
 import org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptionService;
 import org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService;
 import org.adorsys.docusafe.service.api.keystore.KeyStoreService;
@@ -58,9 +60,9 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
         ConnectionProperties props = new ReadArguments().readEnvironment();
         DFSCredentials dfsCredentials = new DFSCredentials();
         if (props instanceof FilesystemConnectionPropertiesImpl) {
-            dfsCredentials.filesystem = (FilesystemConnectionPropertiesImpl) props;
+            dfsCredentials.setFilesystem((FilesystemConnectionPropertiesImpl) props);
         } else {
-            dfsCredentials.amazons3 = (AmazonS3ConnectionProperitesImpl) props;
+            dfsCredentials.setAmazons3((AmazonS3ConnectionProperitesImpl) props);
         }
         return dfsCredentials;
     }

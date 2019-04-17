@@ -1,17 +1,12 @@
-package org.adorsys.docusafe.business.impl;
+package org.adorsys.docusafe.business.impl.jsonserialisation;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.common.utils.HexUtil;
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
 
 import java.io.*;
-
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
 
 import java.io.IOException;
 import java.security.PublicKey;

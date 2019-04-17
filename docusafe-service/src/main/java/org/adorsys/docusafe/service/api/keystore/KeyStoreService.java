@@ -16,7 +16,7 @@ public interface KeyStoreService {
                             KeyStoreType keyStoreType,
                             KeyStoreCreationConfig config);
 
-    List<PublicKeyIDWithPublicKey> getPublicKeys(KeyStoreAccess keyStoreAccess);
+    PublicKeyList getPublicKeys(KeyStoreAccess keyStoreAccess);
 
     PrivateKey getPrivateKey(KeyStoreAccess keyStoreAccess, KeyID keyID);
 

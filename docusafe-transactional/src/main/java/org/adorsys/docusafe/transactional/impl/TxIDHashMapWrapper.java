@@ -2,7 +2,9 @@ package org.adorsys.docusafe.transactional.impl;
 
 import lombok.*;
 import org.adorsys.docusafe.business.DocumentSafeService;
-import org.adorsys.docusafe.business.types.complex.*;
+import org.adorsys.docusafe.business.types.DSDocument;
+import org.adorsys.docusafe.business.types.DocumentDirectoryFQN;
+import org.adorsys.docusafe.business.types.DocumentFQN;
 import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.adorsys.docusafe.service.api.types.UserIDAuth;
 import org.adorsys.docusafe.transactional.exceptions.NoTxFoundForDocumentException;

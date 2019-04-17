@@ -1,4 +1,4 @@
-package org.adorsys.docusafe.business.impl;
+package org.adorsys.docusafe.service.api.keystore.types;
 
 import org.adorsys.docusafe.service.api.keystore.types.PublicKeyIDWithPublicKey;
 

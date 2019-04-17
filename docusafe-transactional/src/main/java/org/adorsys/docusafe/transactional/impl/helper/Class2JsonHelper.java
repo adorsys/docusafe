@@ -11,7 +11,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import de.adorsys.common.exceptions.BaseExceptionHandler;
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+import org.adorsys.docusafe.business.types.DocumentFQN;
 import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.adorsys.docusafe.transactional.impl.LastCommitedTxID;
 import org.adorsys.docusafe.transactional.impl.TxIDHashMapWrapper;

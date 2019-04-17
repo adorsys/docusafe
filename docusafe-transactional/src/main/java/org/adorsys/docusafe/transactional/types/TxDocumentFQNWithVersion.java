@@ -1,6 +1,6 @@
 package org.adorsys.docusafe.transactional.types;
 
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+import org.adorsys.docusafe.business.types.DocumentFQN;
 
 /**
  * Created by peter on 30.01.19 10:02.

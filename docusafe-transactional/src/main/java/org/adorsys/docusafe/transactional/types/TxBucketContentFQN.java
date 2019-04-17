@@ -1,6 +1,6 @@
 package org.adorsys.docusafe.transactional.types;
 
-import org.adorsys.docusafe.business.types.complex.BucketContentFQN;
+import org.adorsys.docusafe.business.types.BucketContentFQN;
 
 import java.util.List;
 

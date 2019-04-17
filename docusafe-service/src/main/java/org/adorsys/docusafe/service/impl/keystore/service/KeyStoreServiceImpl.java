@@ -47,11 +47,11 @@ public class KeyStoreServiceImpl implements KeyStoreService {
     }
 
     @Override
-    public List<PublicKeyIDWithPublicKey> getPublicKeys(KeyStoreAccess keyStoreAccess) {
-        log.debug("get public keys");
-        List<PublicKeyIDWithPublicKey> result = new ArrayList<>();
-        KeyStore keyStore = keyStoreAccess.getKeyStore();
+    public PublicKeyList getPublicKeys(KeyStoreAccess keyStoreAccess) {
         try {
+            log.debug("get public keys");
+            PublicKeyList result = new PublicKeyList();
+            KeyStore keyStore = keyStoreAccess.getKeyStore();
             for (Enumeration<String> keyAliases = keyStore.aliases(); keyAliases.hasMoreElements(); ) {
                 final String keyAlias = keyAliases.nextElement();
                 X509Certificate cert = (X509Certificate) keyStore.getCertificate(keyAlias);
@@ -63,61 +63,60 @@ public class KeyStoreServiceImpl implements KeyStoreService {
                     result.add(new PublicKeyIDWithPublicKey(new KeyID(keyAlias), cert.getPublicKey()));
                 }
             }
+            return result;
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
         }
-        return result;
     }
 
     @Override
     public PrivateKey getPrivateKey(KeyStoreAccess keyStoreAccess, KeyID keyID) {
-        ReadKeyPassword readKeyPassword = keyStoreAccess.getKeyStoreAuth().getReadKeyPassword();
-        KeyStore keyStore = keyStoreAccess.getKeyStore();
-        PrivateKey privateKey;
         try {
+            ReadKeyPassword readKeyPassword = keyStoreAccess.getKeyStoreAuth().getReadKeyPassword();
+            KeyStore keyStore = keyStoreAccess.getKeyStore();
+            PrivateKey privateKey;
             privateKey = (PrivateKey) keyStore.getKey(keyID.getValue(), readKeyPassword.getValue().toCharArray());
+            return privateKey;
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
         }
-        return privateKey;
     }
 
     @Override
     public SecretKey getSecretKey(KeyStoreAccess keyStoreAccess, KeyID keyID) {
-        KeyStore keyStore = keyStoreAccess.getKeyStore();
-        SecretKey key = null;
         try {
+            KeyStore keyStore = keyStoreAccess.getKeyStore();
+            SecretKey key = null;
             char[] password = keyStoreAccess.getKeyStoreAuth().getReadKeyPassword().getValue().toCharArray();
-            key = (SecretKey) keyStore.getKey(keyID.getValue(), password);
+            return (SecretKey) keyStore.getKey(keyID.getValue(), password);
         } catch (UnrecoverableKeyException | NoSuchAlgorithmException | KeyStoreException e) {
             throw BaseExceptionHandler.handle(e);
         }
-        return key;
     }
 
     @Override
     public SecretKeyIDWithKey getRandomSecretKeyID(KeyStoreAccess keyStoreAccess) {
-        KeyStore keyStore = keyStoreAccess.getKeyStore();
-        Key key = null;
-        String randomAlias = null;
         try {
+            KeyStore keyStore = keyStoreAccess.getKeyStore();
+            Key key = null;
+            String randomAlias = null;
             Enumeration<String> aliases = keyStore.aliases();
             List<String> keyIDs = new ArrayList<>();
-            for(String keyAlias : Collections.list(aliases)) {
-                if(keyStore.entryInstanceOf(keyAlias, KeyStore.SecretKeyEntry.class)) {
+            for (String keyAlias : Collections.list(aliases)) {
+                if (keyStore.entryInstanceOf(keyAlias, KeyStore.SecretKeyEntry.class)) {
                     keyIDs.add(keyAlias);
                 }
             }
-            if(keyIDs.size() == 0) {
+            if (keyIDs.size() == 0) {
                 throw new BaseException("No secret keys in the keystore");
             }
             int randomIndex = RandomUtils.nextInt(0, keyIDs.size());
             randomAlias = keyIDs.get(randomIndex);
             char[] password = keyStoreAccess.getKeyStoreAuth().getReadKeyPassword().getValue().toCharArray();
             key = keyStore.getKey(randomAlias, password);
+            return new SecretKeyIDWithKey(new KeyID(randomAlias), (SecretKey) key);
         } catch (KeyStoreException | UnrecoverableKeyException | NoSuchAlgorithmException e) {
             throw BaseExceptionHandler.handle(e);
         }
-        return new SecretKeyIDWithKey(new KeyID(randomAlias), (SecretKey) key);
     }
 }

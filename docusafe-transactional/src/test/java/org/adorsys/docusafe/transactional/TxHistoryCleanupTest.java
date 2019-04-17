@@ -1,6 +1,9 @@
 package org.adorsys.docusafe.transactional;
 
-import org.adorsys.docusafe.business.types.complex.*;
+import org.adorsys.docusafe.business.types.BucketContentFQN;
+import org.adorsys.docusafe.business.types.DSDocument;
+import org.adorsys.docusafe.business.types.DocumentDirectoryFQN;
+import org.adorsys.docusafe.business.types.DocumentFQN;
 import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.apache.commons.lang3.time.StopWatch;

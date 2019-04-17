@@ -1,6 +1,6 @@
 package org.adorsys.docusafe.transactional;
 
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+import org.adorsys.docusafe.business.types.DocumentFQN;
 import org.adorsys.docusafe.service.api.types.UserID;
 import org.adorsys.docusafe.service.api.types.UserIDAuth;
 

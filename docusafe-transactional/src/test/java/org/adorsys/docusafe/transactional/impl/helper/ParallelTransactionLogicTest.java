@@ -2,13 +2,12 @@ package org.adorsys.docusafe.transactional.impl.helper;
 
 import com.googlecode.catchexception.CatchException;
 import lombok.extern.slf4j.Slf4j;
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+import org.adorsys.docusafe.business.types.DocumentFQN;
 import org.adorsys.docusafe.transactional.impl.LastCommitedTxID;
 import org.adorsys.docusafe.transactional.impl.TxIDHashMap;
 import org.adorsys.docusafe.transactional.impl.TxIDHashMapWrapper;
 import org.adorsys.docusafe.transactional.types.TxID;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 @Slf4j

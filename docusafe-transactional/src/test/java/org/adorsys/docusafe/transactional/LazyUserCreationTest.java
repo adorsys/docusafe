@@ -1,8 +1,7 @@
 package org.adorsys.docusafe.transactional;
 
-import org.adorsys.docusafe.business.types.complex.DSDocument;
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
-import org.adorsys.docusafe.service.api.types.DocumentContent;
+import org.adorsys.docusafe.business.types.DSDocument;
+import org.adorsys.docusafe.business.types.DocumentFQN;
 import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.junit.Assert;
 import org.slf4j.Logger;

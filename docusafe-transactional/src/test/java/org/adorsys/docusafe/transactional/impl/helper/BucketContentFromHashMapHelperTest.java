@@ -1,10 +1,8 @@
 package org.adorsys.docusafe.transactional.impl.helper;
 
-import org.adorsys.docusafe.business.types.complex.BucketContentFQN;
-import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
-import org.adorsys.docusafe.transactional.types.TxBucketContentFQN;
-import org.adorsys.docusafe.transactional.types.TxDocumentFQNVersion;
+import org.adorsys.docusafe.business.types.BucketContentFQN;
+import org.adorsys.docusafe.business.types.DocumentDirectoryFQN;
+import org.adorsys.docusafe.business.types.DocumentFQN;
 import org.adorsys.docusafe.transactional.types.TxID;
 import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import org.junit.Assert;

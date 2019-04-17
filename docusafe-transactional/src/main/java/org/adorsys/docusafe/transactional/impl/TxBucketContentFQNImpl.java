@@ -1,6 +1,6 @@
 package org.adorsys.docusafe.transactional.impl;
 
-import org.adorsys.docusafe.business.impl.BucketContentFQNImpl;
+import org.adorsys.docusafe.business.types.BucketContentFQNImpl;
 import org.adorsys.docusafe.transactional.types.TxBucketContentFQN;
 import org.adorsys.docusafe.transactional.types.TxDocumentFQNWithVersion;
 

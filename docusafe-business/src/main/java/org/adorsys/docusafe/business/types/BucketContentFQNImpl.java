@@ -1,8 +1,4 @@
-package org.adorsys.docusafe.business.impl;
-
-import org.adorsys.docusafe.business.types.complex.BucketContentFQN;
-import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+package org.adorsys.docusafe.business.types;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -2,7 +2,7 @@ package org.adorsys.docusafe.transactional.impl.helper;
 
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+import org.adorsys.docusafe.business.types.DocumentFQN;
 import org.adorsys.docusafe.transactional.exceptions.TxBaseException;
 import org.adorsys.docusafe.transactional.exceptions.TxParallelCommittingException;
 import org.adorsys.docusafe.transactional.impl.LastCommitedTxID;

@@ -1,8 +1,8 @@
 package org.adorsys.docusafe.transactional.impl.helper;
 
 import de.adorsys.dfs.connection.api.complextypes.BucketPath;
-import org.adorsys.docusafe.business.types.complex.DocumentDirectoryFQN;
-import org.adorsys.docusafe.business.types.complex.DocumentFQN;
+import org.adorsys.docusafe.business.types.DocumentDirectoryFQN;
+import org.adorsys.docusafe.business.types.DocumentFQN;
 import org.adorsys.docusafe.transactional.types.TxBucketContentFQN;
 import org.adorsys.docusafe.transactional.types.TxDocumentFQNVersion;
 import org.adorsys.docusafe.transactional.types.TxDocumentFQNWithVersion;
@@ -11,10 +11,8 @@ import org.adorsys.docusafe.transactional.types.TxID;
 import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 
 /**
