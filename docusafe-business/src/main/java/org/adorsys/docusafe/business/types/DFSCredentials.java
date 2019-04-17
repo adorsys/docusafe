@@ -17,6 +17,18 @@ public class DFSCredentials {
     private FilesystemConnectionPropertiesImpl filesystem;
     private AmazonS3ConnectionProperitesImpl amazons3;
 
+    public DFSCredentials() {
+
+    }
+
+    public DFSCredentials(DFSCredentials dfsCredentials) {
+        if (dfsCredentials.filesystem != null) {
+            filesystem = new FilesystemConnectionPropertiesImpl(dfsCredentials.filesystem);
+        }
+        if (dfsCredentials.amazons3 != null) {
+            amazons3 = new AmazonS3ConnectionProperitesImpl(dfsCredentials.amazons3);
+        }
+    }
     public void setRootBucket(UserID userID) {
 
         if (getFilesystem() != null) {

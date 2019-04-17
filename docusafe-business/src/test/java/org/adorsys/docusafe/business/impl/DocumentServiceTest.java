@@ -43,7 +43,6 @@ public class DocumentServiceTest {
 
     @Test
     public void storeAndReadOneDocument() {
-        log.debug("OK ");
         DocumentFQN documentFQN = new DocumentFQN("affe/file1.txt");
         DocumentContent documentContent = new DocumentContent("affe".getBytes());
         DSDocument dsDocument = new DSDocument(documentFQN, documentContent);

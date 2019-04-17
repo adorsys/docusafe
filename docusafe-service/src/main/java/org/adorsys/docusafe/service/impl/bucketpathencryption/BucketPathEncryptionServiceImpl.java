@@ -5,6 +5,7 @@ import de.adorsys.common.utils.HexUtil;
 import de.adorsys.dfs.connection.api.complextypes.BucketDirectory;
 import de.adorsys.dfs.connection.api.complextypes.BucketPath;
 import de.adorsys.dfs.connection.api.complextypes.BucketPathUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptionService;
 
 import javax.crypto.BadPaddingException;
@@ -18,11 +19,17 @@ import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-
+@Slf4j
 public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionService {
+    public static final String NO_BUCKETPATH_ENCRYPTION = "SC-NO-BUCKETPATH-ENCRYPTION";
+
+    private static boolean active = isActive();
 
     @Override
     public BucketPath encrypt(SecretKey secretKey, BucketPath bucketPath) {
+        if (! active) {
+            return bucketPath;
+        }
         Cipher cipher = createCipher(secretKey, Cipher.ENCRYPT_MODE);
         List<String> elements = BucketPathUtil.split(BucketPathUtil.getAsString(bucketPath));
         return new BucketPath(encryptStringList(elements, cipher).toLowerCase());
@@ -30,6 +37,9 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
 
     @Override
     public BucketPath decrypt(SecretKey secretKey, BucketPath bucketPath) {
+        if (! active) {
+            return bucketPath;
+        }
         Cipher cipher = createCipher(secretKey, Cipher.DECRYPT_MODE);
         List<String> elements = BucketPathUtil.split(BucketPathUtil.getAsString(bucketPath));
         return new BucketPath(decryptStringList(elements, cipher));
@@ -38,6 +48,9 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
 
     @Override
     public BucketDirectory encrypt(SecretKey secretKey, BucketDirectory bucketDirectory) {
+        if (! active) {
+            return bucketDirectory;
+        }
         Cipher cipher = createCipher(secretKey, Cipher.ENCRYPT_MODE);
         List<String> elements = BucketPathUtil.split(BucketPathUtil.getAsString(bucketDirectory));
         return new BucketDirectory(encryptStringList(elements, cipher).toLowerCase());
@@ -45,6 +58,9 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
 
     @Override
     public BucketDirectory decrypt(SecretKey secretKey, BucketDirectory bucketDirectory) {
+        if (! active) {
+            return bucketDirectory;
+        }
         Cipher cipher = createCipher(secretKey, Cipher.DECRYPT_MODE);
         List<String> elements = BucketPathUtil.split(BucketPathUtil.getAsString(bucketDirectory));
         return new BucketDirectory(decryptStringList(elements, cipher));
@@ -102,4 +118,13 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
         return first + BucketPath.BUCKET_SEPARATOR + decryptedPathString.toString();
     }
 
+    private static boolean isActive() {
+        if (System.getProperty(NO_BUCKETPATH_ENCRYPTION) != null) {
+            log.info("encryption is off");
+            return false;
+        }
+        log.info("encryption is on");
+        return true;
+
+    }
 }

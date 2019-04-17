@@ -92,7 +92,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
             // create and persist encrypted dfscredentials
             DFSCredentials userDFSCredentials = null;
             {
-                userDFSCredentials = defaultUserDFSCredentials;
+                userDFSCredentials = new DFSCredentials(defaultUserDFSCredentials);
                 userDFSCredentials.setRootBucket(userIDAuth.getUserID());
                 // retrieve public key of public keystore once to encrypt DFSCredentials
                 PublicKeyIDWithPublicKey publicKeyIDWithPublicKey = keyStoreService.getPublicKeys(publicKeyStoreAccess).get(0);
@@ -258,12 +258,20 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     @Override
     public void moveDocumnetToInboxOfUser(UserIDAuth userIDAuth, UserID receiverUserID, DocumentFQN sourceDocumentFQN, DocumentFQN destDocumentFQN, MoveType moveType) {
-
+        DSDocument dsDocument = readDocument(userIDAuth, sourceDocumentFQN);
+        writeDocumentToInboxOfUser(receiverUserID, dsDocument, destDocumentFQN);
+        if (moveType.equals(MoveType.MOVE)) {
+            deleteDocument(userIDAuth, sourceDocumentFQN);
+        }
     }
 
     @Override
     public DSDocument moveDocumentFromInbox(UserIDAuth userIDAuth, DocumentFQN source, DocumentFQN destination) {
-        return null;
+        DSDocument dsDocument = readDocumentFromInbox(userIDAuth, source);
+        DSDocument destDocument = new DSDocument(destination, dsDocument.getDocumentContent());
+        storeDocument(userIDAuth, destDocument);
+        deleteDocumentFromInbox(userIDAuth, source);
+        return destDocument;
     }
 
 
