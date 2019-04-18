@@ -95,12 +95,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
                 userDFSCredentials = new DFSCredentials(defaultUserDFSCredentials);
                 userDFSCredentials.setRootBucket(userIDAuth.getUserID());
                 // retrieve public key of public keystore once to encrypt DFSCredentials
-                PublicKeyIDWithPublicKey publicKeyIDWithPublicKey = keyStoreService.getPublicKeys(publicKeyStoreAccess).get(0);
-                BucketPath dfsCredentialsPath = FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID());
-                Payload payload = class2JsonHelper.dfsCredentialsToContent(userDFSCredentials);
-                CMSEnvelopedData encryptedDFSCredentialsAsEnvelope = cmsEncryptionService.encrypt(payload, publicKeyIDWithPublicKey.getPublicKey(), publicKeyIDWithPublicKey.getKeyID());
-                Payload encryptedPayload = new SimplePayloadImpl(encryptedDFSCredentialsAsEnvelope.getEncoded());
-                systemDFS.putBlob(FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID()), encryptedPayload);
+                storeUserDFSCredentials(userIDAuth, publicKeyStoreAccess, userDFSCredentials);
             }
 
             // create users DFS
@@ -167,14 +162,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
             {
                 // retrieve public key of public keystore once to encrypt DFSCredentials
                 KeyStoreAccess publicKeyStoreAccess = getKeyStoreAccess(systemDFS, userIDAuth);
-                PublicKeyIDWithPublicKey publicKeyIDWithPublicKey = keyStoreService.getPublicKeys(publicKeyStoreAccess).get(0);
-
-                BucketPath dfsCredentialsPath = FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID());
-                Payload payload = class2JsonHelper.dfsCredentialsToContent(dfsCredentials);
-                CMSEnvelopedData encryptedDFSCredentialsAsEnvelope = cmsEncryptionService.encrypt(payload, publicKeyIDWithPublicKey.getPublicKey(), publicKeyIDWithPublicKey.getKeyID());
-                Payload encryptedPayload = new SimplePayloadImpl(encryptedDFSCredentialsAsEnvelope.getEncoded());
-                systemDFS.putBlob(FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID()), encryptedPayload);
-                log.debug("stored the new dfs credentials info");
+                storeUserDFSCredentials(userIDAuth, publicKeyStoreAccess, dfsCredentials);
             }
 
             // now delete all the old data
@@ -421,4 +409,15 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
             throw BaseExceptionHandler.handle(e);
         }
     }
+
+    private void storeUserDFSCredentials(UserIDAuth userIDAuth, KeyStoreAccess publicKeyStoreAccess, DFSCredentials userDFSCredentials) throws IOException {
+        PublicKeyIDWithPublicKey publicKeyIDWithPublicKey = keyStoreService.getPublicKeys(publicKeyStoreAccess).get(0);
+        Payload payload = class2JsonHelper.dfsCredentialsToContent(userDFSCredentials);
+        CMSEnvelopedData encryptedDFSCredentialsAsEnvelope = cmsEncryptionService.encrypt(payload, publicKeyIDWithPublicKey.getPublicKey(), publicKeyIDWithPublicKey.getKeyID());
+        Payload encryptedPayload = new SimplePayloadImpl(encryptedDFSCredentialsAsEnvelope.getEncoded());
+        systemDFS.putBlob(FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID()), encryptedPayload);
+        log.debug("stored the new dfs credentials info");
+    }
+
+
 }
