@@ -60,4 +60,14 @@ public class RegisterDFSTest {
     }
 
 
+    @Test
+    public void createPuml() {
+
+        DFSCredentials dfsCredentials = new DFSCredentials();
+        FilesystemConnectionPropertiesImpl props = new FilesystemConnectionPropertiesImpl();
+        props.setFilesystemRootBucketName(new FilesystemRootBucketName("target/another-root-bucket"));
+        dfsCredentials.setFilesystem(new FilesystemConnectionPropertiesImpl(new FilesystemConnectionPropertiesImpl(props)));
+        service.registerDFSCredentials(userIDAuth, dfsCredentials);
+    }
+
 }

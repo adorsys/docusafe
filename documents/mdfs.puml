@@ -1,0 +1,672 @@
+@startuml
+
+skinparam SequenceMessageAlign center
+
+activate DocumentServiceTest
+' org.adorsys.docusafe.business.impl.DocumentServiceTest
+DocumentServiceTest --> DocumentSafeService : createUser
+
+activate DocumentSafeService
+' org.adorsys.docusafe.business.DocumentSafeService
+DocumentSafeService --> DocumentSafeServiceImpl : createUser
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : userExists
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : containerExists
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : boolean
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : boolean
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStoreService : createKeyStore
+
+note left
+this is the public keystore.
+it only contains a public private keypair
+for the en- and decryption of the
+users DFSCredentials
+end note
+activate KeyStoreService
+' org.adorsys.docusafe.service.api.keystore.KeyStoreService
+DocumentSafeServiceImpl <-- KeyStoreService : KeyStore
+deactivate KeyStoreService
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : store
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore :  
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : createContainer
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection :  
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : putBlob
+
+note left
+the public keystore is persisted in the
+users space of the SYSTEM DFS
+end note
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection :  
+deactivate DFSConnection
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStoreService : getPublicKeys
+note left
+the only one public key of
+the public keystore is extracted
+end note
+
+activate KeyStoreService
+' org.adorsys.docusafe.service.api.keystore.KeyStoreService
+DocumentSafeServiceImpl <-- KeyStoreService : List
+deactivate KeyStoreService
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> Class2JsonHelper : dfsCredentialsToContent
+
+note left
+the default users USER DFSCredentials
+are created and serialized
+end note
+activate Class2JsonHelper
+' org.adorsys.docusafe.business.impl.jsonserialisation.Class2JsonHelper
+DocumentSafeServiceImpl <-- Class2JsonHelper : Payload
+deactivate Class2JsonHelper
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> CMSEncryptionService : encrypt
+note left
+the users serialized DFSCredentials
+are encrypted
+end note
+
+activate CMSEncryptionService
+' org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService
+DocumentSafeServiceImpl <-- CMSEncryptionService : CMSEnvelopedData
+deactivate CMSEncryptionService
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : putBlob
+note left
+the serialized encrypted users DFSCredentials
+are persisted in the SYSTEM DFS user space
+end note
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection :  
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnectionFactory : get
+note left
+the users DFSConnection is
+established with the users
+USER DFSCredentials
+end note
+
+activate DFSConnectionFactory
+' de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory
+DocumentSafeServiceImpl <-- DFSConnectionFactory : DFSConnection
+deactivate DFSConnectionFactory
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStoreService : createKeyStore
+note left
+the users private keystore is created.
+it contains exactly one secret key that
+is used for the bucketpathencryption.
+Further it contains a bunch of public
+private keypairs to en- and decrypt
+the users data.
+end note
+activate KeyStoreService
+' org.adorsys.docusafe.service.api.keystore.KeyStoreService
+DocumentSafeServiceImpl <-- KeyStoreService : KeyStore
+deactivate KeyStoreService
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : store
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore :  
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : createContainer
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection :  
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : putBlob
+note left
+the users private keystore is persisted
+in the USER DFS.
+end note
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection :  
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStoreService : getPublicKeys
+note left
+all public keys including the keyids
+are extracted
+end note
+
+activate KeyStoreService
+' org.adorsys.docusafe.service.api.keystore.KeyStoreService
+DocumentSafeServiceImpl <-- KeyStoreService : List
+deactivate KeyStoreService
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> Class2JsonHelper : keyListToContent
+
+activate Class2JsonHelper
+' org.adorsys.docusafe.business.impl.jsonserialisation.Class2JsonHelper
+DocumentSafeServiceImpl <-- Class2JsonHelper : Payload
+deactivate Class2JsonHelper
+note left
+The list of public keys and their keyids
+is serialized
+end note
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : putBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection :  
+deactivate DFSConnection
+note left
+the public keys and their keyids are
+persisted in the user space of
+the SYSTEM DFS. not encrypted!
+end note
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeService <-- DocumentSafeServiceImpl :  
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.DocumentSafeService
+DocumentServiceTest <-- DocumentSafeService :  
+deactivate DocumentSafeService
+
+' org.adorsys.docusafe.business.impl.DocumentServiceTest
+DocumentServiceTest --> DocumentSafeService : storeDocument
+
+activate DocumentSafeService
+' org.adorsys.docusafe.business.DocumentSafeService
+DocumentSafeService --> DocumentSafeServiceImpl : storeDocument
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> Class2JsonHelper : contentToKeyList
+
+activate Class2JsonHelper
+' org.adorsys.docusafe.business.impl.jsonserialisation.Class2JsonHelper
+DocumentSafeServiceImpl <-- Class2JsonHelper : List
+deactivate Class2JsonHelper
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> CMSEncryptionService : encrypt
+
+activate CMSEncryptionService
+' org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService
+DocumentSafeServiceImpl <-- CMSEncryptionService : CMSEnvelopedData
+deactivate CMSEncryptionService
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getUsersDFS
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getKeyStoreAccess
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : getInstance
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore : KeyStore
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : load
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore :  
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : KeyStoreAccess
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> CMSEncryptionService : decrypt
+
+activate CMSEncryptionService
+' org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService
+DocumentSafeServiceImpl <-- CMSEncryptionService : Payload
+deactivate CMSEncryptionService
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> Class2JsonHelper : contentToDFSConnection
+
+activate Class2JsonHelper
+' org.adorsys.docusafe.business.impl.jsonserialisation.Class2JsonHelper
+DocumentSafeServiceImpl <-- Class2JsonHelper : DFSCredentials
+deactivate Class2JsonHelper
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnectionFactory : get
+
+activate DFSConnectionFactory
+' de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory
+DocumentSafeServiceImpl <-- DFSConnectionFactory : DFSConnection
+deactivate DFSConnectionFactory
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : DFSConnection
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getKeyStoreAccess
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : getInstance
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore : KeyStore
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : load
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore :  
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : KeyStoreAccess
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStoreService : getRandomSecretKeyID
+
+activate KeyStoreService
+' org.adorsys.docusafe.service.api.keystore.KeyStoreService
+DocumentSafeServiceImpl <-- KeyStoreService : SecretKeyIDWithKey
+deactivate KeyStoreService
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> BucketPathEncryptionService : encrypt
+
+activate BucketPathEncryptionService
+' org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptionService
+DocumentSafeServiceImpl <-- BucketPathEncryptionService : BucketPath
+deactivate BucketPathEncryptionService
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : putBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection :  
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeService <-- DocumentSafeServiceImpl :  
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.DocumentSafeService
+DocumentServiceTest <-- DocumentSafeService :  
+deactivate DocumentSafeService
+
+' org.adorsys.docusafe.business.impl.DocumentServiceTest
+DocumentServiceTest --> DocumentSafeService : readDocument
+
+activate DocumentSafeService
+' org.adorsys.docusafe.business.DocumentSafeService
+DocumentSafeService --> DocumentSafeServiceImpl : readDocument
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getUsersDFS
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getKeyStoreAccess
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : getInstance
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore : KeyStore
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : load
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore :  
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : KeyStoreAccess
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> CMSEncryptionService : decrypt
+
+activate CMSEncryptionService
+' org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService
+DocumentSafeServiceImpl <-- CMSEncryptionService : Payload
+deactivate CMSEncryptionService
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> Class2JsonHelper : contentToDFSConnection
+
+activate Class2JsonHelper
+' org.adorsys.docusafe.business.impl.jsonserialisation.Class2JsonHelper
+DocumentSafeServiceImpl <-- Class2JsonHelper : DFSCredentials
+deactivate Class2JsonHelper
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnectionFactory : get
+
+activate DFSConnectionFactory
+' de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory
+DocumentSafeServiceImpl <-- DFSConnectionFactory : DFSConnection
+deactivate DFSConnectionFactory
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : DFSConnection
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getKeyStoreAccess
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : getInstance
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore : KeyStore
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : load
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore :  
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : KeyStoreAccess
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStoreService : getRandomSecretKeyID
+
+activate KeyStoreService
+' org.adorsys.docusafe.service.api.keystore.KeyStoreService
+DocumentSafeServiceImpl <-- KeyStoreService : SecretKeyIDWithKey
+deactivate KeyStoreService
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> BucketPathEncryptionService : encrypt
+
+activate BucketPathEncryptionService
+' org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptionService
+DocumentSafeServiceImpl <-- BucketPathEncryptionService : BucketPath
+deactivate BucketPathEncryptionService
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getKeyStoreAccess
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : getInstance
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore : KeyStore
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : load
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore :  
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : KeyStoreAccess
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> CMSEncryptionService : decrypt
+
+activate CMSEncryptionService
+' org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService
+DocumentSafeServiceImpl <-- CMSEncryptionService : Payload
+deactivate CMSEncryptionService
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeService <-- DocumentSafeServiceImpl : DSDocument
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.DocumentSafeService
+DocumentServiceTest <-- DocumentSafeService : DSDocument
+deactivate DocumentSafeService
+
+' org.adorsys.docusafe.business.impl.DocumentServiceTest
+DocumentServiceTest --> DocumentSafeService : destroyUser
+
+activate DocumentSafeService
+' org.adorsys.docusafe.business.DocumentSafeService
+DocumentSafeService --> DocumentSafeServiceImpl : destroyUser
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getUsersDFS
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getKeyStoreAccess
+
+activate DocumentSafeServiceImpl
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : getInstance
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore : KeyStore
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : load
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore :  
+deactivate KeyStore
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : KeyStoreAccess
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> CMSEncryptionService : decrypt
+
+activate CMSEncryptionService
+' org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService
+DocumentSafeServiceImpl <-- CMSEncryptionService : Payload
+deactivate CMSEncryptionService
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> Class2JsonHelper : contentToDFSConnection
+
+activate Class2JsonHelper
+' org.adorsys.docusafe.business.impl.jsonserialisation.Class2JsonHelper
+DocumentSafeServiceImpl <-- Class2JsonHelper : DFSCredentials
+deactivate Class2JsonHelper
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnectionFactory : get
+
+activate DFSConnectionFactory
+' de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory
+DocumentSafeServiceImpl <-- DFSConnectionFactory : DFSConnection
+deactivate DFSConnectionFactory
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : DFSConnection
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : deleteContainer
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection :  
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : deleteContainer
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection :  
+deactivate DFSConnection
+
+' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+DocumentSafeService <-- DocumentSafeServiceImpl :  
+deactivate DocumentSafeServiceImpl
+
+' org.adorsys.docusafe.business.DocumentSafeService
+DocumentServiceTest <-- DocumentSafeService :  
+deactivate DocumentSafeService
+
+@enduml
