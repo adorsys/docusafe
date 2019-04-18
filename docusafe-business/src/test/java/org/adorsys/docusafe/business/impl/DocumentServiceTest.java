@@ -53,9 +53,8 @@ public class DocumentServiceTest {
 
     @Test
     public void storeAndReadMoreDocuments() {
-        List<DSDocument> list = new ArrayList<>();
         DocumentDirectoryFQN root = new DocumentDirectoryFQN("affe");
-        createDocuments(root, 2, 2, 3, list);
+        List<DSDocument> list = TestHelper.createDocuments(root, 2, 2, 3);
         List<DocumentFQN> created = new ArrayList<>();
         for (DSDocument dsDocument : list) {
             log.debug("store " + dsDocument.getDocumentFQN().toString());
@@ -72,26 +71,4 @@ public class DocumentServiceTest {
 
     }
 
-    private void createDocuments(DocumentDirectoryFQN directory, int numberOfDirectories, int numberOfFiles, int depth, List<DSDocument> list) {
-        // create files in this directory
-        for (int file = 0; file < numberOfFiles; file++) {
-            list.add(createFile(directory, file));
-        }
-
-        if (depth == 0) {
-            return;
-        }
-
-        // createFile for current directory
-        for (int dir = 0; dir < numberOfDirectories; dir++) {
-            DocumentDirectoryFQN subdir = directory.addDirectory("subdir_" + dir);
-            createDocuments(subdir, numberOfDirectories, numberOfFiles, depth-1, list);
-        }
-    }
-
-    private DSDocument createFile(DocumentDirectoryFQN directoryFQN, int numberOfFile) {
-        DocumentFQN documentFQN = directoryFQN.addName("file" + numberOfFile + "txt");
-        DocumentContent documentContent = new DocumentContent(("my name is " + documentFQN.toString()).getBytes());
-        return new DSDocument(documentFQN, documentContent);
-    }
 }

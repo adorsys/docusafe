@@ -1,12 +1,8 @@
 package org.adorsys.docusafe.business;
 
 import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
-import org.adorsys.docusafe.business.types.MoveType;
+import org.adorsys.docusafe.business.types.*;
 import org.adorsys.docusafe.service.api.types.UserID;
-import org.adorsys.docusafe.business.types.DSDocument;
-import org.adorsys.docusafe.business.types.DSDocumentStream;
-import org.adorsys.docusafe.business.types.DocumentDirectoryFQN;
-import org.adorsys.docusafe.business.types.DocumentFQN;
 import org.adorsys.docusafe.service.api.types.UserIDAuth;
 
 import java.util.List;
@@ -24,6 +20,7 @@ public interface DocumentSafeService {
 
     boolean userExists(UserID userID);
 
+    void registerDFSCredentials (UserIDAuth userIDAuth, DFSCredentials dfsCredentials);
     /**
      * Document
      */

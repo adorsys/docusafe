@@ -144,6 +144,53 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     }
 
     @Override
+    public void registerDFSCredentials(UserIDAuth userIDAuth, DFSCredentials dfsCredentials) {
+        try {
+            // retrieve the old dfs and store them in the new dfs
+            DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth);
+            DFSConnection oldUsersDFSConnection = dfsAndKeystoreAndPath.usersDFS;
+            DFSConnection newUsersDFSConnection = DFSConnectionFactory.get(dfsCredentials.getProperties());
+            int numberOfFilesCopied = 0;
+            for (BucketDirectory bucketDirectory : oldUsersDFSConnection.listAllBuckets()) {
+                newUsersDFSConnection.createContainer(bucketDirectory);
+                for (BucketPath bucketPath : oldUsersDFSConnection.list(bucketDirectory, ListRecursiveFlag.TRUE)) {
+                    // nothing has to be en- or decrypted. The data just has to be moved from one dfs to the next dfs
+                    Payload blob = oldUsersDFSConnection.getBlob(bucketPath);
+                    newUsersDFSConnection.putBlob(bucketPath, blob);
+                    numberOfFilesCopied++;
+                }
+            }
+            log.debug("copied " + numberOfFilesCopied + " from old dfs to new dfs");
+
+            // store new dfs and overwrite old dfs
+            // create and persist encrypted dfscredentials
+            {
+                // retrieve public key of public keystore once to encrypt DFSCredentials
+                KeyStoreAccess publicKeyStoreAccess = getKeyStoreAccess(systemDFS, userIDAuth);
+                PublicKeyIDWithPublicKey publicKeyIDWithPublicKey = keyStoreService.getPublicKeys(publicKeyStoreAccess).get(0);
+
+                BucketPath dfsCredentialsPath = FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID());
+                Payload payload = class2JsonHelper.dfsCredentialsToContent(dfsCredentials);
+                CMSEnvelopedData encryptedDFSCredentialsAsEnvelope = cmsEncryptionService.encrypt(payload, publicKeyIDWithPublicKey.getPublicKey(), publicKeyIDWithPublicKey.getKeyID());
+                Payload encryptedPayload = new SimplePayloadImpl(encryptedDFSCredentialsAsEnvelope.getEncoded());
+                systemDFS.putBlob(FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID()), encryptedPayload);
+                log.debug("stored the new dfs credentials info");
+            }
+
+            // now delete all the old data
+            int numberOfBucketsDeleted = 0;
+            for (BucketDirectory bucketDirectory : oldUsersDFSConnection.listAllBuckets()) {
+                oldUsersDFSConnection.deleteContainer(bucketDirectory);
+                numberOfBucketsDeleted++;
+            }
+            log.debug("delete " + numberOfBucketsDeleted + "  from old dfs");
+
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
+    }
+
+    @Override
     public void storeDocument(UserIDAuth userIDAuth, DSDocument dsDocument) {
         DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth, dsDocument.getDocumentFQN());
         Payload payload = encryptDataForUserWithRandomKey(userIDAuth.getUserID(), new SimplePayloadImpl(dsDocument.getDocumentContent().getValue()));
@@ -320,6 +367,10 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
         }
     }
 
+    private DFSAndKeystoreAndPath getUsersAccess(UserIDAuth userIDAuth) {
+        return getUsersAccess(userIDAuth, null, null);
+    }
+
     private DFSAndKeystoreAndPath getUsersAccess(UserIDAuth userIDAuth, DocumentFQN documentFQN) {
         return getUsersAccess(userIDAuth, null, documentFQN);
     }
@@ -370,6 +421,4 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
             throw BaseExceptionHandler.handle(e);
         }
     }
-
-
 }
