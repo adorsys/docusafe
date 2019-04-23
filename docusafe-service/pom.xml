@@ -23,6 +23,11 @@
             <artifactId>dfs-connection-api</artifactId>
             <version>${dfs-connection.version}</version>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons.io.version}</version>
+        </dependency>
         <!-- bouncy castle -->
         <dependency>
             <groupId>org.bouncycastle</groupId>

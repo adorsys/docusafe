@@ -25,6 +25,7 @@
         <guava.version>26.0-jre</guava.version>
         <dfs-connection.version>0.0.11</dfs-connection.version>
         <common-basetypes.version>0.0.7</common-basetypes.version>
+        <commons.io.version>2.5</commons.io.version>
         <spring.aspects.version>5.1.2.RELEASE</spring.aspects.version>
         <lombok.version>1.16.18.1</lombok.version>
         <powermock.version>1.7.4</powermock.version>

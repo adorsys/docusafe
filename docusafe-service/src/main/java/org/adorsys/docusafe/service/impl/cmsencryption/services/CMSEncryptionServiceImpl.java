@@ -4,26 +4,30 @@ package org.adorsys.docusafe.service.impl.cmsencryption.services;
 import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.dfs.connection.api.domain.Payload;
 import de.adorsys.dfs.connection.api.service.impl.SimplePayloadImpl;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService;
+import org.adorsys.docusafe.service.api.exceptions.DecryptionException;
 import org.adorsys.docusafe.service.api.keystore.types.KeyID;
 import org.adorsys.docusafe.service.api.keystore.types.KeyStoreAccess;
-import org.adorsys.docusafe.service.api.types.DocumentContent;
 import org.adorsys.docusafe.service.impl.cmsencryption.exceptions.AsymmetricEncryptionException;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.bouncycastle.cms.*;
-import org.bouncycastle.cms.jcajce.JceCMSContentEncryptorBuilder;
-import org.bouncycastle.cms.jcajce.JceKeyTransEnvelopedRecipient;
-import org.bouncycastle.cms.jcajce.JceKeyTransRecipient;
-import org.bouncycastle.cms.jcajce.JceKeyTransRecipientInfoGenerator;
+import org.bouncycastle.cms.jcajce.*;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.OutputEncryptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import javax.crypto.SecretKey;
+import java.io.*;
+import java.security.*;
 import java.util.Iterator;
 
 /**
  * Cryptographic message syntax document encoder/decoder - see
+ *
  * @see <a href=https://en.wikipedia.org/wiki/Cryptographic_Message_Syntax">CMS wiki</a>
  */
 @Slf4j
@@ -83,4 +87,128 @@ public class CMSEncryptionServiceImpl implements CMSEncryptionService {
             throw BaseExceptionHandler.handle(e);
         }
     }
+
+    @Override
+    public InputStream buildEncryptionInputStream(InputStream is, PublicKey publicKey, KeyID publicKeyID) {
+        try {
+            File file = File.createTempFile("temp-encrypted", "blob");
+            FileOutputStream fos = new FileOutputStream(file);
+            RecipientInfoGenerator rec = new JceKeyTransRecipientInfoGenerator(publicKeyID.getValue().getBytes(), publicKey);
+            createInputStream(is, fos, rec);
+
+            return new TempInputStream(file);
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
+    }
+
+    @Override
+    public InputStream buildEncryptionInputStream(InputStream is, SecretKey secretKey, KeyID keyID) {
+        try {
+            File file = File.createTempFile("temp-encrypted", "blob");
+            try (FileOutputStream fos = new FileOutputStream(file)) {
+                RecipientInfoGenerator rec = new JceKEKRecipientInfoGenerator(keyID.getValue().getBytes(), secretKey);
+                createInputStream(is, fos, rec);
+            }
+            return new TempInputStream(file);
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
+    }
+
+    @Override
+    @SneakyThrows
+    public InputStream buildDecryptionInputStream(InputStream inputStream, KeyStoreAccess keyStoreAccess) {
+        try {
+            RecipientInformationStore recipientInfoStore = new CMSEnvelopedDataParser(inputStream).getRecipientInfos();
+
+            if (recipientInfoStore.size() == 0) {
+                throw new DecryptionException("CMS Envelope doesn't contain recipients");
+            }
+            if (recipientInfoStore.size() > 1) {
+                throw new DecryptionException("Programming error. Handling of more that one recipient not done yet");
+            }
+            RecipientInformation recipientInfo = recipientInfoStore.getRecipients().stream().findFirst().get();
+            RecipientId rid = recipientInfo.getRID();
+
+            switch (rid.getType()) {
+                case RecipientId.keyTrans:
+                    return recipientInfo.getContentStream(new JceKeyTransEnvelopedRecipient(privateKey(keyStoreAccess, rid)))
+                            .getContentStream();
+                case RecipientId.kek:
+                    return recipientInfo.getContentStream(new JceKEKEnvelopedRecipient(secretKey(keyStoreAccess, rid)))
+                            .getContentStream();
+                default:
+                    throw new DecryptionException("Programming error. Handling of more that one recipient not done yet");
+            }
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
+    }
+
+    private SecretKey secretKey(KeyStoreAccess keyStoreAccess, RecipientId rid)
+            throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
+        String keyIdentifier = new String(((KEKRecipientId) rid).getKeyIdentifier());
+        log.debug("Secret key ID from envelope: {}", keyIdentifier);
+        return (SecretKey) keyStoreAccess.getKeyStore().getKey(keyIdentifier,
+                keyStoreAccess.getKeyStoreAuth().getReadKeyPassword().getValue().toCharArray());
+    }
+
+    private PrivateKey privateKey(KeyStoreAccess keyStoreAccess, RecipientId rid)
+            throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
+        String subjectKeyIdentifier = new String(((KeyTransRecipientId) rid).getSubjectKeyIdentifier());
+        log.debug("Private key ID from envelope: {}", subjectKeyIdentifier);
+        return (PrivateKey) keyStoreAccess.getKeyStore().getKey(subjectKeyIdentifier,
+                keyStoreAccess.getKeyStoreAuth().getReadKeyPassword().getValue().toCharArray());
+    }
+
+    private OutputStream streamEncrypt(OutputStream dataContentStream, RecipientInfoGenerator rec)
+            throws CMSException, IOException {
+        CMSEnvelopedDataStreamGenerator gen = new CMSEnvelopedDataStreamGenerator();
+        gen.addRecipientInfoGenerator(rec);
+        return gen.open(dataContentStream, new JceCMSContentEncryptorBuilder(CMSAlgorithm.AES128_CBC)
+                .setProvider(BouncyCastleProvider.PROVIDER_NAME).build());
+    }
+
+
+    public static class TempInputStream extends FileInputStream {
+        private final static Logger LOGGER = LoggerFactory.getLogger(TempInputStream.class);
+        File file = null;
+
+        public TempInputStream(File file) throws FileNotFoundException {
+            super(file);
+            this.file = file;
+            LOGGER.info("tempinputfile is " + file);
+        }
+
+        @Override
+        public void close() {
+            try {
+                LOGGER.info("delete temp file " + file);
+                FileUtils.forceDelete(file);
+            } catch (Exception e) {
+                BaseExceptionHandler.handle(e);
+            }
+
+        }
+    }
+
+    private void createInputStream(InputStream is, FileOutputStream fos, RecipientInfoGenerator rec) {
+        try {
+            OutputStream os = streamEncrypt(fos, rec);
+
+            int content;
+            byte[] buffer = new byte[8 * 1024]; //8kb
+            while ((content = is.read(buffer)) != -1) {
+                os.write(buffer, 0, content);
+            }
+            os.flush();
+            IOUtils.closeQuietly(os);
+
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
+    }
+
+
 }

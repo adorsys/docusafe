@@ -1,10 +1,13 @@
 package org.adorsys.docusafe.business.impl;
 
+import com.amazonaws.util.IOUtils;
+import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.business.DocumentSafeService;
 import org.adorsys.docusafe.business.types.DSDocument;
+import org.adorsys.docusafe.business.types.DSDocumentStream;
 import org.adorsys.docusafe.business.types.DocumentDirectoryFQN;
 import org.adorsys.docusafe.business.types.DocumentFQN;
 import org.adorsys.docusafe.service.api.keystore.types.ReadKeyPassword;
@@ -18,6 +21,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +52,7 @@ public class DocumentServiceTest {
         DocumentContent documentContent = new DocumentContent("affe".getBytes());
         DSDocument dsDocument = new DSDocument(documentFQN, documentContent);
         service.storeDocument(userIDAuth, dsDocument);
-        DSDocument dsDocument1 = service.readDocument(userIDAuth, dsDocument.getDocumentFQN());
+        DSDocument dsDocument1 = service.readDocument(userIDAuth, documentFQN);
         Assert.assertArrayEquals(dsDocument.getDocumentContent().getValue(), dsDocument1.getDocumentContent().getValue());
     }
 
@@ -71,4 +76,19 @@ public class DocumentServiceTest {
 
     }
 
+
+    @Test
+    public void storeAndReadStream() {
+        try {
+            DocumentFQN documentFQN = new DocumentFQN("affe/file1.txt");
+            DocumentContent documentContent = new DocumentContent("affe".getBytes());
+            DSDocumentStream dsDocumentStream = new DSDocumentStream(documentFQN, new ByteArrayInputStream(documentContent.getValue()));
+            service.storeDocumentStream(userIDAuth, dsDocumentStream);
+            DSDocumentStream dsDocumentStream1 = service.readDocumentStream(userIDAuth, documentFQN);
+            byte[] readBytes = IOUtils.toByteArray(dsDocumentStream1.getDocumentStream());
+            Assert.assertArrayEquals(documentContent.getValue(), readBytes);
+        } catch (Exception e ) {
+            throw BaseExceptionHandler.handle(e);
+        }
+    }
 }

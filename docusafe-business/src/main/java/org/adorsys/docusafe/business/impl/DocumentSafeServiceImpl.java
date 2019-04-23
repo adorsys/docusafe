@@ -6,9 +6,11 @@ import de.adorsys.dfs.connection.api.complextypes.BucketDirectory;
 import de.adorsys.dfs.connection.api.complextypes.BucketPath;
 import de.adorsys.dfs.connection.api.complextypes.BucketPathUtil;
 import de.adorsys.dfs.connection.api.domain.Payload;
+import de.adorsys.dfs.connection.api.domain.PayloadStream;
 import de.adorsys.dfs.connection.api.filesystem.FilesystemConnectionPropertiesImpl;
 import de.adorsys.dfs.connection.api.service.api.DFSConnection;
 import de.adorsys.dfs.connection.api.service.impl.SimplePayloadImpl;
+import de.adorsys.dfs.connection.api.service.impl.SimplePayloadStreamImpl;
 import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import de.adorsys.dfs.connection.api.types.properties.ConnectionProperties;
 import de.adorsys.dfs.connection.impl.amazons3.AmazonS3ConnectionProperitesImpl;
@@ -37,9 +39,7 @@ import org.adorsys.docusafe.service.impl.keystore.service.KeyStoreServiceImpl;
 import org.bouncycastle.cms.CMSEnvelopedData;
 
 import javax.crypto.SecretKey;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -200,12 +200,27 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     @Override
     public void storeDocumentStream(UserIDAuth userIDAuth, DSDocumentStream dsDocumentStream) {
+        try {
+            DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth, dsDocumentStream.getDocumentFQN());
+            PublicKeyIDWithPublicKey publicKeyIDWithPublicKey = getPublicKeyIDWithPublicKey(userIDAuth.getUserID());
+            InputStream encryptedStream = cmsEncryptionService.buildEncryptionInputStream(dsDocumentStream.getDocumentStream(), publicKeyIDWithPublicKey.getPublicKey(), publicKeyIDWithPublicKey.getKeyID());
+            dfsAndKeystoreAndPath.usersDFS.putBlobStream(dfsAndKeystoreAndPath.encryptedBucketPath, new SimplePayloadStreamImpl(encryptedStream));
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
 
     }
 
     @Override
     public DSDocumentStream readDocumentStream(UserIDAuth userIDAuth, DocumentFQN documentFQN) {
-        return null;
+        try {
+            DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth, documentFQN);
+            PayloadStream payloadStream = dfsAndKeystoreAndPath.usersDFS.getBlobStream(dfsAndKeystoreAndPath.encryptedBucketPath);
+            InputStream decryptedStream = cmsEncryptionService.buildDecryptionInputStream(payloadStream.openStream(), dfsAndKeystoreAndPath.privateKeystoreAccess);
+            return new DSDocumentStream(documentFQN, decryptedStream);
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
     }
 
     @Override
@@ -397,17 +412,21 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     private Payload encryptDataForUserWithRandomKey(UserID userID, Payload unencryptedContent) {
         try {
-            // get random public key to encrypt
-            Payload publicKeysAsPayload = systemDFS.getBlob(FolderHelper.getPublicKeyListPath(userID));
-            List<PublicKeyIDWithPublicKey> publicKeys = class2JsonHelper.contentToKeyList(publicKeysAsPayload);
-            Random random = new Random();
-            PublicKeyIDWithPublicKey publicKeyIDWithPublicKey = publicKeys.get(random.nextInt(publicKeys.size()));
+            PublicKeyIDWithPublicKey publicKeyIDWithPublicKey = getPublicKeyIDWithPublicKey(userID);
             Payload unencryptedPayload = new SimplePayloadImpl(unencryptedContent.getData());
             CMSEnvelopedData cmsEnvelope = cmsEncryptionService.encrypt(unencryptedPayload, publicKeyIDWithPublicKey.getPublicKey(), publicKeyIDWithPublicKey.getKeyID());
             return new SimplePayloadImpl(cmsEnvelope.getEncoded());
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
         }
+    }
+
+    private PublicKeyIDWithPublicKey getPublicKeyIDWithPublicKey(UserID userID) {
+        // get random public key to encrypt
+        Payload publicKeysAsPayload = systemDFS.getBlob(FolderHelper.getPublicKeyListPath(userID));
+        List<PublicKeyIDWithPublicKey> publicKeys = class2JsonHelper.contentToKeyList(publicKeysAsPayload);
+        Random random = new Random();
+        return publicKeys.get(random.nextInt(publicKeys.size()));
     }
 
     private void storeUserDFSCredentials(UserIDAuth userIDAuth, KeyStoreAccess publicKeyStoreAccess, DFSCredentials userDFSCredentials) throws IOException {
@@ -418,6 +437,4 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
         systemDFS.putBlob(FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID()), encryptedPayload);
         log.debug("stored the new dfs credentials info");
     }
-
-
 }
