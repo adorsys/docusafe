@@ -91,12 +91,12 @@ public class CMSEncryptionServiceImpl implements CMSEncryptionService {
     @Override
     public InputStream buildEncryptionInputStream(InputStream is, PublicKey publicKey, KeyID publicKeyID) {
         try {
-            File file = File.createTempFile("temp-encrypted", "blob");
-            FileOutputStream fos = new FileOutputStream(file);
-            RecipientInfoGenerator rec = new JceKeyTransRecipientInfoGenerator(publicKeyID.getValue().getBytes(), publicKey);
-            createInputStream(is, fos, rec);
-
-            return new TempInputStream(file);
+            File file = File.createTempFile("fos-encrypted-", "");
+            try (FileOutputStream fos = new MyFileOutputStream(file)) {
+                RecipientInfoGenerator rec = new JceKeyTransRecipientInfoGenerator(publicKeyID.getValue().getBytes(), publicKey);
+                readFromInputStreamAndWriteToOutputStream(is, fos, rec);
+                return new MyFileInputStream(file);
+            }
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
         }
@@ -105,12 +105,12 @@ public class CMSEncryptionServiceImpl implements CMSEncryptionService {
     @Override
     public InputStream buildEncryptionInputStream(InputStream is, SecretKey secretKey, KeyID keyID) {
         try {
-            File file = File.createTempFile("temp-encrypted", "blob");
-            try (FileOutputStream fos = new FileOutputStream(file)) {
+            File file = File.createTempFile("fos-encrypted-", "");
+            try (FileOutputStream fos = new MyFileOutputStream(file)) {
                 RecipientInfoGenerator rec = new JceKEKRecipientInfoGenerator(keyID.getValue().getBytes(), secretKey);
-                createInputStream(is, fos, rec);
+                readFromInputStreamAndWriteToOutputStream(is, fos, rec);
             }
-            return new TempInputStream(file);
+            return new MyFileInputStream(file);
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
         }
@@ -170,30 +170,7 @@ public class CMSEncryptionServiceImpl implements CMSEncryptionService {
                 .setProvider(BouncyCastleProvider.PROVIDER_NAME).build());
     }
 
-
-    public static class TempInputStream extends FileInputStream {
-        private final static Logger LOGGER = LoggerFactory.getLogger(TempInputStream.class);
-        File file = null;
-
-        public TempInputStream(File file) throws FileNotFoundException {
-            super(file);
-            this.file = file;
-            LOGGER.info("tempinputfile is " + file);
-        }
-
-        @Override
-        public void close() {
-            try {
-                LOGGER.info("delete temp file " + file);
-                FileUtils.forceDelete(file);
-            } catch (Exception e) {
-                BaseExceptionHandler.handle(e);
-            }
-
-        }
-    }
-
-    private void createInputStream(InputStream is, FileOutputStream fos, RecipientInfoGenerator rec) {
+    private void readFromInputStreamAndWriteToOutputStream(InputStream is, FileOutputStream fos, RecipientInfoGenerator rec) {
         try {
             OutputStream os = streamEncrypt(fos, rec);
 
@@ -204,9 +181,76 @@ public class CMSEncryptionServiceImpl implements CMSEncryptionService {
             }
             os.flush();
             IOUtils.closeQuietly(os);
-
+            IOUtils.closeQuietly(fos);
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
+        }
+    }
+
+    public static class MyFileInputStream extends FileInputStream {
+        private final static Logger LOGGER = LoggerFactory.getLogger(MyFileInputStream.class);
+        File file = null;
+        boolean hereItBecomeseUgly = false;
+
+        public MyFileInputStream(File file) throws FileNotFoundException {
+            super(file);
+            this.file = file;
+            LOGGER.debug("temp fis " + file);
+        }
+
+        /**
+         * Please do not change unless you test this under windows. The fis can not be deleted unless the super.close is
+         * completly done. The hereItBecomesUgly is neccessary to avoid calling delete too early.
+         */
+        @Override
+        public void close() {
+            if (hereItBecomeseUgly) {
+                return;
+            }
+            try {
+                LOGGER.debug("close fis " + file);
+                hereItBecomeseUgly = true;
+                super.close();
+                hereItBecomeseUgly = false;
+                LOGGER.debug("closed fis " + file);
+                delete();
+            } catch (Exception e) {
+                BaseExceptionHandler.handle(e);
+            }
+        }
+
+        public void delete() {
+            try {
+                if (file != null) {
+                    LOGGER.debug("delete file " + file);
+                    FileUtils.forceDelete(file);
+                    LOGGER.debug("deleted file " + file);
+                    file = null; // to avoid reentrance
+                }
+            } catch (Exception e) {
+                BaseExceptionHandler.handle(e);
+            }
+        }
+    }
+
+    public static class MyFileOutputStream extends FileOutputStream {
+        private final static Logger LOGGER = LoggerFactory.getLogger(MyFileOutputStream.class);
+        File file = null;
+
+        public MyFileOutputStream(File file) throws FileNotFoundException {
+            super(file);
+            this.file = file;
+            LOGGER.debug("temp fos is " + file);
+        }
+
+        @Override
+        public void close() {
+            try {
+                LOGGER.debug("close fos " + file);
+                super.close();
+            } catch (Exception e) {
+                BaseExceptionHandler.handle(e);
+            }
         }
     }
 
