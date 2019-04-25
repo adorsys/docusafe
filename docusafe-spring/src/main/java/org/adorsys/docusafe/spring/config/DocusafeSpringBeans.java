@@ -22,13 +22,13 @@ public class DocusafeSpringBeans {
     }
 
     @Bean
-    public DFSConnection extendedStoreConnection(SpringDFSConnectionFactory factory) {
+    public DFSConnection DFSConnection(SpringDFSConnectionFactory factory) {
         LOGGER.info(DFSConnection.class.getName() + " is required as @Bean");
         return factory.getDFSConnectionWithSubDir(null);
     }
 
     @Bean
-    public SpringDFSConnectionFactory springExtendedStoreConnectionFactory(SpringDFSConnectionProperties properties) {
+    public SpringDFSConnectionFactory springDFSConnectionFactory(SpringDFSConnectionProperties properties) {
         LOGGER.info(SpringDFSConnectionFactory.class.getName() + " is required as @Bean");
         return new SpringDFSConnectionFactory(properties);
     }

@@ -16,6 +16,6 @@ import org.springframework.context.annotation.Configuration;
 public class DocusafeSpringConfiguration {
     private final static Logger LOGGER = LoggerFactory.getLogger(DocusafeSpringConfiguration.class);
     public DocusafeSpringConfiguration() {
-        LOGGER.debug("docusafe spring config supplies ExtendedStoreConnection and CachedTransactionalDocumentSafeService as spring beans.");
+        LOGGER.debug("docusafe spring config supplies DFSConnection and CachedTransactionalDocumentSafeService as spring beans.");
     }
 }

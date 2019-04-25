@@ -39,11 +39,11 @@ public class SpringCachedTransactionalDocusafeServiceFactory {
             LOGGER.info("Connection for " + (basedir==null ? "default" : basedir) + " is known. Singleton is returned");
             return map.get(basedir);
         }
-        LOGGER.info("getExtendedStoreConnection");
-        DFSConnection extendedStoreConnection = connectionFactory.getDFSConnectionWithSubDir(basedir);
+        LOGGER.info("getDFSConnection");
+        DFSConnection DFSConnection = connectionFactory.getDFSConnectionWithSubDir(basedir);
         LOGGER.info(CachedTransactionalDocumentSafeService.class.getName() + " is required as @Bean");
         LOGGER.debug("create documentSafeService");
-        DocumentSafeService documentSafeService = new DocumentSafeServiceImpl(extendedStoreConnection);
+        DocumentSafeService documentSafeService = new DocumentSafeServiceImpl(DFSConnection);
         RequestMemoryContext requestContext = new SimpleRequestMemoryContextImpl();
         LOGGER.debug("create transactionalDocumentSafeService");
         TransactionalDocumentSafeService transactionalDocumentSafeService = new TransactionalDocumentSafeServiceImpl(requestContext, documentSafeService);
