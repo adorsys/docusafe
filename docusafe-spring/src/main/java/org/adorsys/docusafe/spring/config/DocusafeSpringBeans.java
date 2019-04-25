@@ -24,7 +24,7 @@ public class DocusafeSpringBeans {
     @Bean
     public DFSConnection extendedStoreConnection(SpringDFSConnectionFactory factory) {
         LOGGER.info(DFSConnection.class.getName() + " is required as @Bean");
-        return factory.getExtendedStoreConnectionWithSubDir(null);
+        return factory.getDFSConnectionWithSubDir(null);
     }
 
     @Bean

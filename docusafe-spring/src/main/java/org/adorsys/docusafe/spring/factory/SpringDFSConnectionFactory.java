@@ -34,7 +34,7 @@ public class SpringDFSConnectionFactory {
         }
     }
 
-    public DFSConnection getExtendedStoreConnectionWithSubDir(String basedir) {
+    public DFSConnection getDFSConnectionWithSubDir(String basedir) {
         if (map.containsKey(basedir)) {
             LOGGER.info("Connection for " + (basedir==null ? "default" : basedir) + " is known. Singleton is returned");
             return map.get(basedir);

@@ -40,7 +40,7 @@ public class SpringCachedTransactionalDocusafeServiceFactory {
             return map.get(basedir);
         }
         LOGGER.info("getExtendedStoreConnection");
-        DFSConnection extendedStoreConnection = connectionFactory.getExtendedStoreConnectionWithSubDir(basedir);
+        DFSConnection extendedStoreConnection = connectionFactory.getDFSConnectionWithSubDir(basedir);
         LOGGER.info(CachedTransactionalDocumentSafeService.class.getName() + " is required as @Bean");
         LOGGER.debug("create documentSafeService");
         DocumentSafeService documentSafeService = new DocumentSafeServiceImpl(extendedStoreConnection);
