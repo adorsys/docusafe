@@ -116,7 +116,7 @@ public class TransactionalDocumentSafeServiceImpl extends NonTransactionalDocume
             CurrentTransactionData currentTransactionData = getCurrentTransactionData(userIDAuth.getUserID());
             boolean changed = getCurrentTransactionData(userIDAuth.getUserID()).anyDifferenceToInitalState();
             if (changed) {
-                LOGGER.info("something has changed, so write down the new state");
+                LOGGER.debug("something has changed, so write down the new state");
                 TxIDHashMapWrapper txIDHashMapWrapper = getCurrentTxIDHashMap(userIDAuth.getUserID());
                 txIDHashMapWrapper.setEndTransactionDate(new Date());
                 txIDHashMapWrapper.saveOnce(documentSafeService, userIDAuth);
@@ -133,7 +133,7 @@ public class TransactionalDocumentSafeServiceImpl extends NonTransactionalDocume
                     }
                 }
             } else {
-                LOGGER.info("nothing has changed, so nothing has to be written down");
+                LOGGER.debug("nothing has changed, so nothing has to be written down");
             }
         }
         finally {

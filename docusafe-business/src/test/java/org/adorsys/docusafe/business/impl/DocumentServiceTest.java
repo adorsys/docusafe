@@ -84,9 +84,13 @@ public class DocumentServiceTest {
             DocumentContent documentContent = new DocumentContent("affe".getBytes());
             DSDocumentStream dsDocumentStream = new DSDocumentStream(documentFQN, new ByteArrayInputStream(documentContent.getValue()));
             service.storeDocumentStream(userIDAuth, dsDocumentStream);
+            dsDocumentStream.getDocumentStream().close(); // not necessary as it is a bytestream
+
             DSDocumentStream dsDocumentStream1 = service.readDocumentStream(userIDAuth, documentFQN);
             byte[] readBytes = IOUtils.toByteArray(dsDocumentStream1.getDocumentStream());
+            dsDocumentStream1.getDocumentStream().close();
             Assert.assertArrayEquals(documentContent.getValue(), readBytes);
+
         } catch (Exception e ) {
             throw BaseExceptionHandler.handle(e);
         }

@@ -7,6 +7,7 @@ import de.adorsys.dfs.connection.api.complextypes.BucketPath;
 import de.adorsys.dfs.connection.api.complextypes.BucketPathUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptionService;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;

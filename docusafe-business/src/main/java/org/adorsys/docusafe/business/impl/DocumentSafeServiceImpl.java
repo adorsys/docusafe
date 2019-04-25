@@ -20,12 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.business.DocumentSafeService;
 import org.adorsys.docusafe.business.exceptions.UserExistsException;
 import org.adorsys.docusafe.business.impl.jsonserialisation.Class2JsonHelper;
-import org.adorsys.docusafe.business.types.DFSCredentials;
-import org.adorsys.docusafe.business.types.MoveType;
-import org.adorsys.docusafe.business.types.DSDocument;
-import org.adorsys.docusafe.business.types.DSDocumentStream;
-import org.adorsys.docusafe.business.types.DocumentDirectoryFQN;
-import org.adorsys.docusafe.business.types.DocumentFQN;
+import org.adorsys.docusafe.business.types.*;
 import org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptionService;
 import org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService;
 import org.adorsys.docusafe.service.api.keystore.KeyStoreService;
@@ -215,9 +210,11 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     public DSDocumentStream readDocumentStream(UserIDAuth userIDAuth, DocumentFQN documentFQN) {
         try {
             DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth, documentFQN);
-            PayloadStream payloadStream = dfsAndKeystoreAndPath.usersDFS.getBlobStream(dfsAndKeystoreAndPath.encryptedBucketPath);
+            PayloadStream payloadStream = null;
+            payloadStream = dfsAndKeystoreAndPath.usersDFS.getBlobStream(dfsAndKeystoreAndPath.encryptedBucketPath);
             InputStream decryptedStream = cmsEncryptionService.buildDecryptionInputStream(payloadStream.openStream(), dfsAndKeystoreAndPath.privateKeystoreAccess);
-            return new DSDocumentStream(documentFQN, decryptedStream);
+            EncryptionInputStreamWrapper encryptionInputStreamWrapper = new EncryptionInputStreamWrapper(decryptedStream, payloadStream.openStream());
+            return new DSDocumentStream(documentFQN, encryptionInputStreamWrapper);
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
         }

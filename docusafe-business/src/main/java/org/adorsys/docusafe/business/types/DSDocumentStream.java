@@ -1,5 +1,6 @@
 package org.adorsys.docusafe.business.types;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
