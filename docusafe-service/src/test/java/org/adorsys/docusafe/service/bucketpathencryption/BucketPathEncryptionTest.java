@@ -57,7 +57,7 @@ public class BucketPathEncryptionTest {
         BucketDirectory d2 = full2.getBucketDirectory();
 
         Assert.assertEquals(BucketPathUtil.getAsString(d2),BucketPathUtil.getAsString(d1));
-        log.info(bucketPath1 + " and " + bucketPath2 + " both have thZZe same prefix when encrypted:" + d1);
+        log.info(bucketPath1 + " and " + bucketPath2 + " both have the same prefix when encrypted:" + d1);
     }
 
     private SecretKey getSecretKey() {

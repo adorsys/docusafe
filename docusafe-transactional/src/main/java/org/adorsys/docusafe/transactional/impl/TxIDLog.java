@@ -1,7 +1,6 @@
 package org.adorsys.docusafe.transactional.impl;
 
 import de.adorsys.common.exceptions.BaseException;
-import de.adorsys.dfs.connection.impl.factory.ReadArguments;
 import org.adorsys.docusafe.business.DocumentSafeService;
 import org.adorsys.docusafe.business.types.DSDocument;
 import org.adorsys.docusafe.business.types.DocumentFQN;
@@ -21,7 +20,6 @@ public class TxIDLog {
     private final static Logger LOGGER = LoggerFactory.getLogger(TxIDLog.class);
     private static String LOG_FILE_NAME = "LastCommitedTxID.txt";
     private static DocumentFQN txidLogFilename = TransactionalDocumentSafeServiceImpl.txMeta.addName(LOG_FILE_NAME);
-    public final static boolean dontEncrypt = System.getProperty(ReadArguments.NO_ENCRYPTION_PASSWORD) != null;
 
 
     private TransactionInformationList txidList = new TransactionInformationList();
