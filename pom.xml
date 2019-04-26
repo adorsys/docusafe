@@ -23,12 +23,12 @@
         <catch.exception.version>2.0.0-beta-1</catch.exception.version>
         <junit.version>4.12</junit.version>
         <guava.version>26.0-jre</guava.version>
-        <dfs-connection.version>0.0.14-SNAPSHOT</dfs-connection.version>
-        <common-basetypes.version>0.0.7</common-basetypes.version>
-        <commons.io.version>2.5</commons.io.version>
         <spring.aspects.version>5.1.2.RELEASE</spring.aspects.version>
         <lombok.version>1.16.18.1</lombok.version>
         <powermock.version>1.7.4</powermock.version>
+        <commons.io.version>2.5</commons.io.version>
+        <common-basetypes.version>0.0.7</common-basetypes.version>
+        <dfs-connection.version>0.0.14</dfs-connection.version>
 
         <!-- Sonar dependencies -->
         <sonar.core.coveragePlugin>jacoco</sonar.core.coveragePlugin>
