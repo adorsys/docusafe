@@ -39,7 +39,7 @@ public class BucketPathEncryptionTest {
             BucketPath encryptedBucketPath = bucketPathEncryptionService.encrypt(secretKey, bucketPath);
 
             log.info(String.format("asymmetric encryption of \"%s\" for %d times took time: %d ms", bucketPath, loopsize, (stop - start)));
-            log.info(String.format("asymmetric encryption blew up path length from %d to %d ", BucketPathUtil.getAsString(bucketPath).length(), BucketPathUtil.getAsString(encryptedBucketPath).length()));
+            log.info(String.format("asymmetric encryption blew up path length from %d to %d ", bucketPath.getValue().length(), encryptedBucketPath.getValue().length()));
         }
 
     }
@@ -56,7 +56,7 @@ public class BucketPathEncryptionTest {
         BucketDirectory d1 = full1.getBucketDirectory();
         BucketDirectory d2 = full2.getBucketDirectory();
 
-        Assert.assertEquals(BucketPathUtil.getAsString(d2),BucketPathUtil.getAsString(d1));
+        Assert.assertEquals(d2.getValue(),d1.getValue());
         log.info(bucketPath1 + " and " + bucketPath2 + " both have the same prefix when encrypted:" + d1);
     }
 

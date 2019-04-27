@@ -4,16 +4,13 @@ import de.adorsys.common.exceptions.BaseException;
 import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.dfs.connection.api.complextypes.BucketDirectory;
 import de.adorsys.dfs.connection.api.complextypes.BucketPath;
-import de.adorsys.dfs.connection.api.complextypes.BucketPathUtil;
 import de.adorsys.dfs.connection.api.domain.Payload;
 import de.adorsys.dfs.connection.api.domain.PayloadStream;
-import de.adorsys.dfs.connection.api.filesystem.FilesystemConnectionPropertiesImpl;
 import de.adorsys.dfs.connection.api.service.api.DFSConnection;
 import de.adorsys.dfs.connection.api.service.impl.SimplePayloadImpl;
 import de.adorsys.dfs.connection.api.service.impl.SimplePayloadStreamImpl;
 import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import de.adorsys.dfs.connection.api.types.properties.ConnectionProperties;
-import de.adorsys.dfs.connection.impl.amazons3.AmazonS3ConnectionProperitesImpl;
 import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.business.DocumentSafeService;
@@ -240,10 +237,10 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
         List<DocumentFQN> retList = new ArrayList<>();
         DFSAndKeystoreAndPath dfsAndKeystoreAndPath = getUsersAccess(userIDAuth, documentDirectoryFQN);
         List<BucketPath> list = dfsAndKeystoreAndPath.usersDFS.list(dfsAndKeystoreAndPath.encryptedBucketDirectory, recursiveFlag);
-        String homeDirectoryAsString = BucketPathUtil.getAsString(FolderHelper.getHomeDirectory(userIDAuth.getUserID()));
+        String homeDirectoryAsString = FolderHelper.getHomeDirectory(userIDAuth.getUserID()).getValue();
         for (BucketPath encryptedBucketPath : list) {
             BucketPath unecryptedBucketPath = bucketPathEncryptionService.decrypt(dfsAndKeystoreAndPath.pathEncryptionKey, encryptedBucketPath);
-            String unecryptedBucketPathAsString = BucketPathUtil.getAsString(unecryptedBucketPath);
+            String unecryptedBucketPathAsString = unecryptedBucketPath.getValue();
             if (!unecryptedBucketPathAsString.startsWith(homeDirectoryAsString)) {
                 throw new BaseException("ProgrammingError:" + unecryptedBucketPathAsString + " does not start with " + homeDirectoryAsString);
             }
@@ -257,10 +254,10 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     public List<DocumentFQN> listInbox(UserIDAuth userIDAuth) {
         List<DocumentFQN> retList = new ArrayList<>();
         BucketDirectory inboxDirectory = FolderHelper.getInboxDirectory(userIDAuth.getUserID());
-        String inboxDirectoryAsString = BucketPathUtil.getAsString(inboxDirectory);
+        String inboxDirectoryAsString = inboxDirectory.getValue();
         List<BucketPath> list = systemDFS.list(inboxDirectory, ListRecursiveFlag.TRUE);
         for (BucketPath bucketPath : list) {
-            String bucketPathAsString = BucketPathUtil.getAsString(bucketPath);
+            String bucketPathAsString = bucketPath.getValue();
             if (!bucketPathAsString.startsWith(inboxDirectoryAsString)) {
                 throw new BaseException("ProgrammingError:" + bucketPathAsString + " does not start with " + inboxDirectoryAsString);
             }

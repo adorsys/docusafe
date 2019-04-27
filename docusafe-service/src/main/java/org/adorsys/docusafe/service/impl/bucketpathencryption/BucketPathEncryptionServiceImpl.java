@@ -7,7 +7,6 @@ import de.adorsys.dfs.connection.api.complextypes.BucketPath;
 import de.adorsys.dfs.connection.api.complextypes.BucketPathUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptionService;
-import org.slf4j.LoggerFactory;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -32,7 +31,7 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
             return bucketPath;
         }
         Cipher cipher = createCipher(secretKey, Cipher.ENCRYPT_MODE);
-        List<String> elements = BucketPathUtil.split(BucketPathUtil.getAsString(bucketPath));
+        List<String> elements = BucketPathUtil.split(bucketPath.getValue());
         return new BucketPath(encryptStringList(elements, cipher).toLowerCase());
     }
 
@@ -42,7 +41,7 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
             return bucketPath;
         }
         Cipher cipher = createCipher(secretKey, Cipher.DECRYPT_MODE);
-        List<String> elements = BucketPathUtil.split(BucketPathUtil.getAsString(bucketPath));
+        List<String> elements = BucketPathUtil.split(bucketPath.getValue());
         return new BucketPath(decryptStringList(elements, cipher));
     }
 
@@ -53,7 +52,7 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
             return bucketDirectory;
         }
         Cipher cipher = createCipher(secretKey, Cipher.ENCRYPT_MODE);
-        List<String> elements = BucketPathUtil.split(BucketPathUtil.getAsString(bucketDirectory));
+        List<String> elements = BucketPathUtil.split(bucketDirectory.getValue());
         return new BucketDirectory(encryptStringList(elements, cipher).toLowerCase());
     }
 
@@ -63,7 +62,7 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
             return bucketDirectory;
         }
         Cipher cipher = createCipher(secretKey, Cipher.DECRYPT_MODE);
-        List<String> elements = BucketPathUtil.split(BucketPathUtil.getAsString(bucketDirectory));
+        List<String> elements = BucketPathUtil.split(bucketDirectory.getValue());
         return new BucketDirectory(decryptStringList(elements, cipher));
     }
 
