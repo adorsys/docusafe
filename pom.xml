@@ -28,7 +28,7 @@
         <powermock.version>1.7.4</powermock.version>
         <commons.io.version>2.5</commons.io.version>
         <common-basetypes.version>0.0.7</common-basetypes.version>
-        <dfs-connection.version>0.0.14</dfs-connection.version>
+        <dfs-connection.version>0.0.15-SNAPSHOT</dfs-connection.version>
 
         <!-- Sonar dependencies -->
         <sonar.core.coveragePlugin>jacoco</sonar.core.coveragePlugin>

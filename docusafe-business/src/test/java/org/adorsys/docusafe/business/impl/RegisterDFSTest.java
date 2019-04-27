@@ -1,7 +1,12 @@
 package org.adorsys.docusafe.business.impl;
 
+import de.adorsys.common.exceptions.BaseException;
+import de.adorsys.dfs.connection.api.complextypes.BucketPath;
 import de.adorsys.dfs.connection.api.filesystem.FilesystemConnectionPropertiesImpl;
+import de.adorsys.dfs.connection.api.types.connection.AmazonS3RootBucketName;
 import de.adorsys.dfs.connection.api.types.connection.FilesystemRootBucketName;
+import de.adorsys.dfs.connection.api.types.properties.ConnectionProperties;
+import de.adorsys.dfs.connection.impl.amazons3.AmazonS3ConnectionProperitesImpl;
 import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.business.DocumentSafeService;
@@ -46,10 +51,9 @@ public class RegisterDFSTest {
             service.storeDocument(userIDAuth, dsDocument);
         }
 
-        DFSCredentials dfsCredentials = new DFSCredentials();
-        FilesystemConnectionPropertiesImpl props = new FilesystemConnectionPropertiesImpl();
-        props.setFilesystemRootBucketName(new FilesystemRootBucketName("target/another-root-bucket"));
-        dfsCredentials.setFilesystem(new FilesystemConnectionPropertiesImpl(new FilesystemConnectionPropertiesImpl(props)));
+        ConnectionProperties props = DFSConnectionFactory.get().getConnectionProperties();
+        props = changeRootDirectory( props, "for-one-user-only");
+        DFSCredentials dfsCredentials = new DFSCredentials(props);
         service.registerDFSCredentials(userIDAuth, dfsCredentials);
 
         // now retrieve a rondom document
@@ -57,17 +61,37 @@ public class RegisterDFSTest {
         DSDocument documentFromMemory = list.get(random.nextInt(list.size()));
         DSDocument dsDocument = service.readDocument(userIDAuth, documentFromMemory.getDocumentFQN());
         Assert.assertArrayEquals(documentFromMemory.getDocumentContent().getValue(), dsDocument.getDocumentContent().getValue());
+
+
     }
 
 
     @Test
     public void createPuml() {
 
-        DFSCredentials dfsCredentials = new DFSCredentials();
         FilesystemConnectionPropertiesImpl props = new FilesystemConnectionPropertiesImpl();
         props.setFilesystemRootBucketName(new FilesystemRootBucketName("target/another-root-bucket"));
-        dfsCredentials.setFilesystem(new FilesystemConnectionPropertiesImpl(new FilesystemConnectionPropertiesImpl(props)));
+        DFSCredentials dfsCredentials = new DFSCredentials(props);
         service.registerDFSCredentials(userIDAuth, dfsCredentials);
     }
 
+    private ConnectionProperties changeRootDirectory(ConnectionProperties props, String deeper) {
+        if (props instanceof FilesystemConnectionPropertiesImpl) {
+            FilesystemConnectionPropertiesImpl p = (FilesystemConnectionPropertiesImpl) props;
+            String root = p.getFilesystemRootBucketName().getValue();
+            root = root + BucketPath.BUCKET_SEPARATOR + deeper;
+            p.setFilesystemRootBucketName(new FilesystemRootBucketName(root));
+            return p;
+        }
+
+        if (props instanceof AmazonS3ConnectionProperitesImpl) {
+            AmazonS3ConnectionProperitesImpl p = (AmazonS3ConnectionProperitesImpl) props;
+            String root = p.getAmazonS3RootBucketName().getValue();
+            root = root + BucketPath.BUCKET_SEPARATOR + deeper;
+            p.setAmazonS3RootBucketName(new AmazonS3RootBucketName(root));
+            return p;
+
+        }
+        throw new BaseException("unknown instance of properties:" + props);
+    }
 }

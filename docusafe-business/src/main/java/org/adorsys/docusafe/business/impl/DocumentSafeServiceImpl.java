@@ -54,20 +54,23 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     private final DFSCredentials defaultUserDFSCredentials;
 
     private DFSCredentials getDefaultDFSCredentials(ConnectionProperties props) {
-        DFSCredentials dfsCredentials = new DFSCredentials();
-        if (props instanceof FilesystemConnectionPropertiesImpl) {
-            dfsCredentials.setFilesystem((FilesystemConnectionPropertiesImpl) props);
-        } else {
-            dfsCredentials.setAmazons3((AmazonS3ConnectionProperitesImpl) props);
-        }
+        DFSCredentials dfsCredentials = new DFSCredentials(props);
         return dfsCredentials;
     }
 
     private final KeyStoreService keyStoreService = new KeyStoreServiceImpl();
 
     public DocumentSafeServiceImpl(DFSConnection dfsConnection) {
-        systemDFS = dfsConnection;
-        defaultUserDFSCredentials = getDefaultDFSCredentials(dfsConnection.getConnectionProperties());
+        {
+            DFSCredentials dfsCredentials = new DFSCredentials(dfsConnection.getConnectionProperties());
+            dfsCredentials.addRootBucket(DFSCredentials.TYPE.SYSTEM_DFS);
+            systemDFS = DFSConnectionFactory.get(dfsCredentials.getProperties());
+        }
+        {
+            DFSCredentials dfsCredentials = new DFSCredentials(dfsConnection.getConnectionProperties());
+            dfsCredentials.addRootBucket(DFSCredentials.TYPE.USERS_DFS);
+            defaultUserDFSCredentials = new DFSCredentials(dfsCredentials.getProperties());
+        }
     }
 
     @Override
@@ -90,7 +93,6 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
             DFSCredentials userDFSCredentials = null;
             {
                 userDFSCredentials = new DFSCredentials(defaultUserDFSCredentials);
-                userDFSCredentials.setRootBucket(userIDAuth.getUserID());
                 // retrieve public key of public keystore once to encrypt DFSCredentials
                 storeUserDFSCredentials(userIDAuth, publicKeyStoreAccess, userDFSCredentials);
             }
@@ -126,13 +128,13 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     @Override
     public void destroyUser(UserIDAuth userIDAuth) {
         final DFSConnection usersDFSConnection = getUsersDFS(userIDAuth);
-        usersDFSConnection.deleteContainer(FolderHelper.getRootDirectory(userIDAuth.getUserID()));
-        systemDFS.deleteContainer(FolderHelper.getRootDirectory(userIDAuth.getUserID()));
+        usersDFSConnection.removeBlobFolder(FolderHelper.getRootDirectory(userIDAuth.getUserID()));
+        systemDFS.removeBlobFolder(FolderHelper.getRootDirectory(userIDAuth.getUserID()));
     }
 
     @Override
     public boolean userExists(UserID userID) {
-        return (systemDFS.containerExists(FolderHelper.getRootDirectory(userID)));
+        return (systemDFS.blobExists(FolderHelper.getKeyStorePath(userID)));
     }
 
     @Override
@@ -143,14 +145,11 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
             DFSConnection oldUsersDFSConnection = dfsAndKeystoreAndPath.usersDFS;
             DFSConnection newUsersDFSConnection = DFSConnectionFactory.get(dfsCredentials.getProperties());
             int numberOfFilesCopied = 0;
-            for (BucketDirectory bucketDirectory : oldUsersDFSConnection.listAllBuckets()) {
-                newUsersDFSConnection.createContainer(bucketDirectory);
-                for (BucketPath bucketPath : oldUsersDFSConnection.list(bucketDirectory, ListRecursiveFlag.TRUE)) {
+            for (BucketPath bucketPath : oldUsersDFSConnection.list(new BucketDirectory("/"), ListRecursiveFlag.TRUE)) {
                     // nothing has to be en- or decrypted. The data just has to be moved from one dfs to the next dfs
                     Payload blob = oldUsersDFSConnection.getBlob(bucketPath);
                     newUsersDFSConnection.putBlob(bucketPath, blob);
                     numberOfFilesCopied++;
-                }
             }
             log.debug("copied " + numberOfFilesCopied + " from old dfs to new dfs");
 
@@ -163,12 +162,8 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
             }
 
             // now delete all the old data
-            int numberOfBucketsDeleted = 0;
-            for (BucketDirectory bucketDirectory : oldUsersDFSConnection.listAllBuckets()) {
-                oldUsersDFSConnection.deleteContainer(bucketDirectory);
-                numberOfBucketsDeleted++;
-            }
-            log.debug("delete " + numberOfBucketsDeleted + "  from old dfs");
+            oldUsersDFSConnection.removeBlobFolder(new BucketDirectory("/"));
+            log.debug("deleted user from old dfs");
 
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
@@ -328,7 +323,6 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         usersSystemKeyStore.store(stream, userIDAuth.getReadKeyPassword().getValue().toCharArray());
         Payload payload = new SimplePayloadImpl(stream.toByteArray());
-        systemDFS.createContainer(FolderHelper.getRootDirectory(userIDAuth.getUserID()));
         systemDFS.putBlob(FolderHelper.getKeyStorePath(userIDAuth.getUserID()), payload);
     }
 

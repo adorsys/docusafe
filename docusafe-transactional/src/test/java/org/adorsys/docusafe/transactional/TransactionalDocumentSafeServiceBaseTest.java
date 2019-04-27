@@ -33,9 +33,8 @@ public class TransactionalDocumentSafeServiceBaseTest {
     @Before
     public void preTestBase() {
         LOGGER.debug("preTestBase");
-        DFSConnection esc = DFSConnectionFactory.get();
-        esc.listAllBuckets().forEach(bucket -> esc.deleteContainer(bucket));
 
+        DFSConnectionFactory.get().deleteDatabase();
         LOGGER.debug("TransactionalDcoumentSafeService is " + transactionalDocumentSafeService.getClass().getName());
     }
 

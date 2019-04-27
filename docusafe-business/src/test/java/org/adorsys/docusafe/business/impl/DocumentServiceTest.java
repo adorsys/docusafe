@@ -48,7 +48,7 @@ public class DocumentServiceTest {
 
     @Test
     public void storeAndReadOneDocument() {
-        DocumentFQN documentFQN = new DocumentFQN("affe/file1.txt");
+        DocumentFQN documentFQN = new DocumentFQN("file1.txt");
         DocumentContent documentContent = new DocumentContent("affe".getBytes());
         DSDocument dsDocument = new DSDocument(documentFQN, documentContent);
         service.storeDocument(userIDAuth, dsDocument);
