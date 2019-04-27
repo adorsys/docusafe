@@ -43,7 +43,7 @@ public class SpringDFSConnectionFactory {
             FilesystemConnectionPropertiesImpl properties = new FilesystemConnectionPropertiesImpl(wiredProperties.getFilesystem());
             if (basedir != null) {
                 String origName = properties.getFilesystemRootBucketName().getValue();
-                String newName = origName + basedir;
+                String newName = origName + "." + basedir;
                 properties.setFilesystemRootBucketName(new FilesystemRootBucketName(newName));
             }
             LOGGER.debug("jetzt filesystem");
@@ -52,7 +52,7 @@ public class SpringDFSConnectionFactory {
             AmazonS3ConnectionProperitesImpl properties = new AmazonS3ConnectionProperitesImpl(wiredProperties.getAmazons3());
             if (basedir != null) {
                 String origName = properties.getAmazonS3RootBucketName().getValue();
-                String newName = origName + basedir;
+                String newName = origName + "." + basedir;
                 properties.setAmazonS3RootBucketName(new AmazonS3RootBucketName(newName));
             }
             LOGGER.debug("jetzt amazon");

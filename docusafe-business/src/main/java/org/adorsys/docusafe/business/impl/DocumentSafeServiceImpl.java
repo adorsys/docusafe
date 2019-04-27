@@ -15,7 +15,6 @@ import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import de.adorsys.dfs.connection.api.types.properties.ConnectionProperties;
 import de.adorsys.dfs.connection.impl.amazons3.AmazonS3ConnectionProperitesImpl;
 import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
-import de.adorsys.dfs.connection.impl.factory.ReadArguments;
 import lombok.extern.slf4j.Slf4j;
 import org.adorsys.docusafe.business.DocumentSafeService;
 import org.adorsys.docusafe.business.exceptions.UserExistsException;
@@ -34,7 +33,10 @@ import org.adorsys.docusafe.service.impl.keystore.service.KeyStoreServiceImpl;
 import org.bouncycastle.cms.CMSEnvelopedData;
 
 import javax.crypto.SecretKey;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -49,10 +51,9 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     private final Class2JsonHelper class2JsonHelper = new Class2JsonHelper();
     private final BucketPathEncryptionService bucketPathEncryptionService = new BucketPathEncryptionServiceImpl();
     private final CMSEncryptionService cmsEncryptionService = new CMSEncryptionServiceImpl();
-    private final DFSCredentials defaultUserDFSCredentials = getDefaultDFSCredentials();
+    private final DFSCredentials defaultUserDFSCredentials;
 
-    private DFSCredentials getDefaultDFSCredentials() {
-        ConnectionProperties props = new ReadArguments().readEnvironment();
+    private DFSCredentials getDefaultDFSCredentials(ConnectionProperties props) {
         DFSCredentials dfsCredentials = new DFSCredentials();
         if (props instanceof FilesystemConnectionPropertiesImpl) {
             dfsCredentials.setFilesystem((FilesystemConnectionPropertiesImpl) props);
@@ -66,6 +67,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     public DocumentSafeServiceImpl(DFSConnection dfsConnection) {
         systemDFS = dfsConnection;
+        defaultUserDFSCredentials = getDefaultDFSCredentials(dfsConnection.getConnectionProperties());
     }
 
     @Override

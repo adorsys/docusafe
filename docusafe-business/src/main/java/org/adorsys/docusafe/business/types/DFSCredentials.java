@@ -14,8 +14,8 @@ import org.adorsys.docusafe.service.api.types.UserID;
 @Getter
 @Setter
 public class DFSCredentials {
-    private FilesystemConnectionPropertiesImpl filesystem;
-    private AmazonS3ConnectionProperitesImpl amazons3;
+    private FilesystemConnectionPropertiesImpl filesystem = null;
+    private AmazonS3ConnectionProperitesImpl amazons3 = null;
 
     public DFSCredentials() {
 
@@ -33,12 +33,12 @@ public class DFSCredentials {
 
         if (getFilesystem() != null) {
             String root = getFilesystem().getFilesystemRootBucketName().getValue();
-            root += "-bp-" + userID.getValue();
+            root += ".bp-" + userID.getValue();
             getFilesystem().setFilesystemRootBucketName(new FilesystemRootBucketName(root));
         }
         if (getAmazons3() != null) {
             String root = getAmazons3().getAmazonS3RootBucketName().getValue();
-            root += "-bp-" + userID.getValue();
+            root += ".bp-" + userID.getValue();
             getAmazons3().setAmazonS3RootBucketName(new AmazonS3RootBucketName(root));
         }
     }
