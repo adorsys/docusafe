@@ -14,19 +14,6 @@ activate DocumentSafeServiceImpl
 ' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DocumentSafeServiceImpl : userExists
 
-activate DocumentSafeServiceImpl
-' DocumentSafeServiceImpl
-DocumentSafeServiceImpl --> DFSConnection : containerExists
-
-activate DFSConnection
-' de.adorsys.dfs.connection.api.service.api.DFSConnection
-DocumentSafeServiceImpl <-- DFSConnection : boolean
-deactivate DFSConnection
-
-' DocumentSafeServiceImpl
-DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : boolean
-deactivate DocumentSafeServiceImpl
-
 ' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> KeyStoreService : createKeyStore
 
@@ -49,13 +36,6 @@ activate KeyStore
 DocumentSafeServiceImpl <-- KeyStore :  
 deactivate KeyStore
 
-' DocumentSafeServiceImpl
-DocumentSafeServiceImpl --> DFSConnection : createContainer
-
-activate DFSConnection
-' de.adorsys.dfs.connection.api.service.api.DFSConnection
-DocumentSafeServiceImpl <-- DFSConnection :  
-deactivate DFSConnection
 
 ' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : putBlob
@@ -151,13 +131,6 @@ activate KeyStore
 DocumentSafeServiceImpl <-- KeyStore :  
 deactivate KeyStore
 
-' DocumentSafeServiceImpl
-DocumentSafeServiceImpl --> DFSConnection : createContainer
-
-activate DFSConnection
-' de.adorsys.dfs.connection.api.service.api.DFSConnection
-DocumentSafeServiceImpl <-- DFSConnection :  
-deactivate DFSConnection
 
 ' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : putBlob

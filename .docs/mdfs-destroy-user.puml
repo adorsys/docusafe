@@ -83,7 +83,7 @@ DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : DFSConnection
 deactivate DocumentSafeServiceImpl
 
 ' DocumentSafeServiceImpl
-DocumentSafeServiceImpl --> DFSConnection : deleteContainer
+DocumentSafeServiceImpl --> DFSConnection : deleteFolder
 
 activate DFSConnection
 ' de.adorsys.dfs.connection.api.service.api.DFSConnection
@@ -91,11 +91,11 @@ DocumentSafeServiceImpl <-- DFSConnection :
 deactivate DFSConnection
 
 ' DocumentSafeServiceImpl
-DocumentSafeServiceImpl --> DFSConnection : deleteContainer
+DocumentSafeServiceImpl --> DFSConnection : deleteFolder
 
 activate DFSConnection
 ' de.adorsys.dfs.connection.api.service.api.DFSConnection
-DocumentSafeServiceImpl <-- DFSConnection :  
+DocumentSafeServiceImpl <-- DFSConnection :
 deactivate DFSConnection
 
 ' DocumentSafeServiceImpl
