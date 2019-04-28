@@ -21,7 +21,7 @@ secrete key. This secret key is choosen to en- and decrypt the bucketpath of the
 
 # registerDFS
 
-![New user sequence diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/adorsys/.docs/develop/documents/registerdfs.puml&fmt=png&vvv=1)
+![New user sequence diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/adorsys/docusafe/develop/.docs/registerdfs.puml&fmt=png&vvv=1)
 
 # setup
 
