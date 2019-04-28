@@ -3,39 +3,39 @@
 skinparam SequenceMessageAlign center
 
 activate RegisterDFSTest
-' org.adorsys.docusafe.business.impl.RegisterDFSTest
+' RegisterDFSTest
 RegisterDFSTest --> DocumentSafeService : registerDFSCredentials
 
 activate DocumentSafeService
-' org.adorsys.docusafe.business.DocumentSafeService
+' DocumentSafeService
 DocumentSafeService --> DocumentSafeServiceImpl : registerDFSCredentials
 
 activate DocumentSafeServiceImpl
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getUsersAccess
 
 activate DocumentSafeServiceImpl
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getUsersAccess
 
 activate DocumentSafeServiceImpl
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getUsersDFS
 
 activate DocumentSafeServiceImpl
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getKeyStoreAccess
 
 activate DocumentSafeServiceImpl
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> FolderHelper : getKeyStorePath
 
 activate FolderHelper
-' org.adorsys.docusafe.business.impl.FolderHelper
+' FolderHelper
 DocumentSafeServiceImpl <-- FolderHelper : BucketPath
 deactivate FolderHelper
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : getBlob
 
 activate DFSConnection
@@ -43,19 +43,19 @@ activate DFSConnection
 DocumentSafeServiceImpl <-- DFSConnection : Payload
 deactivate DFSConnection
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : KeyStoreAccess
 deactivate DocumentSafeServiceImpl
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> FolderHelper : getDFSCredentialsPath
 
 activate FolderHelper
-' org.adorsys.docusafe.business.impl.FolderHelper
+' FolderHelper
 DocumentSafeServiceImpl <-- FolderHelper : BucketPath
 deactivate FolderHelper
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : getBlob
 
 activate DFSConnection
@@ -63,31 +63,31 @@ activate DFSConnection
 DocumentSafeServiceImpl <-- DFSConnection : Payload
 deactivate DFSConnection
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> CMSEncryptionService : decrypt
 
 activate CMSEncryptionService
-' org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService
+' CMSEncryptionService
 CMSEncryptionService --> CMSEncryptionServiceImpl : decrypt
 
 activate CMSEncryptionServiceImpl
-' org.adorsys.docusafe.service.impl.cmsencryption.services.CMSEncryptionServiceImpl
+' CMSEncryptionServiceImpl
 CMSEncryptionService <-- CMSEncryptionServiceImpl : Payload
 deactivate CMSEncryptionServiceImpl
 
-' org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService
+' CMSEncryptionService
 DocumentSafeServiceImpl <-- CMSEncryptionService : Payload
 deactivate CMSEncryptionService
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> Class2JsonHelper : contentToDFSConnection
 
 activate Class2JsonHelper
-' org.adorsys.docusafe.business.impl.jsonserialisation.Class2JsonHelper
+' Class2JsonHelper
 DocumentSafeServiceImpl <-- Class2JsonHelper : DFSCredentials
 deactivate Class2JsonHelper
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnectionFactory : get
 
 activate DFSConnectionFactory
@@ -95,23 +95,23 @@ activate DFSConnectionFactory
 DocumentSafeServiceImpl <-- DFSConnectionFactory : DFSConnection
 deactivate DFSConnectionFactory
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : DFSConnection
 deactivate DocumentSafeServiceImpl
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getKeyStoreAccess
 
 activate DocumentSafeServiceImpl
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> FolderHelper : getKeyStorePath
 
 activate FolderHelper
-' org.adorsys.docusafe.business.impl.FolderHelper
+' FolderHelper
 DocumentSafeServiceImpl <-- FolderHelper : BucketPath
 deactivate FolderHelper
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : getBlob
 
 activate DFSConnection
@@ -119,39 +119,39 @@ activate DFSConnection
 DocumentSafeServiceImpl <-- DFSConnection : Payload
 deactivate DFSConnection
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : KeyStoreAccess
 deactivate DocumentSafeServiceImpl
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> KeyStoreService : getRandomSecretKeyID
 
 activate KeyStoreService
-' org.adorsys.docusafe.service.api.keystore.KeyStoreService
+' KeyStoreService
 KeyStoreService --> KeyStoreServiceImpl : getRandomSecretKeyID
 
 activate KeyStoreServiceImpl
-' org.adorsys.docusafe.service.impl.keystore.service.KeyStoreServiceImpl
+' KeyStoreServiceImpl
 KeyStoreService <-- KeyStoreServiceImpl : SecretKeyIDWithKey
 deactivate KeyStoreServiceImpl
 
-' org.adorsys.docusafe.service.api.keystore.KeyStoreService
+' KeyStoreService
 DocumentSafeServiceImpl <-- KeyStoreService : SecretKeyIDWithKey
 deactivate KeyStoreService
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getKeyStoreAccess
 
 activate DocumentSafeServiceImpl
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> FolderHelper : getKeyStorePath
 
 activate FolderHelper
-' org.adorsys.docusafe.business.impl.FolderHelper
+' FolderHelper
 DocumentSafeServiceImpl <-- FolderHelper : BucketPath
 deactivate FolderHelper
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : getBlob
 
 activate DFSConnection
@@ -159,15 +159,15 @@ activate DFSConnection
 DocumentSafeServiceImpl <-- DFSConnection : Payload
 deactivate DFSConnection
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : KeyStoreAccess
 deactivate DocumentSafeServiceImpl
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> FolderHelper : getHomeDirectory
 
 activate FolderHelper
-' org.adorsys.docusafe.business.impl.FolderHelper
+' FolderHelper
 FolderHelper --> BucketDirectory : appendDirectory
 
 activate BucketDirectory
@@ -175,31 +175,31 @@ activate BucketDirectory
 FolderHelper <-- BucketDirectory : BucketDirectory
 deactivate BucketDirectory
 
-' org.adorsys.docusafe.business.impl.FolderHelper
+' FolderHelper
 DocumentSafeServiceImpl <-- FolderHelper : BucketDirectory
 deactivate FolderHelper
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> BucketPathEncryptionService : encrypt
 
 activate BucketPathEncryptionService
-' org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptionService
+' BucketPathEncryptionService
 BucketPathEncryptionService --> BucketPathEncryptionServiceImpl : encrypt
 
 activate BucketPathEncryptionServiceImpl
-' org.adorsys.docusafe.service.impl.bucketpathencryption.BucketPathEncryptionServiceImpl
+' BucketPathEncryptionServiceImpl
 BucketPathEncryptionService <-- BucketPathEncryptionServiceImpl : BucketPath
 deactivate BucketPathEncryptionServiceImpl
 
-' org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptionService
+' BucketPathEncryptionService
 DocumentSafeServiceImpl <-- BucketPathEncryptionService : BucketPath
 deactivate BucketPathEncryptionService
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> FolderHelper : getHomeDirectory
 
 activate FolderHelper
-' org.adorsys.docusafe.business.impl.FolderHelper
+' FolderHelper
 FolderHelper --> BucketDirectory : appendDirectory
 
 activate BucketDirectory
@@ -207,11 +207,11 @@ activate BucketDirectory
 FolderHelper <-- BucketDirectory : BucketDirectory
 deactivate BucketDirectory
 
-' org.adorsys.docusafe.business.impl.FolderHelper
+' FolderHelper
 DocumentSafeServiceImpl <-- FolderHelper : BucketDirectory
 deactivate FolderHelper
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> BucketDirectory : appendDirectory
 
 activate BucketDirectory
@@ -219,31 +219,31 @@ activate BucketDirectory
 DocumentSafeServiceImpl <-- BucketDirectory : BucketDirectory
 deactivate BucketDirectory
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> BucketPathEncryptionService : encrypt
 
 activate BucketPathEncryptionService
-' org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptionService
+' BucketPathEncryptionService
 BucketPathEncryptionService --> BucketPathEncryptionServiceImpl : encrypt
 
 activate BucketPathEncryptionServiceImpl
-' org.adorsys.docusafe.service.impl.bucketpathencryption.BucketPathEncryptionServiceImpl
+' BucketPathEncryptionServiceImpl
 BucketPathEncryptionService <-- BucketPathEncryptionServiceImpl : BucketDirectory
 deactivate BucketPathEncryptionServiceImpl
 
-' org.adorsys.docusafe.service.api.bucketpathencryption.BucketPathEncryptionService
+' BucketPathEncryptionService
 DocumentSafeServiceImpl <-- BucketPathEncryptionService : BucketDirectory
 deactivate BucketPathEncryptionService
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : DFSAndKeystoreAndPath
 deactivate DocumentSafeServiceImpl
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : DFSAndKeystoreAndPath
 deactivate DocumentSafeServiceImpl
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnectionFactory : get
 
 activate DFSConnectionFactory
@@ -251,7 +251,7 @@ activate DFSConnectionFactory
 DocumentSafeServiceImpl <-- DFSConnectionFactory : DFSConnection
 deactivate DFSConnectionFactory
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : listAllBuckets
 
 activate DFSConnection
@@ -259,7 +259,7 @@ activate DFSConnection
 DocumentSafeServiceImpl <-- DFSConnection : List
 deactivate DFSConnection
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : createContainer
 
 activate DFSConnection
@@ -267,7 +267,7 @@ activate DFSConnection
 DocumentSafeServiceImpl <-- DFSConnection :  
 deactivate DFSConnection
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : list
 
 activate DFSConnection
@@ -275,7 +275,7 @@ activate DFSConnection
 DocumentSafeServiceImpl <-- DFSConnection : List
 deactivate DFSConnection
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : getBlob
 
 activate DFSConnection
@@ -283,7 +283,7 @@ activate DFSConnection
 DocumentSafeServiceImpl <-- DFSConnection : Payload
 deactivate DFSConnection
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : putBlob
 
 activate DFSConnection
@@ -291,19 +291,19 @@ activate DFSConnection
 DocumentSafeServiceImpl <-- DFSConnection :  
 deactivate DFSConnection
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getKeyStoreAccess
 
 activate DocumentSafeServiceImpl
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> FolderHelper : getKeyStorePath
 
 activate FolderHelper
-' org.adorsys.docusafe.business.impl.FolderHelper
+' FolderHelper
 DocumentSafeServiceImpl <-- FolderHelper : BucketPath
 deactivate FolderHelper
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : getBlob
 
 activate DFSConnection
@@ -311,63 +311,63 @@ activate DFSConnection
 DocumentSafeServiceImpl <-- DFSConnection : Payload
 deactivate DFSConnection
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : KeyStoreAccess
 deactivate DocumentSafeServiceImpl
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DocumentSafeServiceImpl : storeUserDFSCredentials
 
 activate DocumentSafeServiceImpl
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> KeyStoreService : getPublicKeys
 
 activate KeyStoreService
-' org.adorsys.docusafe.service.api.keystore.KeyStoreService
+' KeyStoreService
 KeyStoreService --> KeyStoreServiceImpl : getPublicKeys
 
 activate KeyStoreServiceImpl
-' org.adorsys.docusafe.service.impl.keystore.service.KeyStoreServiceImpl
+' KeyStoreServiceImpl
 KeyStoreService <-- KeyStoreServiceImpl : PublicKeyList
 deactivate KeyStoreServiceImpl
 
-' org.adorsys.docusafe.service.api.keystore.KeyStoreService
+' KeyStoreService
 DocumentSafeServiceImpl <-- KeyStoreService : PublicKeyList
 deactivate KeyStoreService
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> Class2JsonHelper : dfsCredentialsToContent
 
 activate Class2JsonHelper
-' org.adorsys.docusafe.business.impl.jsonserialisation.Class2JsonHelper
+' Class2JsonHelper
 DocumentSafeServiceImpl <-- Class2JsonHelper : Payload
 deactivate Class2JsonHelper
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> CMSEncryptionService : encrypt
 
 activate CMSEncryptionService
-' org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService
+' CMSEncryptionService
 CMSEncryptionService --> CMSEncryptionServiceImpl : encrypt
 
 activate CMSEncryptionServiceImpl
-' org.adorsys.docusafe.service.impl.cmsencryption.services.CMSEncryptionServiceImpl
+' CMSEncryptionServiceImpl
 CMSEncryptionService <-- CMSEncryptionServiceImpl : CMSEnvelopedData
 deactivate CMSEncryptionServiceImpl
 
-' org.adorsys.docusafe.service.api.cmsencryption.CMSEncryptionService
+' CMSEncryptionService
 DocumentSafeServiceImpl <-- CMSEncryptionService : CMSEnvelopedData
 deactivate CMSEncryptionService
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> FolderHelper : getDFSCredentialsPath
 
 activate FolderHelper
-' org.adorsys.docusafe.business.impl.FolderHelper
+' FolderHelper
 DocumentSafeServiceImpl <-- FolderHelper : BucketPath
 deactivate FolderHelper
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : putBlob
 
 activate DFSConnection
@@ -375,11 +375,11 @@ activate DFSConnection
 DocumentSafeServiceImpl <-- DFSConnection :  
 deactivate DFSConnection
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl <-- DocumentSafeServiceImpl :  
 deactivate DocumentSafeServiceImpl
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : listAllBuckets
 
 activate DFSConnection
@@ -387,7 +387,7 @@ activate DFSConnection
 DocumentSafeServiceImpl <-- DFSConnection : List
 deactivate DFSConnection
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeServiceImpl --> DFSConnection : deleteContainer
 
 activate DFSConnection
@@ -395,11 +395,11 @@ activate DFSConnection
 DocumentSafeServiceImpl <-- DFSConnection :  
 deactivate DFSConnection
 
-' org.adorsys.docusafe.business.impl.DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
 DocumentSafeService <-- DocumentSafeServiceImpl :  
 deactivate DocumentSafeServiceImpl
 
-' org.adorsys.docusafe.business.DocumentSafeService
+' DocumentSafeService
 RegisterDFSTest <-- DocumentSafeService :  
 deactivate DocumentSafeService
 
