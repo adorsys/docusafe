@@ -19,10 +19,19 @@ The sconed keystsore is created in the users DFS Connection, so by default in th
 public/private keypairs. The public keys are randomly choosen to encrypt the users data. Further the keystore contains exactly one
 secrete key. This secret key is choosen to en- and decrypt the bucketpath of the users documents.
 
-# registerDFS
 
-![New user sequence diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/adorsys/docusafe/develop/.docs/registerdfs.puml&fmt=png&vvv=1)
+# create user
 
-# setup
+![New user sequence diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/adorsys/docusafe/develop/.docs/mdfs-create-user.puml&fmt=png&vvv=1)
 
-![New user sequence diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/adorsys/docusafe/develop/.docs/mdfs.puml&fmt=png&vvv=1)
+# write document
+
+![New user sequence diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/adorsys/docusafe/develop/.docs/mdfs-store-document.puml&fmt=png&vvv=1)
+
+# read document
+
+![New user sequence diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/adorsys/docusafe/develop/.docs/mdfs-read-document.puml&fmt=png&vvv=1)
+
+# destroy user
+
+![New user sequence diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/adorsys/docusafe/develop/.docs/mdfs-destroy-user.puml&fmt=png&vvv=1)

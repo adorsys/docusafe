@@ -1,0 +1,190 @@
+@startuml
+
+skinparam SequenceMessageAlign center
+
+
+' DocumentServiceTest
+DocumentServiceTest --> DocumentSafeService : readDocument
+
+activate DocumentSafeService
+' DocumentSafeService
+DocumentSafeService --> DocumentSafeServiceImpl : readDocument
+
+activate DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getUsersDFS
+
+activate DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getKeyStoreAccess
+
+activate DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : getInstance
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore : KeyStore
+deactivate KeyStore
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : load
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore :  
+deactivate KeyStore
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : KeyStoreAccess
+deactivate DocumentSafeServiceImpl
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> CMSEncryptionService : decrypt
+
+activate CMSEncryptionService
+' CMSEncryptionService
+DocumentSafeServiceImpl <-- CMSEncryptionService : Payload
+deactivate CMSEncryptionService
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> Class2JsonHelper : contentToDFSConnection
+
+activate Class2JsonHelper
+' Class2JsonHelper
+DocumentSafeServiceImpl <-- Class2JsonHelper : DFSCredentials
+deactivate Class2JsonHelper
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnectionFactory : get
+
+activate DFSConnectionFactory
+' de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory
+DocumentSafeServiceImpl <-- DFSConnectionFactory : DFSConnection
+deactivate DFSConnectionFactory
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : DFSConnection
+deactivate DocumentSafeServiceImpl
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getKeyStoreAccess
+
+activate DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : getInstance
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore : KeyStore
+deactivate KeyStore
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : load
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore :  
+deactivate KeyStore
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : KeyStoreAccess
+deactivate DocumentSafeServiceImpl
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStoreService : getRandomSecretKeyID
+
+activate KeyStoreService
+' KeyStoreService
+DocumentSafeServiceImpl <-- KeyStoreService : SecretKeyIDWithKey
+deactivate KeyStoreService
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> BucketPathEncryptionService : encrypt
+
+activate BucketPathEncryptionService
+' BucketPathEncryptionService
+DocumentSafeServiceImpl <-- BucketPathEncryptionService : BucketPath
+deactivate BucketPathEncryptionService
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DocumentSafeServiceImpl : getKeyStoreAccess
+
+activate DocumentSafeServiceImpl
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : getInstance
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore : KeyStore
+deactivate KeyStore
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> KeyStore : load
+
+activate KeyStore
+' java.security.KeyStore
+DocumentSafeServiceImpl <-- KeyStore :  
+deactivate KeyStore
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl <-- DocumentSafeServiceImpl : KeyStoreAccess
+deactivate DocumentSafeServiceImpl
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> DFSConnection : getBlob
+
+activate DFSConnection
+' de.adorsys.dfs.connection.api.service.api.DFSConnection
+DocumentSafeServiceImpl <-- DFSConnection : Payload
+deactivate DFSConnection
+
+' DocumentSafeServiceImpl
+DocumentSafeServiceImpl --> CMSEncryptionService : decrypt
+
+activate CMSEncryptionService
+' CMSEncryptionService
+DocumentSafeServiceImpl <-- CMSEncryptionService : Payload
+deactivate CMSEncryptionService
+
+' DocumentSafeServiceImpl
+DocumentSafeService <-- DocumentSafeServiceImpl : DSDocument
+deactivate DocumentSafeServiceImpl
+
+' DocumentSafeService
+DocumentServiceTest <-- DocumentSafeService : DSDocument
+deactivate DocumentSafeService
+
+@enduml
