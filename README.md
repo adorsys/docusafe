@@ -1,13 +1,31 @@
 # Document Safe
 
 The document safe (docusafe) is a framework used to securely manage (read, write, update and delete) data on the top of a blob storage.
+This version contains the following features
+* Multiple DFS Connections
+
+    The underlying DFSConnection is explained in https://travis-ci.com/adorsys/dfs-connection. The docusafe by defaults works with one DFS. It contains all data of all user. Though the data is encrypted individually and thus can not be hacked it is vulnerable as once the dfs connection credentials are known, all data can be deleted. To avoid this, it is possible to give each user its own dfs connection. By that the data is no more stored in one place, but in different places and for that much less vulnerable. Of course this feature can be used for clustering too. 
+
+* Encryption done with CMSEnvelopeData
+
+    The en- and decryption of the data is done by the bouncy castle classes provided with the CMSEnvelope. The cryptographic message syntax (CMS) is a standard. Thus the
+encrypted data can be read by other systems if the private keys are available. 
+
+* individual BucketPath encryption
+
+    Each users documents are not only en- and decrypted individually, but the names of the files are encrypted individually too. So access to the DFS connection gives the hacker only a chance to see completly encrypted data. No readable filenames and of course no readable content can be seen.
+
+* Persistence en- and decrypted via fixed byte array or streams
+
+    Last but not least, even big data streams (> 1GB) can be securely stored with the provide stream functionality.
+
 
 ## Layers
 The docusafe framework is a layer based software. 
 Each layer depends on its underlying layer. 
 The underlying layer does not have any dependencies to the layers above. 
 The layers will be explained from bottom to top. 
-* layer 0: **docusafe-service**
+### layer 0: **docusafe-service** (internal)
 
 This layer does the encryption stuff. It is not to be uses by the clients. It provides a service
 to create a keystore, to en- and decrypt a bucket path and to en- and decrypt a blob.
@@ -63,7 +81,7 @@ public class ReadMeMDFileTestCode {
     }
 }
 ```
-### layer 2: **docusafe-transactional**
+### layer 2: **docusafe-transactional** (internal)
 
 This layer provides the functionality to group actions that will be commited 
 all together, or none of them. Now guess, you want store two documents and 
@@ -152,14 +170,20 @@ public class ReadMeMDFileTestCode {
     
 The layers 0-3 have to be used as direct services. This means, the classes have to be instantiated with new x-serviceImpl(). 
 Specially the layer 2 and 3 need a MemoryContext object to store temporary information in memory 
-rather than the filesystem.
+rather than the DFS.
 As most server based architectures run 
 with spring or ee context, there is no need to create your own implementation of a MemoryContext.
+
 As the name of the layer implies,
-it can be used with spring, to get the needed services to be injected for free.
-This can be achieved by simply using the @UseDocusafeSpringConfiguration annotation. Then the ExtendedStoreConnection or the 
+the docusafe instances can be injected with spring. 
+This can be achieved by simply using the @UseDocusafeSpringConfiguration annotation. Then the DFSConnection or the 
 CachedTransactionalDocumentSafeService can be injected as autowired beans. Or, for more detailed access to the services, the
-SpringExtendedStoreConnectionFactory or SpringCachedTransactionalDocusafeServiceFactory can be autowired.
+SpringDFSConnectionFactory or SpringCachedTransactionalDocusafeServiceFactory can be autowired.
  
 ## REST
 If you are missing a REST layer, this is not provided by this framework. But in https://github.com/adorsys/docusafe.tests you can find a REST layer for the docusafe framework.
+
+# further documents
+
+* [Interals](.docs/internals.md)
+* [how to create a release](.docs/HowToCreateARelease.md)
