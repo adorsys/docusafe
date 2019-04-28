@@ -185,5 +185,5 @@ If you are missing a REST layer, this is not provided by this framework. But in 
 
 # further documents
 
-* [Interals](.docs/internals.md)
+* [Internals](.docs/Internals.md)
 * [how to create a release](.docs/HowToCreateARelease.md)
