@@ -20,18 +20,27 @@ public/private keypairs. The public keys are randomly choosen to encrypt the use
 secrete key. This secret key is choosen to en- and decrypt the bucketpath of the users documents.
 
 
-# create user
+## create user
 
 ![New user sequence diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/adorsys/docusafe/develop/.docs/mdfs-create-user.puml&fmt=png&vvv=1)
 
-# write document
+## write document
 
 ![New user sequence diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/adorsys/docusafe/develop/.docs/mdfs-store-document.puml&fmt=png&vvv=1)
 
-# read document
+## read document
 
 ![New user sequence diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/adorsys/docusafe/develop/.docs/mdfs-read-document.puml&fmt=png&vvv=1)
 
-# destroy user
+## destroy user
 
 ![New user sequence diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/adorsys/docusafe/develop/.docs/mdfs-destroy-user.puml&fmt=png&vvv=1)
+
+
+# The beginning of docusafe
+
+Docusafe is a tiny part of the former platform plooh. The kickoff for the first docusafe was done at the 14 of December in 2017. At that time, the encryption was done explicitly with a document guard.
+Here a the screenshots:
+![](images/decryption.jpg)
+![](images/encryption.jpg)
+
