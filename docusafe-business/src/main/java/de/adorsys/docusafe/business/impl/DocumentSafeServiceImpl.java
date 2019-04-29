@@ -142,7 +142,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
             DFSConnection oldUsersDFSConnection = dfsAndKeystoreAndPath.usersDFS;
             DFSConnection newUsersDFSConnection = DFSConnectionFactory.get(dfsCredentials.getProperties());
             int numberOfFilesCopied = 0;
-            for (BucketPath bucketPath : oldUsersDFSConnection.list(new BucketDirectory("/"), ListRecursiveFlag.TRUE)) {
+            for (BucketPath bucketPath : oldUsersDFSConnection.list(FolderHelper.getRootDirectory(userIDAuth.getUserID()), ListRecursiveFlag.TRUE)) {
                     // nothing has to be en- or decrypted. The data just has to be moved from one dfs to the next dfs
                     Payload blob = oldUsersDFSConnection.getBlob(bucketPath);
                     newUsersDFSConnection.putBlob(bucketPath, blob);
@@ -159,7 +159,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
             }
 
             // now delete all the old data
-            oldUsersDFSConnection.removeBlobFolder(new BucketDirectory("/"));
+            oldUsersDFSConnection.removeBlobFolder(FolderHelper.getRootDirectory(userIDAuth.getUserID()));
             log.debug("deleted user from old dfs");
 
         } catch (Exception e) {
