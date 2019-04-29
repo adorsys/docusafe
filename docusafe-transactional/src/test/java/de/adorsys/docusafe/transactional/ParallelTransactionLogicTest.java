@@ -1,9 +1,10 @@
-package de.adorsys.docusafe.transactional.impl.helper;
+package de.adorsys.docusafe.transactional;
 
 import com.googlecode.catchexception.CatchException;
 import de.adorsys.docusafe.transactional.impl.LastCommitedTxID;
 import de.adorsys.docusafe.transactional.impl.TxIDHashMap;
 import de.adorsys.docusafe.transactional.impl.TxIDHashMapWrapper;
+import de.adorsys.docusafe.transactional.impl.helper.ParallelTransactionLogic;
 import de.adorsys.docusafe.transactional.types.TxID;
 import lombok.extern.slf4j.Slf4j;
 import de.adorsys.docusafe.business.types.DocumentFQN;

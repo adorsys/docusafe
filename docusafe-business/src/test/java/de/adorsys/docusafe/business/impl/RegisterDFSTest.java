@@ -61,8 +61,6 @@ public class RegisterDFSTest {
         DSDocument documentFromMemory = list.get(random.nextInt(list.size()));
         DSDocument dsDocument = service.readDocument(userIDAuth, documentFromMemory.getDocumentFQN());
         Assert.assertArrayEquals(documentFromMemory.getDocumentContent().getValue(), dsDocument.getDocumentContent().getValue());
-
-
     }
 
 

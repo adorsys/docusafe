@@ -1,23 +1,27 @@
 package de.adorsys.docusafe.transactional;
 
 import com.googlecode.catchexception.CatchException;
-import de.adorsys.docusafe.business.types.MoveType;
-import de.adorsys.docusafe.business.types.BucketContentFQN;
-import de.adorsys.docusafe.business.types.DSDocument;
-import de.adorsys.docusafe.business.types.DocumentDirectoryFQN;
-import de.adorsys.docusafe.business.types.DocumentFQN;
+import de.adorsys.common.exceptions.BaseException;
+import de.adorsys.dfs.connection.api.complextypes.BucketPath;
+import de.adorsys.dfs.connection.api.filesystem.FilesystemConnectionPropertiesImpl;
+import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
+import de.adorsys.dfs.connection.api.types.connection.AmazonS3RootBucketName;
+import de.adorsys.dfs.connection.api.types.connection.FilesystemRootBucketName;
+import de.adorsys.dfs.connection.api.types.properties.ConnectionProperties;
+import de.adorsys.dfs.connection.impl.amazons3.AmazonS3ConnectionProperitesImpl;
+import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
+import de.adorsys.docusafe.business.types.*;
 import de.adorsys.docusafe.service.api.types.DocumentContent;
-import de.adorsys.docusafe.transactional.exceptions.TxInnerException;
-import de.adorsys.docusafe.transactional.types.TxBucketContentFQN;
-import de.adorsys.docusafe.transactional.types.TxDocumentFQNVersion;
 import de.adorsys.docusafe.transactional.exceptions.TxNotActiveException;
 import de.adorsys.docusafe.transactional.exceptions.TxRacingConditionException;
-import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
+import de.adorsys.docusafe.transactional.types.TxBucketContentFQN;
+import de.adorsys.docusafe.transactional.types.TxDocumentFQNVersion;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -141,13 +145,12 @@ public class TransactionalDocumentSafeServiceTest extends TransactionalDocumentS
         }
     }
 
-    @Test(expected = TxInnerException.class)
+    @Test
     public void innerTxNotImplementedYet() {
-
-
         transactionalDocumentSafeService.createUser(userIDAuth);
         transactionalDocumentSafeService.beginTransaction(userIDAuth);
-        transactionalDocumentSafeService.beginTransaction(userIDAuth);
+        CatchException.catchException(() -> transactionalDocumentSafeService.beginTransaction(userIDAuth));
+        Assert.assertTrue(CatchException.caughtException() != null);
     }
 
     @Test
@@ -319,6 +322,55 @@ public class TransactionalDocumentSafeServiceTest extends TransactionalDocumentS
         CatchException.catchException(() -> transactionalDocumentSafeService.txReadDocument(userIDAuth, documentFQN));
         Assert.assertTrue(CatchException.caughtException() instanceof TxNotActiveException);
     }
+
+    @Test
+    public void registerNewDFS() {
+        transactionalDocumentSafeService.createUser(userIDAuth);
+        DocumentFQN documentFQN = new DocumentFQN("testxTFolder/first.txt");
+        DocumentContent documentContent = new DocumentContent("very first".getBytes());
+        DSDocument document = new DSDocument(documentFQN, documentContent);
+
+        TxDocumentFQNVersion version = null;
+        {
+            transactionalDocumentSafeService.beginTransaction(userIDAuth);
+            CatchException.catchException(() -> transactionalDocumentSafeService.getVersion(userIDAuth, documentFQN));
+            Assert.assertTrue(CatchException.caughtException() != null);
+            transactionalDocumentSafeService.txStoreDocument(userIDAuth, document);
+            version = transactionalDocumentSafeService.getVersion(userIDAuth, documentFQN);
+            transactionalDocumentSafeService.endTransaction(userIDAuth);
+        }
+        {
+            ConnectionProperties props = DFSConnectionFactory.get().getConnectionProperties();
+            DFSCredentials dfsCredentials = new DFSCredentials(changeRootDirectory(props, "another-dfs-for-user"));
+            transactionalDocumentSafeService.registerDFSCredentials(userIDAuth, dfsCredentials);
+        }
+        {
+            transactionalDocumentSafeService.beginTransaction(userIDAuth);
+            Assert.assertEquals(version, transactionalDocumentSafeService.getVersion(userIDAuth, documentFQN));
+            transactionalDocumentSafeService.endTransaction(userIDAuth);
+        }
+    }
+
+    private ConnectionProperties changeRootDirectory(ConnectionProperties props, String deeper) {
+        if (props instanceof FilesystemConnectionPropertiesImpl) {
+            FilesystemConnectionPropertiesImpl p = (FilesystemConnectionPropertiesImpl) props;
+            String root = p.getFilesystemRootBucketName().getValue();
+            root = root + BucketPath.BUCKET_SEPARATOR + deeper;
+            p.setFilesystemRootBucketName(new FilesystemRootBucketName(root));
+            return p;
+        }
+
+        if (props instanceof AmazonS3ConnectionProperitesImpl) {
+            AmazonS3ConnectionProperitesImpl p = (AmazonS3ConnectionProperitesImpl) props;
+            String root = p.getAmazonS3RootBucketName().getValue();
+            root = root + BucketPath.BUCKET_SEPARATOR + deeper;
+            p.setAmazonS3RootBucketName(new AmazonS3RootBucketName(root));
+            return p;
+
+        }
+        throw new BaseException("unknown instance of properties:" + props);
+    }
+
 }
 
 

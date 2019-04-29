@@ -5,15 +5,19 @@ import de.adorsys.docusafe.transactional.impl.TransactionalDocumentSafeServiceIm
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Created by peter on 22.02.19 19:12.
  */
+@RunWith(value = PowerMockRunner.class)
+@PowerMockIgnore("javax.*")
 public class CachedTransactionalDocumentSafeServiceTest extends TransactionalDocumentSafeServiceTest {
     private final static Logger LOGGER = LoggerFactory.getLogger(CachedTransactionalDocumentSafeServiceTest.class);
-    private TransactionalDocumentSafeServiceTestWrapper wrapper = null;
 
     @Before
     public void preTestCached() {
@@ -24,12 +28,6 @@ public class CachedTransactionalDocumentSafeServiceTest extends TransactionalDoc
 
         // erst mal machen wir aus der transactionalDocumentSafeService eine cachedTransactionalDocumentSafeService;
         transactionalDocumentSafeService = new CachedTransactionalDocumentSafeServiceImpl(requestMemoryContext, transactionalDocumentSafeService, dss);
-
-        // diese wrappen wir
-        wrapper = new TransactionalDocumentSafeServiceTestWrapper(transactionalDocumentSafeService);
-
-        // und die gewrappte geben wir an den test
-        transactionalDocumentSafeService = wrapper;
 
         // und der nichttransaktionale teil wird ebenfalls mit dem Wrapper versorgt
         nonTransactionalDocumentSafeService = transactionalDocumentSafeService;

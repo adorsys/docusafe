@@ -3,6 +3,7 @@ package de.adorsys.docusafe.cached.transactional.impl;
 import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
 import de.adorsys.docusafe.business.DocumentSafeService;
 import de.adorsys.docusafe.business.impl.DocumentSafeServiceImpl;
+import de.adorsys.docusafe.cached.transactional.CachedTransactionalDocumentSafeService;
 import de.adorsys.docusafe.service.api.keystore.types.ReadKeyPassword;
 import de.adorsys.docusafe.service.api.types.DocumentContent;
 import de.adorsys.docusafe.service.api.types.UserID;
@@ -19,6 +20,10 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,12 +34,14 @@ import java.util.List;
  * Created by peter on 09.07.18 at 13:52.
  */
 
+@RunWith(value = PowerMockRunner.class)
+@PowerMockIgnore("javax.*")
 public class AdditionalCachedTransactionalDocumentSafeServiceTest {
     private final static Logger LOGGER = LoggerFactory.getLogger(AdditionalCachedTransactionalDocumentSafeServiceTest.class);
     private RequestMemoryContext memoryContext = new SimpleRequestMemoryContextImpl();
     private DocumentSafeService dss = new DocumentSafeServiceImpl(DFSConnectionFactory.get());
-    private TransactionalDocumentSafeServiceTestWrapper wrapper = new TransactionalDocumentSafeServiceTestWrapper(new TransactionalDocumentSafeServiceImpl(memoryContext, dss));
-    private TransactionalDocumentSafeService cachedService = new CachedTransactionalDocumentSafeServiceImpl(memoryContext, wrapper, dss );
+    private TransactionalDocumentSafeService service = Mockito.spy(new TransactionalDocumentSafeServiceImpl(memoryContext, dss));
+    private CachedTransactionalDocumentSafeService cachedService = new CachedTransactionalDocumentSafeServiceImpl(memoryContext, service, dss );
     private List<UserIDAuth> userIDAuthList = new ArrayList<>();
 
 
@@ -46,7 +53,6 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
     @After
     public void after() {
         userIDAuthList.forEach(userIDAuth -> cachedService.destroyUser(userIDAuth));
-        LOGGER.debug("aftertest:" + wrapper.toString());
     }
 
     @Test
@@ -57,7 +63,7 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
 
         DocumentFQN documentFQN = new DocumentFQN("folder1/file1.txt");
         cachedService.beginTransaction(userIDAuth);
-        Assert.assertEquals(new Integer(0), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_LIST_DOCUMENTS));
+    // TODO    Assert.assertEquals(new Integer(0), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_LIST_DOCUMENTS));
         BucketContentFQN bucketContentFQN = cachedService.txListDocuments(userIDAuth, documentFQN.getDocumentDirectory(), ListRecursiveFlag.TRUE);
         Assert.assertTrue(bucketContentFQN.getFiles().isEmpty());
         Assert.assertFalse(cachedService.txDocumentExists(userIDAuth, documentFQN));
@@ -76,14 +82,14 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
         Assert.assertEquals(1, bucketContentFQN2.getFiles().size());
         Assert.assertTrue(cachedService.txDocumentExists(userIDAuth, documentFQN));
 
-        Assert.assertEquals(new Integer(0), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_STORE_DOCUMENT));
-        Assert.assertEquals(new Integer(0), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_READ_DOCUMENT));
-        Assert.assertEquals(new Integer(1), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_LIST_DOCUMENTS));
+        Mockito.verify(service, Mockito.times(0)).txStoreDocument(Mockito.any(), Mockito.any());
+        Mockito.verify(service, Mockito.times(0)).txReadDocument(Mockito.any(), Mockito.any());
+        Mockito.verify(service, Mockito.times(1)).txListDocuments(Mockito.any(), Mockito.any(), Mockito.any());
         cachedService.endTransaction(userIDAuth);
         LOGGER.debug(cachedService.toString());
-        Assert.assertEquals(new Integer(1), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_STORE_DOCUMENT));
-        Assert.assertEquals(new Integer(0), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_READ_DOCUMENT));
-        Assert.assertEquals(new Integer(1), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_LIST_DOCUMENTS));
+        Mockito.verify(service, Mockito.times(1)).txStoreDocument(Mockito.any(), Mockito.any());
+        Mockito.verify(service, Mockito.times(0)).txReadDocument(Mockito.any(), Mockito.any());
+        Mockito.verify(service, Mockito.times(1)).txListDocuments(Mockito.any(), Mockito.any(), Mockito.any());
         Assert.assertEquals(documentFQN, bucketContentFQN2.getFiles().get(0));
     }
 
@@ -117,12 +123,12 @@ public class AdditionalCachedTransactionalDocumentSafeServiceTest {
             Assert.assertArrayEquals(dsDocumentWrite.getDocumentContent().getValue(), dsDocumentRead.getDocumentContent().getValue());
         }
 
-        Assert.assertEquals(new Integer(0), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_STORE_DOCUMENT));
-        Assert.assertEquals(new Integer(0), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_READ_DOCUMENT));
+        Mockito.verify(service, Mockito.times(0)).txStoreDocument(Mockito.any(), Mockito.any());
+        Mockito.verify(service, Mockito.times(0)).txReadDocument(Mockito.any(), Mockito.any());
         cachedService.endTransaction(userIDAuth);
         LOGGER.debug(cachedService.toString());
-        Assert.assertEquals(new Integer(1), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_STORE_DOCUMENT));
-        Assert.assertEquals(new Integer(0), wrapper.counterMap.get(TransactionalDocumentSafeServiceTestWrapper.TX_READ_DOCUMENT));
+        Mockito.verify(service, Mockito.times(1)).txStoreDocument(Mockito.any(), Mockito.any());
+        Mockito.verify(service, Mockito.times(0)).txReadDocument(Mockito.any(), Mockito.any());
     }
 
 
