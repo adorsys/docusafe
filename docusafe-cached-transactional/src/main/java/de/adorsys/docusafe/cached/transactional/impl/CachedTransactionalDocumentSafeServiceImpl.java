@@ -1,11 +1,8 @@
 package de.adorsys.docusafe.cached.transactional.impl;
 
 import de.adorsys.docusafe.business.DocumentSafeService;
-import de.adorsys.docusafe.business.types.MoveType;
+import de.adorsys.docusafe.business.types.*;
 import de.adorsys.docusafe.service.api.types.UserID;
-import de.adorsys.docusafe.business.types.DSDocument;
-import de.adorsys.docusafe.business.types.DocumentDirectoryFQN;
-import de.adorsys.docusafe.business.types.DocumentFQN;
 import de.adorsys.docusafe.cached.transactional.CachedTransactionalDocumentSafeService;
 import de.adorsys.docusafe.cached.transactional.exceptions.CacheException;
 import de.adorsys.docusafe.service.api.types.UserIDAuth;
@@ -63,6 +60,11 @@ public class CachedTransactionalDocumentSafeServiceImpl implements CachedTransac
     @Override
     public boolean userExists(UserID userID) {
         return transactionalDocumentSafeService.userExists(userID);
+    }
+
+    @Override
+    public void registerDFSCredentials(UserIDAuth userIDAuth, DFSCredentials dfsCredentials) {
+        transactionalDocumentSafeService.registerDFSCredentials(userIDAuth, dfsCredentials);
     }
 
     @Override

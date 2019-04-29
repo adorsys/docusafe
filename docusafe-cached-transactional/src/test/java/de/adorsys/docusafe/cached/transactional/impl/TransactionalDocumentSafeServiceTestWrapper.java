@@ -1,10 +1,7 @@
 package de.adorsys.docusafe.cached.transactional.impl;
 
-import de.adorsys.docusafe.business.types.MoveType;
+import de.adorsys.docusafe.business.types.*;
 import de.adorsys.docusafe.service.api.types.UserID;
-import de.adorsys.docusafe.business.types.DSDocument;
-import de.adorsys.docusafe.business.types.DocumentDirectoryFQN;
-import de.adorsys.docusafe.business.types.DocumentFQN;
 import de.adorsys.docusafe.service.api.types.UserIDAuth;
 import de.adorsys.docusafe.transactional.TransactionalDocumentSafeService;
 import de.adorsys.docusafe.transactional.types.TxBucketContentFQN;
@@ -79,6 +76,11 @@ public class TransactionalDocumentSafeServiceTestWrapper implements Transactiona
     public boolean userExists(UserID userID) {
         inc(USER_EXISTS);
         return realTransactionalFileStorage.userExists(userID);
+    }
+
+    @Override
+    public void registerDFSCredentials(UserIDAuth userIDAuth, DFSCredentials dfsCredentials) {
+        realTransactionalFileStorage.registerDFSCredentials(userIDAuth, dfsCredentials);
     }
 
     @Override

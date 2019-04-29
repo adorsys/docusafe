@@ -28,7 +28,6 @@ import java.util.UUID;
  */
 class CachedTransactionalContext {
     private final static Logger LOGGER = LoggerFactory.getLogger(CachedTransactionalContext.class);
-    private String id = UUID.randomUUID().toString() + " ";
     private Map<DocumentFQN, DSDocument> mapToStore = null;
     private Map<DocumentFQN, DSDocument> mapToRead = null;
     private Set<DocumentFQN> setToDelete = null;

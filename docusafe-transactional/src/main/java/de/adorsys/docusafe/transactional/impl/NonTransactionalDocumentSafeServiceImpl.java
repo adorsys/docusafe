@@ -1,6 +1,7 @@
 package de.adorsys.docusafe.transactional.impl;
 
 import de.adorsys.docusafe.business.DocumentSafeService;
+import de.adorsys.docusafe.business.types.DFSCredentials;
 import de.adorsys.docusafe.business.types.DocumentFQN;
 import de.adorsys.docusafe.service.api.types.UserID;
 import de.adorsys.docusafe.service.api.types.UserIDAuth;
@@ -37,6 +38,11 @@ public class NonTransactionalDocumentSafeServiceImpl implements NonTransactional
     @Override
     public boolean userExists(UserID userID) {
         return documentSafeService.userExists(userID);
+    }
+
+    @Override
+    public void registerDFSCredentials(UserIDAuth userIDAuth, DFSCredentials dfsCredentials) {
+        documentSafeService.registerDFSCredentials(userIDAuth, dfsCredentials);
     }
 
     // ============================================================================================
