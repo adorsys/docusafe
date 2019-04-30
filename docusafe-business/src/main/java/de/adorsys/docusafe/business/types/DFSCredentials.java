@@ -74,4 +74,19 @@ public class DFSCredentials {
         }
         return amazons3;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append( "DFSCredentials{");
+        if (filesystem != null) {
+            sb.append(" FilesystemRootBucketName:" + filesystem.getFilesystemRootBucketName());
+        }
+        if (amazons3 != null) {
+            sb.append(" AmazonS3RootBucketName:" + amazons3.getAmazonS3RootBucketName());
+            sb.append(" url:" + amazons3.getUrl().toString());
+        }
+        sb.append("}");
+        return sb.toString();
+    }
 }
