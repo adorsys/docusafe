@@ -5,7 +5,7 @@
 
     <groupId>de.adorsys</groupId>
     <artifactId>docusafe</artifactId>
-    <version>0.99.2</version>
+    <version>0.99.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>docusafe</name>
