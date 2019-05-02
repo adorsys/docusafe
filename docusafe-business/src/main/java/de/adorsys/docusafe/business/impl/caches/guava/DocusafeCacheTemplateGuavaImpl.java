@@ -33,4 +33,8 @@ public class DocusafeCacheTemplateGuavaImpl <K,V> implements DocusafeCacheTempla
         return map.size();
     }
 
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + " size:" + this.size();
+    }
 }

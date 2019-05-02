@@ -14,6 +14,7 @@ import de.adorsys.dfs.connection.api.types.properties.ConnectionProperties;
 import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
 import de.adorsys.docusafe.business.DocumentSafeService;
 import de.adorsys.docusafe.business.exceptions.UserExistsException;
+import de.adorsys.docusafe.business.impl.caches.CacheWrapper;
 import de.adorsys.docusafe.business.impl.jsonserialisation.Class2JsonHelper;
 import de.adorsys.docusafe.business.types.*;
 import de.adorsys.docusafe.service.api.keystore.types.*;
@@ -49,6 +50,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     private final BucketPathEncryptionService bucketPathEncryptionService = new BucketPathEncryptionServiceImpl();
     private final CMSEncryptionService cmsEncryptionService = new CMSEncryptionServiceImpl();
     private final DFSCredentials defaultUserDFSCredentials;
+    private final CacheWrapper cacheWrapper;
 
     private DFSCredentials getDefaultDFSCredentials(ConnectionProperties props) {
         DFSCredentials dfsCredentials = new DFSCredentials(props);
@@ -68,6 +70,8 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
             dfsCredentials.addRootBucket(DFSCredentials.TYPE.USERS_DFS);
             defaultUserDFSCredentials = new DFSCredentials(dfsCredentials.getProperties());
         }
+        cacheWrapper = new CacheWrapper();
+        log.debug(cacheWrapper.toString());
     }
 
     @Override
