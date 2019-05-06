@@ -63,147 +63,146 @@ public class CacheTest {
         int system_dfs_read_last = 0;
         int system_dfs_wrote_last = 0;
         try {
-            // FIRST THE USER IS CREATED
             {
+                // FIRST THE USER IS CREATED
+                service.createUser(userIDAuth);
+                // show("user is created", dfss.getResults());
+                Assert.assertEquals(3, dfss.getResults().size());
+
                 {
-                    ArgumentCaptor<BucketPath> writeBucketPath = ArgumentCaptor.forClass(BucketPath.class);
-                    ArgumentCaptor<BucketPath> readBucketPath = ArgumentCaptor.forClass(BucketPath.class);
-
-                    service.createUser(userIDAuth);
-                    // show("user is created", dfss.getResults());
-                    Assert.assertEquals(3, dfss.getResults().size());
-
                     // CREATE USER writes the following documentes to the system dfs
+                    ArgumentCaptor<BucketPath> captureBucketPath = ArgumentCaptor.forClass(BucketPath.class);
                     Assert.assertEquals(3, dfss.getResults().size());
-                    Mockito.verify(dfss.getResults().get(SYSTEM_DFS_INDEX), Mockito.times(system_dfs_wrote_last +3)).putBlob(writeBucketPath.capture(), Mockito.any());
-                    for (int i = system_dfs_wrote_last; i<writeBucketPath.getAllValues().size(); i++) {
-                        log.info("CREATE USER written to the system dfs:" + writeBucketPath.getAllValues().get(i));
+                    Mockito.verify(dfss.getResults().get(SYSTEM_DFS_INDEX), Mockito.times(system_dfs_wrote_last + 3)).putBlob(captureBucketPath.capture(), Mockito.any());
+                    for (int i = system_dfs_wrote_last; i < captureBucketPath.getAllValues().size(); i++) {
+                        log.info("CREATE USER written to the system dfs:" + captureBucketPath.getAllValues().get(i));
                     }
-                    Assert.assertEquals(system_dfs_wrote_last + 3, writeBucketPath.getAllValues().size());
-                    Assert.assertEquals(writeBucketPath.getAllValues().get(system_dfs_wrote_last + 0).getValue(), "bp-peter/keystore.UBER");
-                    Assert.assertEquals(writeBucketPath.getAllValues().get(system_dfs_wrote_last + 1).getValue(), "bp-peter/UserDFSCredentials");
-                    Assert.assertEquals(writeBucketPath.getAllValues().get(system_dfs_wrote_last + 2).getValue(), "bp-peter/publicKeys");
+                    Assert.assertEquals(system_dfs_wrote_last + 3, captureBucketPath.getAllValues().size());
+                    Assert.assertEquals(captureBucketPath.getAllValues().get(system_dfs_wrote_last + 0).getValue(), "bp-peter/keystore.UBER");
+                    Assert.assertEquals(captureBucketPath.getAllValues().get(system_dfs_wrote_last + 1).getValue(), "bp-peter/UserDFSCredentials");
+                    Assert.assertEquals(captureBucketPath.getAllValues().get(system_dfs_wrote_last + 2).getValue(), "bp-peter/publicKeys");
                     system_dfs_wrote_last += 3;
-
+                }
+                {
                     // CREATE USER does not read documentes from the system dfs
-                    Mockito.verify(dfss.getResults().get(SYSTEM_DFS_INDEX), Mockito.times(system_dfs_read_last + 0)).getBlob(readBucketPath.capture());
-                    for (int i = system_dfs_read_last; i<readBucketPath.getAllValues().size(); i++) {
-                        log.info("CREATE USER read from the system dfs:" + writeBucketPath.getAllValues().get(i));
+                    ArgumentCaptor<BucketPath> captureBucketPath = ArgumentCaptor.forClass(BucketPath.class);
+                    Mockito.verify(dfss.getResults().get(SYSTEM_DFS_INDEX), Mockito.times(system_dfs_read_last + 0)).getBlob(captureBucketPath.capture());
+                    for (int i = system_dfs_read_last; i < captureBucketPath.getAllValues().size(); i++) {
+                        log.info("CREATE USER read from the system dfs:" + captureBucketPath.getAllValues().get(i));
                     }
-                    Assert.assertEquals(system_dfs_read_last + 0, readBucketPath.getAllValues().size());
+                    Assert.assertEquals(system_dfs_read_last + 0, captureBucketPath.getAllValues().size());
                     system_dfs_read_last += 0;
                 }
                 {
-                    ArgumentCaptor<BucketPath> writeBucketPath = ArgumentCaptor.forClass(BucketPath.class);
-                    ArgumentCaptor<BucketPath> readBucketPath = ArgumentCaptor.forClass(BucketPath.class);
                     // CREATE USER writes the following documentes to the users dfs
-                    Mockito.verify(dfss.getResults().get(USERS_DFS_INDEX), Mockito.times(1)).putBlob(writeBucketPath.capture(), Mockito.any());
-                    writeBucketPath.getAllValues().forEach(bp -> log.info("CREATE USER written to the users dfs:" + bp));
-                    Assert.assertEquals(1, writeBucketPath.getAllValues().size());
-                    Assert.assertEquals(writeBucketPath.getAllValues().get(0).getValue(), "bp-peter/keystore.UBER");
-
+                    ArgumentCaptor<BucketPath> captureBucketPath = ArgumentCaptor.forClass(BucketPath.class);
+                    Mockito.verify(dfss.getResults().get(USERS_DFS_INDEX), Mockito.times(1)).putBlob(captureBucketPath.capture(), Mockito.any());
+                    captureBucketPath.getAllValues().forEach(bp -> log.info("CREATE USER written to the users dfs:" + bp));
+                    Assert.assertEquals(1, captureBucketPath.getAllValues().size());
+                    Assert.assertEquals(captureBucketPath.getAllValues().get(0).getValue(), "bp-peter/keystore.UBER");
+                }
+                {
                     // CREATE USER does not read documentes from the system dfs
-                    Mockito.verify(dfss.getResults().get(USERS_DFS_INDEX), Mockito.times(0)).getBlob(readBucketPath.capture());
-                    readBucketPath.getAllValues().forEach(bp -> log.info("CREATE USER read from the users dfs:" + bp));
-                    Assert.assertTrue(readBucketPath.getAllValues().isEmpty());
+                    ArgumentCaptor<BucketPath> captureBucketPath = ArgumentCaptor.forClass(BucketPath.class);
+                    Mockito.verify(dfss.getResults().get(USERS_DFS_INDEX), Mockito.times(0)).getBlob(captureBucketPath.capture());
+                    captureBucketPath.getAllValues().forEach(bp -> log.info("CREATE USER read from the users dfs:" + bp));
+                    Assert.assertTrue(captureBucketPath.getAllValues().isEmpty());
                 }
             }
 
             DSDocument dsDocument = null;
-            // NOW A DOCUMENT WILL BE WRITTEN
             {
+                // NOW A DOCUMENT WILL BE WRITTEN
+                DocumentFQN documentFQN = new DocumentFQN("file1.txt");
+                DocumentContent documentContent = new DocumentContent("affe".getBytes());
+                dsDocument = new DSDocument(documentFQN, documentContent);
+                service.storeDocument(userIDAuth, dsDocument);
+                Assert.assertEquals(4, dfss.getResults().size());
+                USERS_DFS_INDEX++;
+
+                // WRITE DOCUMENT writes no documentes to the system dfs
                 {
-                    ArgumentCaptor<BucketPath> writeBucketPath = ArgumentCaptor.forClass(BucketPath.class);
-                    ArgumentCaptor<BucketPath> readBucketPath = ArgumentCaptor.forClass(BucketPath.class);
-
-                    {
-                        DocumentFQN documentFQN = new DocumentFQN("file1.txt");
-                        DocumentContent documentContent = new DocumentContent("affe".getBytes());
-                        dsDocument = new DSDocument(documentFQN, documentContent);
-                        service.storeDocument(userIDAuth, dsDocument);
+                    ArgumentCaptor<BucketPath> captureBucketPath = ArgumentCaptor.forClass(BucketPath.class);
+                    Mockito.verify(dfss.getResults().get(SYSTEM_DFS_INDEX), Mockito.times(system_dfs_wrote_last + 0)).putBlob(captureBucketPath.capture(), Mockito.any());
+                    for (int i = system_dfs_wrote_last; i < captureBucketPath.getAllValues().size(); i++) {
+                        log.info("WRITE DOCUMENT written to the system dfs:" + captureBucketPath.getAllValues().get(i));
                     }
-                    Assert.assertEquals(4, dfss.getResults().size());
-                    USERS_DFS_INDEX++;
-
-                    // WRITE DOCUMENT writes no documentes to the system dfs
-                    Mockito.verify(dfss.getResults().get(SYSTEM_DFS_INDEX), Mockito.times(system_dfs_wrote_last + 0)).putBlob(writeBucketPath.capture(), Mockito.any());
-                    for (int i = system_dfs_wrote_last; i<writeBucketPath.getAllValues().size(); i++) {
-                        log.info("WRITE DOCUMENT written to the system dfs:" + writeBucketPath.getAllValues().get(i));
-                    }
-                    Assert.assertEquals(system_dfs_wrote_last + 0, writeBucketPath.getAllValues().size());
+                    Assert.assertEquals(system_dfs_wrote_last + 0, captureBucketPath.getAllValues().size());
                     system_dfs_wrote_last += 0;
-
+                }
+                {
                     // WRITE DOCUMENT reads the following documents from the system dfs
-                    Mockito.verify(dfss.getResults().get(SYSTEM_DFS_INDEX), Mockito.times(system_dfs_read_last + 3)).getBlob(readBucketPath.capture());
-                    for (int i = system_dfs_read_last; i<readBucketPath.getAllValues().size(); i++) {
-                        log.info("WRITE DOCUMENT read from the system dfs:" + readBucketPath.getAllValues().get(i));
+                    ArgumentCaptor<BucketPath> captureBucketPath = ArgumentCaptor.forClass(BucketPath.class);
+                    Mockito.verify(dfss.getResults().get(SYSTEM_DFS_INDEX), Mockito.times(system_dfs_read_last + 3)).getBlob(captureBucketPath.capture());
+                    for (int i = system_dfs_read_last; i < captureBucketPath.getAllValues().size(); i++) {
+                        log.info("WRITE DOCUMENT read from the system dfs:" + captureBucketPath.getAllValues().get(i));
                     }
-                    Assert.assertEquals(readBucketPath.getAllValues().get(system_dfs_read_last + 0).getValue(), "bp-peter/keystore.UBER");
-                    Assert.assertEquals(readBucketPath.getAllValues().get(system_dfs_read_last + 1).getValue(), "bp-peter/UserDFSCredentials");
-                    Assert.assertEquals(readBucketPath.getAllValues().get(system_dfs_read_last + 2).getValue(), "bp-peter/publicKeys");
-                    Assert.assertEquals(system_dfs_read_last + 3, readBucketPath.getAllValues().size());
+                    Assert.assertEquals(captureBucketPath.getAllValues().get(system_dfs_read_last + 0).getValue(), "bp-peter/keystore.UBER");
+                    Assert.assertEquals(captureBucketPath.getAllValues().get(system_dfs_read_last + 1).getValue(), "bp-peter/UserDFSCredentials");
+                    Assert.assertEquals(captureBucketPath.getAllValues().get(system_dfs_read_last + 2).getValue(), "bp-peter/publicKeys");
+                    Assert.assertEquals(system_dfs_read_last + 3, captureBucketPath.getAllValues().size());
                     system_dfs_read_last += 3;
                 }
                 {
-                    ArgumentCaptor<BucketPath> writeBucketPath = ArgumentCaptor.forClass(BucketPath.class);
-                    ArgumentCaptor<BucketPath> readBucketPath = ArgumentCaptor.forClass(BucketPath.class);
-
                     // WRITE DOCUMENT writes the documents itself to the users dfs, as the name ie encrypted, it is not captured
-                    Mockito.verify(dfss.getResults().get(USERS_DFS_INDEX), Mockito.times(1)).putBlob(writeBucketPath.capture(), Mockito.any());
-                    writeBucketPath.getAllValues().forEach(bp -> log.info("WRITE DOCUMENT written to the users dfs:" + bp));
-                    Assert.assertEquals(1, writeBucketPath.getAllValues().size());
+                    ArgumentCaptor<BucketPath> captureBucketPath = ArgumentCaptor.forClass(BucketPath.class);
 
-
+                    Mockito.verify(dfss.getResults().get(USERS_DFS_INDEX), Mockito.times(1)).putBlob(captureBucketPath.capture(), Mockito.any());
+                    captureBucketPath.getAllValues().forEach(bp -> log.info("WRITE DOCUMENT written to the users dfs:" + bp));
+                    Assert.assertEquals(1, captureBucketPath.getAllValues().size());
+                }
+                {
                     // WRITE DOCUMENT reads the following documents from the users dfs
-                    Mockito.verify(dfss.getResults().get(USERS_DFS_INDEX), Mockito.times(1)).getBlob(readBucketPath.capture());
-                    readBucketPath.getAllValues().forEach(bp -> log.info("WRITE DOCUMENT read from the users dfs:" + bp));
-                    Assert.assertEquals(readBucketPath.getAllValues().get(0).getValue(), "bp-peter/keystore.UBER");
+                    ArgumentCaptor<BucketPath> captureBucketPath = ArgumentCaptor.forClass(BucketPath.class);
+                    Mockito.verify(dfss.getResults().get(USERS_DFS_INDEX), Mockito.times(1)).getBlob(captureBucketPath.capture());
+                    captureBucketPath.getAllValues().forEach(bp -> log.info("WRITE DOCUMENT read from the users dfs:" + bp));
+                    Assert.assertEquals(captureBucketPath.getAllValues().get(0).getValue(), "bp-peter/keystore.UBER");
                 }
             }
 
-            // NOW A DOCUMENT WILL BE READ
             {
+                // NOW A DOCUMENT WILL BE READ
+
+                DSDocument dsDocument1 = service.readDocument(userIDAuth, dsDocument.getDocumentFQN());
+                Assert.assertArrayEquals(dsDocument.getDocumentContent().getValue(), dsDocument1.getDocumentContent().getValue());
+
+                Assert.assertEquals(5, dfss.getResults().size());
+                USERS_DFS_INDEX++;
                 {
-                    ArgumentCaptor<BucketPath> writeBucketPath = ArgumentCaptor.forClass(BucketPath.class);
-                    ArgumentCaptor<BucketPath> readBucketPath = ArgumentCaptor.forClass(BucketPath.class);
-
-                    DSDocument dsDocument1 = service.readDocument(userIDAuth, dsDocument.getDocumentFQN());
-                    Assert.assertArrayEquals(dsDocument.getDocumentContent().getValue(), dsDocument1.getDocumentContent().getValue());
-
-                    Assert.assertEquals(5, dfss.getResults().size());
-                    USERS_DFS_INDEX++;
-
                     // WRITE DOCUMENT writes no documentes to the system dfs
-                    Mockito.verify(dfss.getResults().get(SYSTEM_DFS_INDEX), Mockito.times(system_dfs_wrote_last + 0)).putBlob(writeBucketPath.capture(), Mockito.any());
-                    for (int i = system_dfs_wrote_last; i<writeBucketPath.getAllValues().size(); i++) {
-                        log.info("READ DOCUMENT written to the system dfs:" + writeBucketPath.getAllValues().get(i));
+                    ArgumentCaptor<BucketPath> captureBucketPath = ArgumentCaptor.forClass(BucketPath.class);
+                    Mockito.verify(dfss.getResults().get(SYSTEM_DFS_INDEX), Mockito.times(system_dfs_wrote_last + 0)).putBlob(captureBucketPath.capture(), Mockito.any());
+                    for (int i = system_dfs_wrote_last; i < captureBucketPath.getAllValues().size(); i++) {
+                        log.info("READ DOCUMENT written to the system dfs:" + captureBucketPath.getAllValues().get(i));
                     }
-                    Assert.assertEquals(system_dfs_wrote_last + 0, writeBucketPath.getAllValues().size());
+                    Assert.assertEquals(system_dfs_wrote_last + 0, captureBucketPath.getAllValues().size());
                     system_dfs_wrote_last += 0;
-
-
-                    Mockito.verify(dfss.getResults().get(SYSTEM_DFS_INDEX), Mockito.times(system_dfs_read_last + 2)).getBlob(readBucketPath.capture());
-                    for (int i = system_dfs_read_last; i<readBucketPath.getAllValues().size(); i++) {
-                        log.info("READ DOCUMENT read from the system dfs:" + readBucketPath.getAllValues().get(i));
+                }
+                {
+                    // WRITE DOCUMENT reads two documentes from the system dfs
+                    ArgumentCaptor<BucketPath> captureBucketPath = ArgumentCaptor.forClass(BucketPath.class);
+                    Mockito.verify(dfss.getResults().get(SYSTEM_DFS_INDEX), Mockito.times(system_dfs_read_last + 2)).getBlob(captureBucketPath.capture());
+                    for (int i = system_dfs_read_last; i < captureBucketPath.getAllValues().size(); i++) {
+                        log.info("READ DOCUMENT read from the system dfs:" + captureBucketPath.getAllValues().get(i));
                     }
-                    Assert.assertEquals(system_dfs_read_last + 2, readBucketPath.getAllValues().size());
-                    Assert.assertEquals(readBucketPath.getAllValues().get(system_dfs_read_last + 0).getValue(), "bp-peter/keystore.UBER");
-                    Assert.assertEquals(readBucketPath.getAllValues().get(system_dfs_read_last + 1).getValue(), "bp-peter/UserDFSCredentials");
+                    Assert.assertEquals(system_dfs_read_last + 2, captureBucketPath.getAllValues().size());
+                    Assert.assertEquals(captureBucketPath.getAllValues().get(system_dfs_read_last + 0).getValue(), "bp-peter/keystore.UBER");
+                    Assert.assertEquals(captureBucketPath.getAllValues().get(system_dfs_read_last + 1).getValue(), "bp-peter/UserDFSCredentials");
                     system_dfs_read_last += 2;
                 }
                 {
-                    ArgumentCaptor<BucketPath> writeBucketPath = ArgumentCaptor.forClass(BucketPath.class);
-                    ArgumentCaptor<BucketPath> readBucketPath = ArgumentCaptor.forClass(BucketPath.class);
-
                     // READ DOCUMENT writes no documents to the users dfs
-                    Mockito.verify(dfss.getResults().get(USERS_DFS_INDEX), Mockito.times(0)).putBlob(writeBucketPath.capture(), Mockito.any());
-                    writeBucketPath.getAllValues().forEach(bp -> log.info("READ DOCUMENT written to the users dfs:" + bp));
-                    Assert.assertTrue(writeBucketPath.getAllValues().isEmpty());
-
+                    ArgumentCaptor<BucketPath> captureBucketPath = ArgumentCaptor.forClass(BucketPath.class);
+                    Mockito.verify(dfss.getResults().get(USERS_DFS_INDEX), Mockito.times(0)).putBlob(captureBucketPath.capture(), Mockito.any());
+                    captureBucketPath.getAllValues().forEach(bp -> log.info("READ DOCUMENT written to the users dfs:" + bp));
+                    Assert.assertTrue(captureBucketPath.getAllValues().isEmpty());
+                }
+                {
                     // READ DOCUMENT reads the following documents from the users dfs
-                    Mockito.verify(dfss.getResults().get(USERS_DFS_INDEX), Mockito.times(2)).getBlob(readBucketPath.capture());
-                    readBucketPath.getAllValues().forEach(bp -> log.info("READ DOCUMENT read from the users dfs:" + bp));
-                    Assert.assertEquals(readBucketPath.getAllValues().get(0).getValue(), "bp-peter/keystore.UBER");
+                    ArgumentCaptor<BucketPath> captureBucketPath = ArgumentCaptor.forClass(BucketPath.class);
+                    Mockito.verify(dfss.getResults().get(USERS_DFS_INDEX), Mockito.times(2)).getBlob(captureBucketPath.capture());
+                    captureBucketPath.getAllValues().forEach(bp -> log.info("READ DOCUMENT read from the users dfs:" + bp));
+                    Assert.assertEquals(captureBucketPath.getAllValues().get(0).getValue(), "bp-peter/keystore.UBER");
                 }
             }
 

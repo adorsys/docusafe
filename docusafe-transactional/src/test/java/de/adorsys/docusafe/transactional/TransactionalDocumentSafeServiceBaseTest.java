@@ -40,8 +40,12 @@ public class TransactionalDocumentSafeServiceBaseTest {
     @After
     public void afterTestBase() {
         LOGGER.debug("afterTestBase");
-        CatchException.catchException(() -> transactionalDocumentSafeService.destroyUser(userIDAuth));
-        CatchException.catchException(() -> transactionalDocumentSafeService.destroyUser(systemUserIDAuth));
+        if (transactionalDocumentSafeService.userExists(userIDAuth.getUserID())) {
+            CatchException.catchException(() -> transactionalDocumentSafeService.destroyUser(userIDAuth));
+        }
+        if (transactionalDocumentSafeService.userExists(systemUserIDAuth.getUserID())) {
+            CatchException.catchException(() -> transactionalDocumentSafeService.destroyUser(systemUserIDAuth));
+        }
     }
 
     protected DSDocument createDocument(String name) {
