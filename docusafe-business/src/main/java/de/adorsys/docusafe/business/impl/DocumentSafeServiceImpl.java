@@ -14,7 +14,11 @@ import de.adorsys.dfs.connection.api.types.properties.ConnectionProperties;
 import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
 import de.adorsys.docusafe.business.DocumentSafeService;
 import de.adorsys.docusafe.business.exceptions.UserExistsException;
-import de.adorsys.docusafe.business.impl.caches.CacheWrapper;
+import de.adorsys.docusafe.business.impl.caches.*;
+import de.adorsys.docusafe.business.impl.caches.guava.UserDFSCredentialsCacheGuavaImpl;
+import de.adorsys.docusafe.business.impl.caches.guava.UserPathSecretKeyCacheGuavaImpl;
+import de.adorsys.docusafe.business.impl.caches.guava.UserPublicKeyListCacheGuavaImpl;
+import de.adorsys.docusafe.business.impl.caches.guava.UsersPrivateKeyStoreCacheGuavaImpl;
 import de.adorsys.docusafe.business.impl.jsonserialisation.Class2JsonHelper;
 import de.adorsys.docusafe.business.types.*;
 import de.adorsys.docusafe.service.api.keystore.types.*;
@@ -51,6 +55,11 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     private final CMSEncryptionService cmsEncryptionService = new CMSEncryptionServiceImpl();
     private final DFSCredentials defaultUserDFSCredentials;
     private final CacheWrapper cacheWrapper;
+
+    private final UsersPrivateKeyStoreCache usersPrivateKeyStoreCache = new UsersPrivateKeyStoreCacheGuavaImpl();
+    private final UserPublicKeyListCache userPublicKeyListCache = new UserPublicKeyListCacheGuavaImpl();
+    private final UserPathSecretKeyCache userPathSecretKeyCache = new UserPathSecretKeyCacheGuavaImpl();
+    private final UserDFSCredentialsCache userDFSCredentialsCache = new UserDFSCredentialsCacheGuavaImpl();
 
     private DFSCredentials getDefaultDFSCredentials(ConnectionProperties props) {
         DFSCredentials dfsCredentials = new DFSCredentials(props);
@@ -96,6 +105,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
                 userDFSCredentials = new DFSCredentials(defaultUserDFSCredentials);
                 // retrieve public key of public keystore once to encrypt DFSCredentials
                 storeUserDFSCredentials(userIDAuth, publicKeyStoreAccess, userDFSCredentials);
+                userDFSCredentialsCache.put(new UserAuthCacheKey(userIDAuth), userDFSCredentials);
             }
 
             // create users DFS
@@ -111,6 +121,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
                 KeyStore usersSystemKeyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, new KeyStoreCreationConfig(5, 0, 1));
                 persistKeystore(userIDAuth, usersSystemKeyStore, usersDFSConnection);
                 privateKeyStoreAccess = new KeyStoreAccess(usersSystemKeyStore, keyStoreAuth);
+                usersPrivateKeyStoreCache.put(new UserAuthCacheKey(userIDAuth), privateKeyStoreAccess);
             }
 
             // extract public keys and store them in userspace of systemdfs
@@ -118,6 +129,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
                 List<PublicKeyIDWithPublicKey> publicKeys = keyStoreService.getPublicKeys(privateKeyStoreAccess);
                 Payload payload = class2JsonHelper.keyListToContent(publicKeys);
                 systemDFS.putBlob(FolderHelper.getPublicKeyListPath(userIDAuth.getUserID()), payload);
+                userPublicKeyListCache.put(userIDAuth.getUserID(), new PublicKeyList(publicKeys));
             }
 
 
@@ -160,6 +172,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
                 // retrieve public key of public keystore once to encrypt DFSCredentials
                 KeyStoreAccess publicKeyStoreAccess = getKeyStoreAccess(systemDFS, userIDAuth);
                 storeUserDFSCredentials(userIDAuth, publicKeyStoreAccess, dfsCredentials);
+                userDFSCredentialsCache.put(new UserAuthCacheKey(userIDAuth), dfsCredentials);
             }
 
             // now delete all the old data
@@ -332,22 +345,24 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
      */
     private DFSConnection getUsersDFS(UserIDAuth userIDAuth) {
         try {
-            KeyStoreAccess publicKeyStoreAccess = getKeyStoreAccess(systemDFS, userIDAuth);
+            DFSCredentials userDFSCredentials = userDFSCredentialsCache.get(new UserAuthCacheKey(userIDAuth));
+            if (userDFSCredentials == null) {
+                KeyStoreAccess publicKeyStoreAccess = getKeyStoreAccess(systemDFS, userIDAuth);
 
-            DFSCredentials userDFSCredentials = null;
-            {
-                // retrieve DFS
-                Payload encryptedPayload = systemDFS.getBlob(FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID()));
-                CMSEnvelopedData cmsEnvelopedData = new CMSEnvelopedData(encryptedPayload.getData());
-                Payload decrypt = cmsEncryptionService.decrypt(cmsEnvelopedData, publicKeyStoreAccess);
-                userDFSCredentials = class2JsonHelper.contentToDFSConnection(decrypt);
+                {
+                    // retrieve DFS
+                    Payload encryptedPayload = systemDFS.getBlob(FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID()));
+                    CMSEnvelopedData cmsEnvelopedData = new CMSEnvelopedData(encryptedPayload.getData());
+                    Payload decrypt = cmsEncryptionService.decrypt(cmsEnvelopedData, publicKeyStoreAccess);
+                    userDFSCredentials = class2JsonHelper.contentToDFSConnection(decrypt);
+                }
+                userDFSCredentialsCache.put(new UserAuthCacheKey(userIDAuth), userDFSCredentials);
             }
             return DFSConnectionFactory.get(userDFSCredentials.getProperties());
 
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
         }
-
     }
 
     /* reads and returns the keystore from the provided dfs
@@ -384,8 +399,19 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     private DFSAndKeystoreAndPath getUsersAccess(UserIDAuth userIDAuth, DocumentDirectoryFQN documentDirectoryFQN, DocumentFQN documentFQN) {
         DFSAndKeystoreAndPath dfsAndKeystoreAndPath = new DFSAndKeystoreAndPath();
         dfsAndKeystoreAndPath.usersDFS = getUsersDFS(userIDAuth);
-        dfsAndKeystoreAndPath.privateKeystoreAccess = getKeyStoreAccess(dfsAndKeystoreAndPath.usersDFS, userIDAuth);
-        dfsAndKeystoreAndPath.pathEncryptionKey = keyStoreService.getRandomSecretKeyID(dfsAndKeystoreAndPath.privateKeystoreAccess).getSecretKey();
+        KeyStoreAccess privateKeyStoreAccess = usersPrivateKeyStoreCache.get(new UserAuthCacheKey(userIDAuth));
+        if (privateKeyStoreAccess == null) {
+            privateKeyStoreAccess = getKeyStoreAccess(dfsAndKeystoreAndPath.usersDFS, userIDAuth);
+            usersPrivateKeyStoreCache.put(new UserAuthCacheKey(userIDAuth), privateKeyStoreAccess);
+        }
+        dfsAndKeystoreAndPath.privateKeystoreAccess = privateKeyStoreAccess;
+
+        SecretKey secretKey = userPathSecretKeyCache.get(new UserAuthCacheKey(userIDAuth));
+        if (secretKey == null) {
+            secretKey = keyStoreService.getRandomSecretKeyID(dfsAndKeystoreAndPath.privateKeystoreAccess).getSecretKey();
+            userPathSecretKeyCache.put(new UserAuthCacheKey(userIDAuth), secretKey);
+        }
+        dfsAndKeystoreAndPath.pathEncryptionKey = secretKey;
 
         if (documentFQN != null) {
             BucketPath unencryptedPath = FolderHelper.getHomeDirectory(userIDAuth.getUserID()).appendName(documentFQN.getValue());
@@ -420,11 +446,16 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     }
 
     private PublicKeyIDWithPublicKey getPublicKeyIDWithPublicKey(UserID userID) {
+        PublicKeyList publicKeyIDWithPublicKeys = userPublicKeyListCache.get(userID);
+        if (publicKeyIDWithPublicKeys == null) {
+            Payload publicKeysAsPayload = systemDFS.getBlob(FolderHelper.getPublicKeyListPath(userID));
+            List<PublicKeyIDWithPublicKey> publicKeys = class2JsonHelper.contentToKeyList(publicKeysAsPayload);
+            publicKeyIDWithPublicKeys = new PublicKeyList(publicKeys);
+            userPublicKeyListCache.put(userID, publicKeyIDWithPublicKeys);
+        }
         // get random public key to encrypt
-        Payload publicKeysAsPayload = systemDFS.getBlob(FolderHelper.getPublicKeyListPath(userID));
-        List<PublicKeyIDWithPublicKey> publicKeys = class2JsonHelper.contentToKeyList(publicKeysAsPayload);
         Random random = new Random();
-        return publicKeys.get(random.nextInt(publicKeys.size()));
+        return publicKeyIDWithPublicKeys.get(random.nextInt(publicKeyIDWithPublicKeys.size()));
     }
 
     private void storeUserDFSCredentials(UserIDAuth userIDAuth, KeyStoreAccess publicKeyStoreAccess, DFSCredentials userDFSCredentials) throws IOException {
