@@ -1,7 +1,6 @@
 package de.adorsys.docusafe.business.impl;
 
 import de.adorsys.dfs.connection.api.service.api.DFSConnection;
-import de.adorsys.dfs.connection.api.types.properties.ConnectionProperties;
 import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
 import de.adorsys.docusafe.business.DocumentSafeService;
 import de.adorsys.docusafe.business.types.DFSCredentials;
@@ -16,8 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -34,8 +31,6 @@ import java.util.List;
 @PrepareForTest({DFSConnectionFactory.class, DFSConnection.class})
 @PowerMockIgnore("javax.*")
 public class CacheTest {
-
-    private List<DFSConnection> results = new ArrayList<>();
 
     @SneakyThrows
     @Test
@@ -55,18 +50,18 @@ public class CacheTest {
 
         try {
             service.createUser(userIDAuth);
-            show(results);
+            show(dfss.getResults());
 
-            Assert.assertEquals(3, results.size());
+            Assert.assertEquals(3, dfss.getResults().size());
             // system users keystore
             // system users dfs credentials
             // system users public keys
-            Mockito.verify(results.get(1), Mockito.times(3)).putBlob(Mockito.any(), Mockito.any());
-            Mockito.verify(results.get(1), Mockito.times(0)).getBlob(Mockito.any());
+            Mockito.verify(dfss.getResults().get(1), Mockito.times(3)).putBlob(Mockito.any(), Mockito.any());
+            Mockito.verify(dfss.getResults().get(1), Mockito.times(0)).getBlob(Mockito.any());
 
             // users keystore has been written
-            Mockito.verify(results.get(2), Mockito.times(1)).putBlob(Mockito.any(), Mockito.any());
-            Mockito.verify(results.get(2), Mockito.times(0)).getBlob(Mockito.any());
+            Mockito.verify(dfss.getResults().get(2), Mockito.times(1)).putBlob(Mockito.any(), Mockito.any());
+            Mockito.verify(dfss.getResults().get(2), Mockito.times(0)).getBlob(Mockito.any());
 
             DSDocument dsDocument = null;
             {
@@ -75,18 +70,18 @@ public class CacheTest {
                 dsDocument = new DSDocument(documentFQN, documentContent);
                 service.storeDocument(userIDAuth, dsDocument);
             }
-            Assert.assertEquals(4, results.size());
+            Assert.assertEquals(4, dfss.getResults().size());
             // nothing to be written
-            Mockito.verify(results.get(1), Mockito.times(3)).putBlob(Mockito.any(), Mockito.any());
+            Mockito.verify(dfss.getResults().get(1), Mockito.times(3)).putBlob(Mockito.any(), Mockito.any());
             // get system users keystore (for path encoding)
             // get system users dfs credentials
             // get system users public keys for documenet encoding
-            Mockito.verify(results.get(1), Mockito.times(3)).getBlob(Mockito.any());
+            Mockito.verify(dfss.getResults().get(1), Mockito.times(3)).getBlob(Mockito.any());
 
             // document written
-            Mockito.verify(results.get(3), Mockito.times(1)).putBlob(Mockito.any(), Mockito.any());
+            Mockito.verify(dfss.getResults().get(3), Mockito.times(1)).putBlob(Mockito.any(), Mockito.any());
             // get users keystore (for path encoding)
-            Mockito.verify(results.get(3), Mockito.times(1)).getBlob(Mockito.any());
+            Mockito.verify(dfss.getResults().get(3), Mockito.times(1)).getBlob(Mockito.any());
 
             {
                 DSDocument dsDocument1 = service.readDocument(userIDAuth, dsDocument.getDocumentFQN());
@@ -96,12 +91,12 @@ public class CacheTest {
 
         } finally {
             log.info("start destroying user");
-            show(results);
+            show(dfss.getResults());
 
 
             service.destroyUser(userIDAuth);
             log.info("finished");
-            show(results);
+            show(dfss.getResults());
         }
 
     }
@@ -115,6 +110,12 @@ public class CacheTest {
 
 
     public class ResultCaptor<T> implements Answer {
+        private List<DFSConnection> results = new ArrayList<>();
+
+        public List<DFSConnection> getResults() {
+            return results;
+        }
+
         @Override
         public T answer(InvocationOnMock invocationOnMock) throws Throwable {
             log.info("a new dfs connection");
