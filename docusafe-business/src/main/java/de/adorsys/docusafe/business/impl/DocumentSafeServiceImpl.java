@@ -327,6 +327,9 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
         systemDFS.putBlob(FolderHelper.getKeyStorePath(userIDAuth.getUserID()), payload);
     }
 
+    /* reads the system dfs users key store to decrypt the dfsCredentials.
+     * the a dfs connection is created with these dfsCredentials
+     */
     private DFSConnection getUsersDFS(UserIDAuth userIDAuth) {
         try {
             KeyStoreAccess publicKeyStoreAccess = getKeyStoreAccess(systemDFS, userIDAuth);
@@ -347,6 +350,8 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     }
 
+    /* reads and returns the keystore from the provided dfs
+     */
     private KeyStoreAccess getKeyStoreAccess(DFSConnection dfs, UserIDAuth userIDAuth) {
         try {
             KeyStoreAccess keyStoreAccess = null;
@@ -379,9 +384,8 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     private DFSAndKeystoreAndPath getUsersAccess(UserIDAuth userIDAuth, DocumentDirectoryFQN documentDirectoryFQN, DocumentFQN documentFQN) {
         DFSAndKeystoreAndPath dfsAndKeystoreAndPath = new DFSAndKeystoreAndPath();
         dfsAndKeystoreAndPath.usersDFS = getUsersDFS(userIDAuth);
-        KeyStoreAccess privateKeyStoreAccess = getKeyStoreAccess(dfsAndKeystoreAndPath.usersDFS, userIDAuth);
-        dfsAndKeystoreAndPath.pathEncryptionKey = keyStoreService.getRandomSecretKeyID(privateKeyStoreAccess).getSecretKey();
         dfsAndKeystoreAndPath.privateKeystoreAccess = getKeyStoreAccess(dfsAndKeystoreAndPath.usersDFS, userIDAuth);
+        dfsAndKeystoreAndPath.pathEncryptionKey = keyStoreService.getRandomSecretKeyID(dfsAndKeystoreAndPath.privateKeystoreAccess).getSecretKey();
 
         if (documentFQN != null) {
             BucketPath unencryptedPath = FolderHelper.getHomeDirectory(userIDAuth.getUserID()).appendName(documentFQN.getValue());

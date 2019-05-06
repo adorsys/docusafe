@@ -111,8 +111,8 @@ public class CacheTest {
             Mockito.verify(dfss.getResults().get(3), Mockito.times(1)).putBlob(Mockito.any(), Mockito.any());
 
             // WRITE DOCUMENT reads the followgin documents from the users dfs
-            Mockito.verify(dfss.getResults().get(3), Mockito.times(2)).getBlob(readBucketPath.capture());
-            readBucketPath.getAllValues().forEach(bp -> log.info("read doc:" + bp));
+            Mockito.verify(dfss.getResults().get(3), Mockito.times(1)).getBlob(readBucketPath.capture());
+            Assert.assertEquals(readBucketPath.getAllValues().get(0).getValue(), "bp-peter/keystore.UBER");
 
             {
                 DSDocument dsDocument1 = service.readDocument(userIDAuth, dsDocument.getDocumentFQN());
