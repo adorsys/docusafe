@@ -14,6 +14,10 @@ import java.util.HashSet;
 public class CleanupLogic {
     private final static Logger LOGGER = LoggerFactory.getLogger(CleanupLogic.class);
     public static TransactionInformationList cleaupTxHistory(DocumentSafeService documentSafeService, UserIDAuth userIDAuth, TransactionInformationList transactionInformationList) {
+        return new CleanupLogic().cleanupTxHistory(documentSafeService, userIDAuth, transactionInformationList);
+    }
+
+    public TransactionInformationList cleanupTxHistory(DocumentSafeService documentSafeService, UserIDAuth userIDAuth, TransactionInformationList transactionInformationList) {
         int size = transactionInformationList.size();
         if (size < 1) {
             return transactionInformationList;

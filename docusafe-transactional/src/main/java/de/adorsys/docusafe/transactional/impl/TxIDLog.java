@@ -21,7 +21,6 @@ public class TxIDLog {
     private static String LOG_FILE_NAME = "LastCommitedTxID.txt";
     private static DocumentFQN txidLogFilename = TransactionalDocumentSafeServiceImpl.txMeta.addName(LOG_FILE_NAME);
 
-
     private TransactionInformationList txidList = new TransactionInformationList();
 
     public static LastCommitedTxID findLastCommitedTxID(DocumentSafeService documentSafeService, UserIDAuth userIDAuth) {

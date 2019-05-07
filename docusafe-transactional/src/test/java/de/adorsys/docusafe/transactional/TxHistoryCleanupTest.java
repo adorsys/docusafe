@@ -1,31 +1,46 @@
 package de.adorsys.docusafe.transactional;
 
+import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import de.adorsys.docusafe.business.types.BucketContentFQN;
 import de.adorsys.docusafe.business.types.DSDocument;
 import de.adorsys.docusafe.business.types.DocumentDirectoryFQN;
 import de.adorsys.docusafe.business.types.DocumentFQN;
-import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import de.adorsys.docusafe.service.api.types.DocumentContent;
+import de.adorsys.docusafe.transactional.impl.helper.CleanupLogic;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by peter on 11.07.18 at 11:20.
  */
+@Slf4j
+@RunWith(value = PowerMockRunner.class)
+@PrepareForTest({CleanupLogic.class})
+@PowerMockIgnore("javax.*")
 public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTest {
-    private final static Logger LOGGER = LoggerFactory.getLogger(TxHistoryCleanupTest.class);
 
+    @SneakyThrows
     @Test
     public void createFilesAndDeleteSomeRandomFilesInServeralTransactions() {
-        
+        CleanupLogic cl = Mockito.spy(new CleanupLogic());
+
+        PowerMockito.whenNew(CleanupLogic.class).withNoArguments().thenAnswer(in -> {
+            log.info("powermodckit works fine for CleanupLogic");
+            return cl;
+        });
 
         StopWatch st = new StopWatch();
         st.start();
@@ -41,17 +56,19 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
         transactionalDocumentSafeService.createUser(userIDAuth);
         DocumentDirectoryFQN documentDirectoryFQN = new DocumentDirectoryFQN("folder");
 
-        LOGGER.info("numberOfTransactions:                "  + numberOfTransactinos);
-        LOGGER.info("numberOfFilesToDeletePerTx:          " + numberOfFilesToDeletePerTx);
-        LOGGER.info("numberOfFilesToCreatePerTx:          " + numberOfFilesToCreatePerTx);
-        LOGGER.info("numberOfFilesToOverwritePerTx:       " + numberOfFilesToOverwritePerTx);
-        LOGGER.info("expectedNumberOfFilesAfterIteration: " + expectedNumberOfFilesAfterIteration);
+        log.info("numberOfTransactions:                " + numberOfTransactinos);
+        log.info("numberOfFilesToDeletePerTx:          " + numberOfFilesToDeletePerTx);
+        log.info("numberOfFilesToCreatePerTx:          " + numberOfFilesToCreatePerTx);
+        log.info("numberOfFilesToOverwritePerTx:       " + numberOfFilesToOverwritePerTx);
+        log.info("expectedNumberOfFilesAfterIteration: " + expectedNumberOfFilesAfterIteration);
 
         int staticCounter = 0;
         {
             // create documents
             for (int i = 0; i < numberOfTransactinos; i++) {
+                log.debug("create LIST OF FILES IN DOCUMENTSAFE: " + dss.list(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE).size());
                 transactionalDocumentSafeService.beginTransaction(userIDAuth);
+                log.debug("create LIST OF FILES IN TX: " + transactionalDocumentSafeService.txListDocuments(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE).getFilesWithVersion().size());
                 for (int j = 0; j < numberOfFilesToCreatePerTx; j++) {
                     DSDocument document = new DSDocument(documentDirectoryFQN.addName("file_" + staticCounter++ + ".TXT"),
                             new DocumentContent(("Content of File " + i).getBytes()));
@@ -65,13 +82,15 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
         {
             // delete documentes
             for (int i = 0; i < numberOfTransactinos; i++) {
+                log.debug("delete LIST OF FILES IN DOCUMENTSAFE: " + dss.list(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE).size());
                 transactionalDocumentSafeService.beginTransaction(userIDAuth);
+                log.debug("delete LIST OF FILES IN TX: " + transactionalDocumentSafeService.txListDocuments(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE).getFilesWithVersion().size());
                 for (int j = 0; j < numberOfFilesToDeletePerTx; j++) {
                     BucketContentFQN bucketContentFQN = transactionalDocumentSafeService.txListDocuments(userIDAuth, documentDirectoryFQN, ListRecursiveFlag.TRUE);
                     int currentNumberOfFiles = bucketContentFQN.getFiles().size();
                     int indexToDelete = getRandomInRange(currentNumberOfFiles);
-                    LOGGER.debug("Transaction number " + i + " has " + currentNumberOfFiles + " files");
-                    LOGGER.debug("Index to delete is " + indexToDelete);
+                    log.debug("Transaction number " + i + " has " + currentNumberOfFiles + " files");
+                    log.debug("Index to delete is " + indexToDelete);
                     transactionalDocumentSafeService.txDeleteDocument(userIDAuth, bucketContentFQN.getFiles().get(indexToDelete));
                     memoryMap.remove(bucketContentFQN.getFiles().get(indexToDelete));
 
@@ -84,7 +103,9 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
         {
             // overwrite documents
             for (int i = 0; i < numberOfTransactinos; i++) {
+                log.debug("overwrite LIST OF FILES IN DOCUMENTSAFE: " + dss.list(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE).size());
                 transactionalDocumentSafeService.beginTransaction(userIDAuth);
+                log.debug("overwrite LIST OF FILES IN TX: " + transactionalDocumentSafeService.txListDocuments(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE).getFilesWithVersion().size());
                 for (int j = 0; j < numberOfFilesToOverwritePerTx; j++) {
                     // show("overwrite loop", transactionalDocumentSafeService.txListDocuments(userIDAuth, documentDirectoryFQN, ListRecursiveFlag.TRUE));
                     BucketContentFQN bucketContentFQN = transactionalDocumentSafeService.txListDocuments(userIDAuth, documentDirectoryFQN, ListRecursiveFlag.TRUE);
@@ -102,36 +123,42 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
         {
             transactionalDocumentSafeService.beginTransaction(userIDAuth);
             BucketContentFQN bucketContentFQN = transactionalDocumentSafeService.txListDocuments(userIDAuth, documentDirectoryFQN, ListRecursiveFlag.TRUE);
-            LOGGER.debug("LIST OF FILES IN TRANSACTIONAL LAYER: " + bucketContentFQN.toString());
+            log.debug("LIST OF FILES IN TRANSACTIONAL LAYER: " + bucketContentFQN.toString());
             Assert.assertEquals(memoryMap.keySet().size(), bucketContentFQN.getFiles().size());
             bucketContentFQN.getFiles().forEach(documentFQN -> {
                 DSDocument dsDocument = transactionalDocumentSafeService.txReadDocument(userIDAuth, documentFQN);
                 Assert.assertArrayEquals(memoryMap.get(documentFQN).getValue(), dsDocument.getDocumentContent().getValue());
-                LOGGER.debug(documentFQN + " checked!");
+                log.debug(documentFQN + " checked!");
             });
             transactionalDocumentSafeService.endTransaction(userIDAuth);
             Assert.assertEquals(expectedNumberOfFilesAfterIteration, bucketContentFQN.getFiles().size());
         }
 
         // Nun gehen wir direkt auf das Filesystem. Hier gibt es nun alle Dateien zu sehen
-        List<DocumentFQN> list = dss.list(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE);
-        LOGGER.debug("LIST OF FILES IN DOCUMENTSAFE: " + list.toString());
-//        Assert.assertEquals(numberOfFiles, list.getFiles().size());
+        transactionalDocumentSafeService.beginTransaction(userIDAuth);
+        int finalNumberOfDocuments = transactionalDocumentSafeService.txListDocuments(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE).getFilesWithVersion().size();
+        log.debug("overwrite LIST OF FILES IN TX: " + finalNumberOfDocuments);
+        transactionalDocumentSafeService.endTransaction(userIDAuth);
+        log.debug("finally LIST OF FILES IN DOCUMENTSAFE: " + dss.list(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE).size());
+        dss.list(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE).forEach(el -> log.debug(el.toString()));
         st.stop();
-        LOGGER.debug("time for test " + st.toString());
+        Assert.assertEquals(expectedNumberOfFilesAfterIteration, finalNumberOfDocuments);
+        log.debug("time for test " + st.toString());
+        Mockito.verify(cl, Mockito.times(1)).cleanupTxHistory(Mockito.any(), Mockito.any(), Mockito.any());
+
     }
 
     private void show(String description, BucketContentFQN bucketContentFQN) {
-        LOGGER.info("--------------------------------- begin " + description);
-        LOGGER.info("files" + bucketContentFQN.getFiles().size());
-        bucketContentFQN.getFiles().forEach(dir -> LOGGER.info(dir.toString()));
-        LOGGER.info("--------------------------------- end " + description);
+        log.info("--------------------------------- begin " + description);
+        log.info("files" + bucketContentFQN.getFiles().size());
+        bucketContentFQN.getFiles().forEach(dir -> log.info(dir.toString()));
+        log.info("--------------------------------- end " + description);
     }
 
 
     private int getRandomInRange(int max) {
-        // nextInt is normally exclusive of the top value,
-        LOGGER.debug("Also max ist " + max);
-        return ThreadLocalRandom.current().nextInt(0, max);
+        int random = ThreadLocalRandom.current().nextInt(0, max);
+        // log.debug("ramdom in max " + max + " is " + random);
+        return random;
     }
 }
