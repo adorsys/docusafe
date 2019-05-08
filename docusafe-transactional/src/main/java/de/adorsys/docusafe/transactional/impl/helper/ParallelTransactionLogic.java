@@ -9,10 +9,12 @@ import de.adorsys.docusafe.transactional.exceptions.TxParallelCommittingExceptio
 import de.adorsys.docusafe.transactional.impl.LastCommitedTxID;
 import de.adorsys.docusafe.transactional.impl.TxIDHashMap;
 import de.adorsys.docusafe.transactional.impl.TxIDHashMapWrapper;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class ParallelTransactionLogic {
 
     public static TxIDHashMapWrapper join(TxIDHashMapWrapper stateLastCommittedTx, TxIDHashMapWrapper stateAtBeginOfCurrentTx, TxIDHashMapWrapper stateAtEndOfCurrentTx, TxIDHashMap documentsReadInTx) {
@@ -45,7 +47,8 @@ public class ParallelTransactionLogic {
             }
         }
 
-        return TxIDHashMapWrapper.builder()
+
+        TxIDHashMapWrapper build = TxIDHashMapWrapper.builder()
                 .lastCommitedTxID(new LastCommitedTxID(stateLastCommittedTx.getCurrentTxID().getValue()))
                 .currentTxID(new TxID())
                 .beginTx(new Date())
@@ -53,5 +56,35 @@ public class ParallelTransactionLogic {
                 .map(stateAtEndOfCurrentTx.getMap())
                 .mergedTxID(stateAtEndOfCurrentTx.getCurrentTxID())
                 .build();
+
+        if (log.isDebugEnabled()) {
+            log.debug("join input state of last committed tx: " + show(stateLastCommittedTx));
+            log.debug("join input state at begin of tx      : " + show(stateAtBeginOfCurrentTx));
+            log.debug("join input state of current tx       : " + show(stateAtBeginOfCurrentTx));
+            log.debug("join result state of tx              : " + show(build));
+        }
+        return build;
+
+    }
+
+    private static String show(TxIDHashMapWrapper stateLastCommittedTx) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n");
+        List<DocumentFQN> list = new ArrayList<>();
+        list.addAll(stateLastCommittedTx.getMap().keySet());
+        Collections.sort(list, new DocumentFQNComparator());
+        for (DocumentFQN documentFQN : list) {
+            sb.append(documentFQN.getValue() + "." + stateLastCommittedTx.getMap().get(documentFQN).getValue());
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    public static class DocumentFQNComparator implements Comparator < DocumentFQN> {
+
+        @Override
+        public int compare(DocumentFQN o1, DocumentFQN o2) {
+            return o1.getValue().compareTo(o2.getValue());
+        }
     }
 }
