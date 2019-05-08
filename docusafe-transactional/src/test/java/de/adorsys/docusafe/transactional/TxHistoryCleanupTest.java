@@ -168,14 +168,11 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
     @SneakyThrows
     @Test
     public void forceCleanupInParallel() {
-        int numberOfTx = TxIDLog.MAX_COMMITED_TX_FOR_CLEANUP + 1;
+        DSDocument document = new DSDocument(new DocumentFQN("folder/file.txt"), new DocumentContent(("Content of File").getBytes()));
+        int numberOfTx = TxIDLog.MAX_COMMITED_TX_FOR_CLEANUP;
         transactionalDocumentSafeService.createUser(userIDAuth);
-        List<Date> transactionStartTimes = new ArrayList<>();
         for (int i = 0; i < numberOfTx; i++) {
             transactionalDocumentSafeService.beginTransaction(userIDAuth);
-            transactionStartTimes.add(new Date());
-
-            DSDocument document = new DSDocument(new DocumentFQN("folder/file.txt"), new DocumentContent(("Content of File").getBytes()));
             transactionalDocumentSafeService.txStoreDocument(userIDAuth, document);
             transactionalDocumentSafeService.endTransaction(userIDAuth);
         }
@@ -208,8 +205,8 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
 
         for (int i = 0; i < PARALLEL_INSTANCES; i++) {
             log.debug(runnables[i].instanceID + " -> " + runnables[i].ok);
+            Assert.assertTrue(runnables[i].ok);
         }
-
     }
 
     public static class ARunnable implements Runnable {
@@ -221,6 +218,7 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
         private TransactionalDocumentSafeService transactionalFileStorage;
         private UserIDAuth userIDAuth;
         private CountDownLatch countDownLatch;
+        private DSDocument document;
         public boolean ok = false;
         public Exception exception;
 
@@ -229,21 +227,24 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
             this.sem = sem;
             this.userIDAuth = userIDAuth;
             this.countDownLatch = countDownLatch;
+            this.document = new DSDocument(new DocumentFQN("folder/file"+instanceID+".txt"), new DocumentContent(("Content of File " + instanceID).getBytes()));
+
             SimpleRequestMemoryContextImpl requestMemoryContext = new SimpleRequestMemoryContextImpl();
             DocumentSafeService dss = new DocumentSafeServiceImpl(DFSConnectionFactory.get());
             this.transactionalFileStorage = new TransactionalDocumentSafeServiceImpl(requestMemoryContext, dss);
-
         }
 
         @Override
         public void run() {
             try {
-                sem.acquire();
-                LOGGER.info("Thread " + instanceID + " successfully started");
                 transactionalFileStorage.beginTransaction(userIDAuth);
+                transactionalFileStorage.txStoreDocument(userIDAuth, document);
+                sem.acquire();
+                LOGGER.info("Thread " + instanceID + " now tries do end tx");
+                transactionalFileStorage.endTransaction(userIDAuth);
                 sem.release();
                 ok = true;
-                LOGGER.info("Thread " + instanceID + " successfully started transaction");
+                LOGGER.info("Thread " + instanceID + " successfully finished transaction");
             } catch (Exception e) {
                 exception = e;
             } finally {

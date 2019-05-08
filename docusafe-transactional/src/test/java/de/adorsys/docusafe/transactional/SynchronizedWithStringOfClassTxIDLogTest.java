@@ -1,7 +1,10 @@
 package de.adorsys.docusafe.transactional;
 
 import de.adorsys.common.exceptions.BaseExceptionHandler;
+import de.adorsys.common.utils.HexUtil;
+import de.adorsys.docusafe.service.api.types.UserID;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +20,7 @@ import java.util.concurrent.Semaphore;
  * The method will become blocked for the same user, but not for different users.
  */
 public class SynchronizedWithStringOfClassTxIDLogTest {
+    private final static Logger LOGGER = LoggerFactory.getLogger(SynchronizedWithStringOfClassTxIDLogTest.class);
 
     @Test
     public void testMethodsaveJustFinishedTxForSameString() {
@@ -30,7 +34,6 @@ public class SynchronizedWithStringOfClassTxIDLogTest {
 
     // @Test
     // ist 42 mal gut gegangen, ist wohl ok
-
     public void lasttest() {
         int counter = 0;
         do {
@@ -43,19 +46,16 @@ public class SynchronizedWithStringOfClassTxIDLogTest {
 
     }
 
-    private void testMethodsaveJustFinishedTx(int WAIT, boolean differ) {
+    public void testMethodsaveJustFinishedTx(int WAIT, boolean differ) {
         try {
-            String key1 = "affe";
-            String key2 = differ ? "nicht affe" : key1;
-
             int MAX_DELTA = 20; // maximal 10 Millisekunden dürfen für die Zeitmessung vergehen
 
             Semaphore semaphore = new Semaphore(2);
             CountDownLatch countDownLatch = new CountDownLatch(2);
             semaphore.acquire(2);
 
-            SynchronizedWithStringOfClassTxIDLogTest.ARunnable runnable1 = new SynchronizedWithStringOfClassTxIDLogTest.ARunnable(semaphore, countDownLatch, WAIT, key1);
-            SynchronizedWithStringOfClassTxIDLogTest.ARunnable runnable2 = new SynchronizedWithStringOfClassTxIDLogTest.ARunnable(semaphore, countDownLatch, WAIT, key2);
+            SynchronizedWithStringOfClassTxIDLogTest.ARunnable runnable1 = new SynchronizedWithStringOfClassTxIDLogTest.ARunnable(semaphore, countDownLatch, WAIT, false);
+            SynchronizedWithStringOfClassTxIDLogTest.ARunnable runnable2 = new SynchronizedWithStringOfClassTxIDLogTest.ARunnable(semaphore, countDownLatch, WAIT, differ);
             Thread[] instances = new Thread[2];
             instances[0] = new Thread(runnable1);
             instances[1] = new Thread(runnable2);
@@ -106,18 +106,21 @@ public class SynchronizedWithStringOfClassTxIDLogTest {
 
     public static class ARunnable implements Runnable {
         private int timeToBlock;
-        private String key;
+        private UserID key;
         private Semaphore semaphore;
         private CountDownLatch countDownLatch;
         public long durationInMillis = -1;
         public long starttime = -1;
         public long endtime = -1;
+        private Blocker blocker = new Blocker();
 
-        public ARunnable(Semaphore sem, CountDownLatch countDownLatch, int timeToBlock, String key) {
+        public ARunnable(Semaphore sem, CountDownLatch countDownLatch, int timeToBlock, boolean differ) {
             this.timeToBlock = timeToBlock;
-            this.key = key;
             this.semaphore = sem;
             this.countDownLatch = countDownLatch;
+
+            // looks weired, but just to make sure a new String is used.
+            this.key = new UserID(new String(HexUtil.convertHexStringToBytes(HexUtil.convertBytesToHexString((differ ? "bifi" : "affe").getBytes()))));
         }
 
         @Override
@@ -126,7 +129,7 @@ public class SynchronizedWithStringOfClassTxIDLogTest {
                 semaphore.acquire();
                 LOGGER.info("start for key " + key);
                 starttime = new Date().getTime();
-                blockForString(key, timeToBlock);
+                blocker.blockForString(key, timeToBlock);
                 endtime = new Date().getTime();
                 this.durationInMillis = endtime - starttime;
                 LOGGER.info("finsih for key " + key);
@@ -141,22 +144,25 @@ public class SynchronizedWithStringOfClassTxIDLogTest {
 
     }
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(SynchronizedWithStringOfClassTxIDLogTest.class);
-
-    private static void blockForString(String s, int timeToBlock) {
-        synchronized (s) {
-            LOGGER.info("start method for " + s);
-            try {
-                Thread.currentThread().sleep(timeToBlock);
-            } catch (Exception e) {
-                throw BaseExceptionHandler.handle(e);
-            }
-            LOGGER.info("finish method for " + s);
-        }
-    }
-
     private String getString(Date date) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH.mm.ss,SSS");
         return sdf.format(date);
+    }
+
+    private static class Blocker {
+        private final static Logger LOGGER = LoggerFactory.getLogger(SynchronizedWithStringOfClassTxIDLogTest.class);
+        private void blockForString(UserID s, int timeToBlock) {
+            // THIS IS VERY IMPORTANT String.intern() see http://antkorwin.com/concurrency/synchronization_by_value.html<12
+            synchronized (s.getValue().intern()) {
+                LOGGER.info("start method for " + s);
+                try {
+                    Thread.currentThread().sleep(timeToBlock);
+                } catch (Exception e) {
+                    throw BaseExceptionHandler.handle(e);
+                }
+                LOGGER.info("finish method for " + s);
+            }
+        }
+
     }
 }

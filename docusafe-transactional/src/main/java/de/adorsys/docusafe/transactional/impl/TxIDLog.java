@@ -31,12 +31,6 @@ public class TxIDLog {
                 throw new BaseException("file " + txidLogFilename + " must not be empty");
             }
             int size = txIDLog.txidList.size();
-            if (size > MAX_COMMITED_TX_FOR_CLEANUP) {
-                txIDLog.txidList = CleanupLogic.cleaupTxHistory(documentSafeService, userIDAuth, txIDLog.txidList);
-                size = txIDLog.txidList.size();
-                DSDocument document = new DSDocument(txidLogFilename, new Class2JsonHelper().txidLogToContent(txIDLog));
-                documentSafeService.storeDocument(userIDAuth, document);
-            }
             TransactionInformation lastTuple = txIDLog.txidList.get(size - 1);
             return new LastCommitedTxID(lastTuple.getCurrentTxID().getValue());
         }
@@ -44,10 +38,10 @@ public class TxIDLog {
     }
 
     public static void saveJustFinishedTx(DocumentSafeService documentSafeService, UserIDAuth userIDAuth, CurrentTransactionData currentTransactionData) {
+
         // we synchonize not all methods, but those, refering to the same user
-
-
-        synchronized (userIDAuth.getUserID().getValue()) {
+        synchronized (userIDAuth.getUserID().getValue().intern()) {
+            LOGGER.debug("start synchronized for " + userIDAuth.getUserID().getValue());
             TxIDHashMapWrapper joinedTx = null;
             TxIDLog txIDLog = new TxIDLog();
             if (documentSafeService.documentExists(userIDAuth, txidLogFilename)) {
@@ -84,8 +78,17 @@ public class TxIDLog {
             DSDocument document = new DSDocument(txidLogFilename, new Class2JsonHelper().txidLogToContent(txIDLog));
             documentSafeService.storeDocument(userIDAuth, document);
             LOGGER.debug("successfully wrote new Version to " + txidLogFilename);
+
+            // as we are here in a synchronized space, we here do the cleanup
+            int size = txIDLog.txidList.size();
+            if (size > MAX_COMMITED_TX_FOR_CLEANUP) {
+                txIDLog.txidList = CleanupLogic.cleaupTxHistory(documentSafeService, userIDAuth, txIDLog.txidList);
+                int newsize = txIDLog.txidList.size();
+                document = new DSDocument(txidLogFilename, new Class2JsonHelper().txidLogToContent(txIDLog));
+                documentSafeService.storeDocument(userIDAuth, document);
+                LOGGER.info("cleanup reduced number of tx from " + size + " to " + newsize + " in " + txidLogFilename);
+            }
+            LOGGER.debug("finished synchronized for " + userIDAuth.getUserID().getValue());
         }
     }
-
-
 }
