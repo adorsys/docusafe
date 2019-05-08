@@ -91,7 +91,7 @@ public class TxIDHashMapWrapper {
         if (!documentSafeService.documentExists(userIDAuth, file)) {
             throw new TxNotFoundException(file, lastCommitedTxID);
         }
-        LOGGER.debug("delete transactional HashMap " + file);
+        LOGGER.debug("delete transactional HashMap file" + file);
         documentSafeService.deleteDocument(userIDAuth, file);
     }
 

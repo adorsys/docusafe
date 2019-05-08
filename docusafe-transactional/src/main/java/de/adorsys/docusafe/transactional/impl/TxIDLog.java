@@ -16,7 +16,7 @@ import java.util.Date;
  * Created by peter on 11.06.18 at 15:48.
  */
 public class TxIDLog {
-    private final static int MAX_COMMITED_TX_FOR_CLEANUP = 5;
+    public final static int MAX_COMMITED_TX_FOR_CLEANUP = 5;
     private final static Logger LOGGER = LoggerFactory.getLogger(TxIDLog.class);
     private static String LOG_FILE_NAME = "LastCommitedTxID.txt";
     private static DocumentFQN txidLogFilename = TransactionalDocumentSafeServiceImpl.txMeta.addName(LOG_FILE_NAME);

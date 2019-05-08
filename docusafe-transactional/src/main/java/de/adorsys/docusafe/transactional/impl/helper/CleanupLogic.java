@@ -19,12 +19,12 @@ public class CleanupLogic {
 
     public TransactionInformationList cleanupTxHistory(DocumentSafeService documentSafeService, UserIDAuth userIDAuth, TransactionInformationList transactionInformationList) {
         int size = transactionInformationList.size();
-        if (size < 1) {
+        if (size < 2) {
             return transactionInformationList;
         }
         LOGGER.debug("cleanup has to be done for " + (size - 1) + " previously commited transactions");
 
-        // Find all files exxcept the last tx
+        // Find all files except the last tx
         HashSet<DocumentFQN> allPrevousFiles = new HashSet<>();
         {
             for (int i = 0; i < size - 1; i++) {
@@ -47,7 +47,10 @@ public class CleanupLogic {
 
         // delete all unused files
         LOGGER.debug("previous files size after removeing all of current file = " + allPrevousFiles.size());
-        allPrevousFiles.forEach(fileToDelte -> documentSafeService.deleteDocument(userIDAuth, fileToDelte));
+        allPrevousFiles.forEach(fileToDelte -> {
+            LOGGER.debug("delete " + fileToDelte);
+            documentSafeService.deleteDocument(userIDAuth, fileToDelte);
+        });
 
         // delete all metafiles of the previous tx
         {

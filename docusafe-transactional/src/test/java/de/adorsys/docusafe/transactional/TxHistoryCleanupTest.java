@@ -1,11 +1,17 @@
 package de.adorsys.docusafe.transactional;
 
 import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
+import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
+import de.adorsys.docusafe.business.DocumentSafeService;
+import de.adorsys.docusafe.business.impl.DocumentSafeServiceImpl;
 import de.adorsys.docusafe.business.types.BucketContentFQN;
 import de.adorsys.docusafe.business.types.DSDocument;
 import de.adorsys.docusafe.business.types.DocumentDirectoryFQN;
 import de.adorsys.docusafe.business.types.DocumentFQN;
 import de.adorsys.docusafe.service.api.types.DocumentContent;
+import de.adorsys.docusafe.service.api.types.UserIDAuth;
+import de.adorsys.docusafe.transactional.impl.TransactionalDocumentSafeServiceImpl;
+import de.adorsys.docusafe.transactional.impl.TxIDLog;
 import de.adorsys.docusafe.transactional.impl.helper.CleanupLogic;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +24,12 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -32,6 +41,10 @@ import java.util.concurrent.ThreadLocalRandom;
 @PowerMockIgnore("javax.*")
 public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTest {
 
+    /**
+     * Here it is only tested, that the cleanup logic is called at all
+     * No check how many files will be cleaned
+     */
     @SneakyThrows
     @Test
     public void createFilesAndDeleteSomeRandomFilesInServeralTransactions() {
@@ -88,7 +101,7 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
                 for (int j = 0; j < numberOfFilesToDeletePerTx; j++) {
                     BucketContentFQN bucketContentFQN = transactionalDocumentSafeService.txListDocuments(userIDAuth, documentDirectoryFQN, ListRecursiveFlag.TRUE);
                     int currentNumberOfFiles = bucketContentFQN.getFiles().size();
-                    int indexToDelete = getRandomInRange(currentNumberOfFiles);
+                    int indexToDelete = ThreadLocalRandom.current().nextInt(0, currentNumberOfFiles);
                     log.debug("Transaction number " + i + " has " + currentNumberOfFiles + " files");
                     log.debug("Index to delete is " + indexToDelete);
                     transactionalDocumentSafeService.txDeleteDocument(userIDAuth, bucketContentFQN.getFiles().get(indexToDelete));
@@ -110,7 +123,7 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
                     // show("overwrite loop", transactionalDocumentSafeService.txListDocuments(userIDAuth, documentDirectoryFQN, ListRecursiveFlag.TRUE));
                     BucketContentFQN bucketContentFQN = transactionalDocumentSafeService.txListDocuments(userIDAuth, documentDirectoryFQN, ListRecursiveFlag.TRUE);
                     int currentNumberOfFiles = bucketContentFQN.getFiles().size();
-                    int indexToOverwrite = getRandomInRange(currentNumberOfFiles);
+                    int indexToOverwrite = ThreadLocalRandom.current().nextInt(0, currentNumberOfFiles);
                     DSDocument dsDocument = transactionalDocumentSafeService.txReadDocument(userIDAuth, bucketContentFQN.getFiles().get(indexToOverwrite));
                     DSDocument newDsDocument = new DSDocument(dsDocument.getDocumentFQN(),
                             new DocumentContent((new String(dsDocument.getDocumentContent().getValue()) + " overwritten in tx ").getBytes()));
@@ -144,21 +157,99 @@ public class TxHistoryCleanupTest extends TransactionalDocumentSafeServiceBaseTe
         st.stop();
         Assert.assertEquals(expectedNumberOfFilesAfterIteration, finalNumberOfDocuments);
         log.debug("time for test " + st.toString());
-        Mockito.verify(cl, Mockito.times(1)).cleanupTxHistory(Mockito.any(), Mockito.any(), Mockito.any());
+        Mockito.verify(cl, Mockito.atLeast(1)).cleanupTxHistory(Mockito.any(), Mockito.any(), Mockito.any());
 
     }
 
-    private void show(String description, BucketContentFQN bucketContentFQN) {
-        log.info("--------------------------------- begin " + description);
-        log.info("files" + bucketContentFQN.getFiles().size());
-        bucketContentFQN.getFiles().forEach(dir -> log.info(dir.toString()));
-        log.info("--------------------------------- end " + description);
+    /**
+     * This test forces the cleanup to run in parallal.
+     * So one thread is getting errors during cleanup, the other not.
+     */
+    @SneakyThrows
+    @Test
+    public void forceCleanupInParallel() {
+        int numberOfTx = TxIDLog.MAX_COMMITED_TX_FOR_CLEANUP + 1;
+        transactionalDocumentSafeService.createUser(userIDAuth);
+        List<Date> transactionStartTimes = new ArrayList<>();
+        for (int i = 0; i < numberOfTx; i++) {
+            transactionalDocumentSafeService.beginTransaction(userIDAuth);
+            transactionStartTimes.add(new Date());
+
+            DSDocument document = new DSDocument(new DocumentFQN("folder/file.txt"), new DocumentContent(("Content of File").getBytes()));
+            transactionalDocumentSafeService.txStoreDocument(userIDAuth, document);
+            transactionalDocumentSafeService.endTransaction(userIDAuth);
+        }
+
+        dss.list(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE).forEach(el -> log.debug(el.toString()));
+
+        // untill now, the cleanup has not been called yet
+        Assert.assertEquals(2 * numberOfTx + 1, dss.list(userIDAuth, new DocumentDirectoryFQN("/"), ListRecursiveFlag.TRUE).size());
+
+        // now we start two tx in parallel, to make sure, both call the cleanup, this should give conficts
+
+        int PARALLEL_INSTANCES = 2;
+        Semaphore semaphore = new Semaphore(PARALLEL_INSTANCES);
+        CountDownLatch countDownLatch = new CountDownLatch(PARALLEL_INSTANCES);
+        semaphore.acquire(PARALLEL_INSTANCES);
+        ARunnable[] runnables = new ARunnable[PARALLEL_INSTANCES];
+        Thread[] instances = new Thread[PARALLEL_INSTANCES];
+        for (int i = 0; i < PARALLEL_INSTANCES; i++) {
+            runnables[i] = new ARunnable(semaphore, countDownLatch, userIDAuth);
+            instances[i] = new Thread(runnables[i]);
+            instances[i].start();
+        }
+
+        Thread.currentThread().sleep(100);
+        log.debug("start " + PARALLEL_INSTANCES + " threads concurrently now");
+        semaphore.release(PARALLEL_INSTANCES);
+        log.debug("wait for " + PARALLEL_INSTANCES + " to finsih");
+        countDownLatch.await();
+        log.debug(PARALLEL_INSTANCES + " threadas have finished");
+
+        for (int i = 0; i < PARALLEL_INSTANCES; i++) {
+            log.debug(runnables[i].instanceID + " -> " + runnables[i].ok);
+        }
+
     }
 
+    public static class ARunnable implements Runnable {
+        private final static Logger LOGGER = LoggerFactory.getLogger(ParallelCommitTxTest.ARunnable.class);
+        private static int instanceCounter = 0;
 
-    private int getRandomInRange(int max) {
-        int random = ThreadLocalRandom.current().nextInt(0, max);
-        // log.debug("ramdom in max " + max + " is " + random);
-        return random;
+        private int instanceID;
+        private Semaphore sem;
+        private TransactionalDocumentSafeService transactionalFileStorage;
+        private UserIDAuth userIDAuth;
+        private CountDownLatch countDownLatch;
+        public boolean ok = false;
+        public Exception exception;
+
+        public ARunnable(Semaphore sem, CountDownLatch countDownLatch, UserIDAuth userIDAuth) {
+            this.instanceID = instanceCounter++;
+            this.sem = sem;
+            this.userIDAuth = userIDAuth;
+            this.countDownLatch = countDownLatch;
+            SimpleRequestMemoryContextImpl requestMemoryContext = new SimpleRequestMemoryContextImpl();
+            DocumentSafeService dss = new DocumentSafeServiceImpl(DFSConnectionFactory.get());
+            this.transactionalFileStorage = new TransactionalDocumentSafeServiceImpl(requestMemoryContext, dss);
+
+        }
+
+        @Override
+        public void run() {
+            try {
+                sem.acquire();
+                LOGGER.info("Thread " + instanceID + " successfully started");
+                transactionalFileStorage.beginTransaction(userIDAuth);
+                sem.release();
+                ok = true;
+                LOGGER.info("Thread " + instanceID + " successfully started transaction");
+            } catch (Exception e) {
+                exception = e;
+            } finally {
+                countDownLatch.countDown();
+            }
+        }
     }
+
 }
