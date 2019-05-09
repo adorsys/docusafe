@@ -23,7 +23,7 @@ public class TxIDLog {
 
     private TransactionInformationList txidList = new TransactionInformationList();
 
-    public static LastCommitedTxID findLastCommitedTxID(DocumentSafeService documentSafeService, UserIDAuth userIDAuth) {
+    public static TxID findLastCommitedTxID(DocumentSafeService documentSafeService, UserIDAuth userIDAuth) {
         if (documentSafeService.documentExists(userIDAuth, txidLogFilename)) {
             DSDocument dsDocument = documentSafeService.readDocument(userIDAuth, txidLogFilename);
             TxIDLog txIDLog = new Class2JsonHelper().txidLogFromContent(dsDocument.getDocumentContent());
@@ -32,7 +32,7 @@ public class TxIDLog {
             }
             int size = txIDLog.txidList.size();
             TransactionInformation lastTuple = txIDLog.txidList.get(size - 1);
-            return new LastCommitedTxID(lastTuple.getCurrentTxID().getValue());
+            return lastTuple.getCurrentTxID();
         }
         return null;
     }
@@ -51,10 +51,10 @@ public class TxIDLog {
             }
             if (!txIDLog.txidList.isEmpty()) {
                 TransactionInformation lastTuple = txIDLog.txidList.get(txIDLog.txidList.size() - 1);
-                LastCommitedTxID lastCommitedTxID = new LastCommitedTxID(lastTuple.getCurrentTxID().getValue());
+                TxID lastCommitedTxID = lastTuple.getCurrentTxID();
 
                 // now read file of lastCommittedTx
-                LastCommitedTxID previousTxID = currentTransactionData.getCurrentTxHashMap().getLastCommitedTxID();
+                TxID previousTxID = currentTransactionData.getCurrentTxHashMap().getLastCommitedTxID();
                 if (!lastCommitedTxID.equals(previousTxID)) {
                     TxIDHashMapWrapper stateOfLastCommitedTx = TxIDHashMapWrapper.readHashMapOfTx(documentSafeService, userIDAuth, lastCommitedTxID);
                     joinedTx = new ParallelTransactionLogic().join(stateOfLastCommitedTx, currentTransactionData.getInitialTxHashMap(), currentTransactionData.getCurrentTxHashMap(), currentTransactionData.getDocumentsReadInThisTx());
@@ -63,14 +63,14 @@ public class TxIDLog {
             }
 
             {
-                LastCommitedTxID previousTxID = currentTransactionData.getCurrentTxHashMap().getLastCommitedTxID();
+                TxID previousTxID = currentTransactionData.getCurrentTxHashMap().getLastCommitedTxID();
                 TxID currentTxID = currentTransactionData.getCurrentTxHashMap().getCurrentTxID();
                 Date start = currentTransactionData.getCurrentTxHashMap().getBeginTx();
                 Date finished = currentTransactionData.getCurrentTxHashMap().getEndTx();
                 txIDLog.txidList.add(new TransactionInformation(start, finished, previousTxID, currentTxID));
             }
             if (joinedTx != null) {
-                LastCommitedTxID previousTxID = joinedTx.getLastCommitedTxID();
+                TxID previousTxID = joinedTx.getLastCommitedTxID();
                 TxID currentTxID = joinedTx.getCurrentTxID();
                 Date start = joinedTx.getBeginTx();
                 Date finished = joinedTx.getEndTx();

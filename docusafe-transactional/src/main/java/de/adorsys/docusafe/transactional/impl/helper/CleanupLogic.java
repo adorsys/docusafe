@@ -4,7 +4,6 @@ import de.adorsys.docusafe.business.DocumentSafeService;
 import de.adorsys.docusafe.business.types.DocumentFQN;
 import de.adorsys.docusafe.service.api.types.UserIDAuth;
 import de.adorsys.docusafe.transactional.impl.TransactionalDocumentSafeServiceImpl;
-import de.adorsys.docusafe.transactional.impl.LastCommitedTxID;
 import de.adorsys.docusafe.transactional.impl.TxIDHashMapWrapper;
 import de.adorsys.docusafe.transactional.types.TxID;
 import org.slf4j.Logger;
@@ -30,7 +29,7 @@ public class CleanupLogic {
         {
             for (int i = 0; i < size - 1; i++) {
                 TransactionInformation tuple = transactionInformationList.get(i);
-                TxIDHashMapWrapper txIDHashMapWrapper = TxIDHashMapWrapper.readHashMapOfTx(documentSafeService, userIDAuth, new LastCommitedTxID(tuple.getCurrentTxID().getValue()));
+                TxIDHashMapWrapper txIDHashMapWrapper = TxIDHashMapWrapper.readHashMapOfTx(documentSafeService, userIDAuth, tuple.getCurrentTxID());
                 txIDHashMapWrapper.getMap().forEach((documentFQN, txID) -> allPrevousFiles.add(TransactionalDocumentSafeServiceImpl.modifyTxDocumentName(documentFQN, txID)));
             }
         }
@@ -41,7 +40,7 @@ public class CleanupLogic {
         {
             TransactionInformation tuple = transactionInformationList.get(size - 1);
             currentTxID = tuple.getCurrentTxID();
-            TxIDHashMapWrapper txIDHashMapWrapper = TxIDHashMapWrapper.readHashMapOfTx(documentSafeService, userIDAuth, new LastCommitedTxID(tuple.getCurrentTxID().getValue()));
+            TxIDHashMapWrapper txIDHashMapWrapper = TxIDHashMapWrapper.readHashMapOfTx(documentSafeService, userIDAuth, tuple.getCurrentTxID());
             txIDHashMapWrapper.getMap().forEach((documentFQN, txID) -> currentFiles.add(TransactionalDocumentSafeServiceImpl.modifyTxDocumentName(documentFQN, txID)));
         }
         LOGGER.debug("current txid is     = " + currentTxID);
@@ -60,7 +59,7 @@ public class CleanupLogic {
         {
             for (int i = 0; i < size - 1; i++) {
                 TransactionInformation tuple = transactionInformationList.get(i);
-                TxIDHashMapWrapper.deleteHashMapOfTx(documentSafeService, userIDAuth, new LastCommitedTxID(tuple.getCurrentTxID().getValue()));
+                TxIDHashMapWrapper.deleteHashMapOfTx(documentSafeService, userIDAuth, tuple.getCurrentTxID());
                 LOGGER.debug("deleted transactional HashMap file for tx " + tuple.getCurrentTxID());
             }
         }

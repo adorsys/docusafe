@@ -1,17 +1,16 @@
 package de.adorsys.docusafe.transactional.impl.helper;
 
 import de.adorsys.docusafe.transactional.types.TxID;
-import de.adorsys.docusafe.transactional.impl.LastCommitedTxID;
 
 import java.util.Date;
 
 public class TransactionInformation {
     private Date txDateFrom;
     private Date txDateUntil;
-    private LastCommitedTxID previousTxID;
+    private TxID previousTxID;
     private TxID currentTxID;
 
-    public TransactionInformation(Date txDateFrom, Date txDateUntil, LastCommitedTxID previousTxID, TxID currentTxID) {
+    public TransactionInformation(Date txDateFrom, Date txDateUntil, TxID previousTxID, TxID currentTxID) {
         this.txDateFrom = txDateFrom;
         this.txDateUntil = txDateUntil;
         this.previousTxID = previousTxID;
@@ -26,7 +25,7 @@ public class TransactionInformation {
         return txDateUntil;
     }
 
-    public LastCommitedTxID getPreviousTxID() {
+    public TxID getPreviousTxID() {
         return previousTxID;
     }
 

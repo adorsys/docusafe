@@ -3,7 +3,6 @@ package de.adorsys.docusafe.transactional;
 import com.googlecode.catchexception.CatchException;
 import de.adorsys.docusafe.business.types.DocumentFQN;
 import de.adorsys.docusafe.transactional.exceptions.TxParallelCommittingException;
-import de.adorsys.docusafe.transactional.impl.LastCommitedTxID;
 import de.adorsys.docusafe.transactional.impl.TxIDHashMap;
 import de.adorsys.docusafe.transactional.impl.TxIDHashMapWrapper;
 import de.adorsys.docusafe.transactional.impl.helper.ParallelTransactionLogic;
@@ -34,7 +33,7 @@ public class ParallelTransactionLogicTest {
 
         TxIDHashMapWrapper stateLastCommittedTx = new TxIDHashMapWrapper().toBuilder()
                 .currentTxID(LAST_COMMIT_TX)
-                .lastCommitedTxID(new LastCommitedTxID(OLD_TX_ID.getValue()))
+                .lastCommitedTxID(OLD_TX_ID)
                 .map(lastCommitMap)
                 .build();
 
@@ -43,7 +42,7 @@ public class ParallelTransactionLogicTest {
         endStateMap.put(new DocumentFQN("A"), CURRENT_TX_ID);
 
         TxIDHashMapWrapper stateAtEndOfCurrentTx = new TxIDHashMapWrapper().toBuilder()
-                .lastCommitedTxID(new LastCommitedTxID(OLD_TX_ID.getValue()))
+                .lastCommitedTxID(OLD_TX_ID)
                 .currentTxID(CURRENT_TX_ID)
                 .map(endStateMap)
                 .build();
@@ -75,7 +74,7 @@ public class ParallelTransactionLogicTest {
         endStateMap.put(new DocumentFQN("D"), CURRENT_TX_ID);
 
         TxIDHashMapWrapper stateAtEndOfCurrentTx = new TxIDHashMapWrapper().toBuilder()
-                .lastCommitedTxID(new LastCommitedTxID(LAST_COMMIT_TX.getValue()))
+                .lastCommitedTxID(LAST_COMMIT_TX)
                 .currentTxID(CURRENT_TX_ID)
                 .map(endStateMap)
                 .build();
@@ -120,7 +119,7 @@ public class ParallelTransactionLogicTest {
         endStateMap.put(new DocumentFQN("C"), CURRENT_TX_ID);
 
         TxIDHashMapWrapper stateAtEndOfCurrentTx = new TxIDHashMapWrapper().toBuilder()
-                .lastCommitedTxID(new LastCommitedTxID(OLD_TX_ID.getValue()))
+                .lastCommitedTxID(OLD_TX_ID)
                 .currentTxID(CURRENT_TX_ID)
                 .map(endStateMap)
                 .build();
@@ -159,7 +158,7 @@ public class ParallelTransactionLogicTest {
         endStateMap.put(new DocumentFQN("C"), CURRENT_TX_ID);
 
         TxIDHashMapWrapper stateAtEndOfCurrentTx = new TxIDHashMapWrapper().toBuilder()
-                .lastCommitedTxID(new LastCommitedTxID(OLD_TX_ID.getValue()))
+                .lastCommitedTxID(OLD_TX_ID)
                 .currentTxID(CURRENT_TX_ID)
                 .map(endStateMap)
                 .build();
@@ -198,7 +197,7 @@ public class ParallelTransactionLogicTest {
         endStateMap.put(new DocumentFQN("B"), OLD_TX_ID);
 
         TxIDHashMapWrapper stateAtEndOfCurrentTx = new TxIDHashMapWrapper().toBuilder()
-                .lastCommitedTxID(new LastCommitedTxID(OLD_TX_ID.getValue()))
+                .lastCommitedTxID(OLD_TX_ID)
                 .currentTxID(CURRENT_TX_ID)
                 .map(endStateMap)
                 .build();
@@ -236,7 +235,7 @@ public class ParallelTransactionLogicTest {
         endStateMap.put(new DocumentFQN("B"), CURRENT_TX_ID);
 
         TxIDHashMapWrapper stateAtEndOfCurrentTx = new TxIDHashMapWrapper().toBuilder()
-                .lastCommitedTxID(new LastCommitedTxID(OLD_TX_ID.getValue()))
+                .lastCommitedTxID(OLD_TX_ID)
                 .currentTxID(CURRENT_TX_ID)
                 .map(endStateMap)
                 .build();
@@ -278,7 +277,7 @@ public class ParallelTransactionLogicTest {
         endStateMap.put(new DocumentFQN("B"), OLD_TX_ID);
 
         TxIDHashMapWrapper stateAtEndOfCurrentTx = new TxIDHashMapWrapper().toBuilder()
-                .lastCommitedTxID(new LastCommitedTxID(OLD_TX_ID.getValue()))
+                .lastCommitedTxID(OLD_TX_ID)
                 .currentTxID(CURRENT_TX_ID)
                 .map(endStateMap)
                 .build();

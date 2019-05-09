@@ -6,7 +6,6 @@ import de.adorsys.docusafe.business.types.DocumentFQN;
 import de.adorsys.docusafe.transactional.types.TxID;
 import de.adorsys.docusafe.transactional.exceptions.TxBaseException;
 import de.adorsys.docusafe.transactional.exceptions.TxParallelCommittingException;
-import de.adorsys.docusafe.transactional.impl.LastCommitedTxID;
 import de.adorsys.docusafe.transactional.impl.TxIDHashMap;
 import de.adorsys.docusafe.transactional.impl.TxIDHashMapWrapper;
 import lombok.extern.slf4j.Slf4j;
@@ -73,12 +72,12 @@ public class ParallelTransactionLogic {
         joinedMap.putAll(stateLastCommittedTx.getMap());
 
         TxIDHashMapWrapper build = TxIDHashMapWrapper.builder()
-                .lastCommitedTxID(new LastCommitedTxID(stateAtEndOfCurrentTx.getCurrentTxID().getValue()))
+                .lastCommitedTxID(stateAtEndOfCurrentTx.getCurrentTxID())
                 .currentTxID(new TxID())
                 .beginTx(new Date())
                 .endTx(new Date())
                 .map(joinedMap)
-                .mergedTxID(new LastCommitedTxID(stateLastCommittedTx.getCurrentTxID().getValue()))
+                .mergedTxID(stateLastCommittedTx.getCurrentTxID())
                 .build();
 
         if (log.isDebugEnabled()) {

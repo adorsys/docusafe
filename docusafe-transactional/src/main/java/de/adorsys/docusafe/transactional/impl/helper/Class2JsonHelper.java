@@ -14,7 +14,6 @@ import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.docusafe.business.types.DocumentFQN;
 import de.adorsys.docusafe.service.api.types.DocumentContent;
 import de.adorsys.docusafe.transactional.types.TxID;
-import de.adorsys.docusafe.transactional.impl.LastCommitedTxID;
 import de.adorsys.docusafe.transactional.impl.TxIDHashMapWrapper;
 import de.adorsys.docusafe.transactional.impl.TxIDLog;
 import org.slf4j.Logger;
@@ -33,7 +32,6 @@ public class Class2JsonHelper {
     private Gson gson = new GsonBuilder().setPrettyPrinting()
             .enableComplexMapKeySerialization()
             .registerTypeAdapter(TxID.class, new TxIDJsonAdapter())
-            .registerTypeAdapter(LastCommitedTxID.class, new LastCommitedTxIDJsonAdapter())
             .registerTypeAdapter(DocumentFQN.class, new DocumentFQNJsonAdapter())
             .setDateFormat(DATE_FORMAT_STRING)
             .create();

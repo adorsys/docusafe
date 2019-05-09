@@ -1,20 +1,20 @@
 package de.adorsys.docusafe.transactional.impl;
 
-import de.adorsys.docusafe.transactional.exceptions.NoTxFoundForDocumentException;
-import de.adorsys.docusafe.transactional.impl.helper.BucketContentFromHashMapHelper;
-import de.adorsys.docusafe.transactional.impl.helper.Class2JsonHelper;
-import de.adorsys.docusafe.transactional.types.TxBucketContentFQN;
-import de.adorsys.docusafe.transactional.types.TxID;
-import lombok.*;
+import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import de.adorsys.docusafe.business.DocumentSafeService;
 import de.adorsys.docusafe.business.types.DSDocument;
 import de.adorsys.docusafe.business.types.DocumentDirectoryFQN;
 import de.adorsys.docusafe.business.types.DocumentFQN;
 import de.adorsys.docusafe.service.api.types.DocumentContent;
 import de.adorsys.docusafe.service.api.types.UserIDAuth;
+import de.adorsys.docusafe.transactional.exceptions.NoTxFoundForDocumentException;
 import de.adorsys.docusafe.transactional.exceptions.TxAlreadyClosedException;
 import de.adorsys.docusafe.transactional.exceptions.TxNotFoundException;
-import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
+import de.adorsys.docusafe.transactional.impl.helper.BucketContentFromHashMapHelper;
+import de.adorsys.docusafe.transactional.impl.helper.Class2JsonHelper;
+import de.adorsys.docusafe.transactional.types.TxBucketContentFQN;
+import de.adorsys.docusafe.transactional.types.TxID;
+import lombok.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,19 +38,21 @@ public class TxIDHashMapWrapper {
     private final static DocumentFQN filenamebase = new DocumentFQN("TransactionalHashMap.txt");
 
     private TxID mergedTxID = null;
-    private LastCommitedTxID lastCommitedTxID;
+    private TxID lastCommitedTxID;
     private TxID currentTxID;
     private Date beginTx;
     private Date endTx;
     private TxIDHashMap map = new TxIDHashMap();
 
-    private TxIDHashMapWrapper(LastCommitedTxID lastCommitedTxID, TxID currentTx, Date beginTxDate) {
+    private TxIDHashMapWrapper(TxID lastCommitedTxID, TxID currentTx, Date beginTxDate) {
         this.lastCommitedTxID = lastCommitedTxID;
         this.currentTxID = currentTx;
         this.beginTx = beginTxDate;
+        /*
         if (this.lastCommitedTxID == null) {
             this.lastCommitedTxID = new LastCommitedTxID("NULL");
         }
+        */
     }
 
     public TxIDHashMapWrapper clone() {
@@ -60,7 +62,7 @@ public class TxIDHashMapWrapper {
     }
 
     public static TxIDHashMapWrapper fromPreviousFileOrNew(DocumentSafeService documentSafeService, UserIDAuth userIDAuth, TxID currentTxID, Date beginTxDate) {
-        LastCommitedTxID lastKnownCommitedTxID = TxIDLog.findLastCommitedTxID(documentSafeService, userIDAuth);
+        TxID lastKnownCommitedTxID = TxIDLog.findLastCommitedTxID(documentSafeService, userIDAuth);
 
         if (lastKnownCommitedTxID == null) {
             return new TxIDHashMapWrapper(lastKnownCommitedTxID, currentTxID, beginTxDate);
@@ -68,14 +70,14 @@ public class TxIDHashMapWrapper {
 
         DocumentFQN file = TransactionalDocumentSafeServiceImpl.modifyTxMetaDocumentName(filenamebase, lastKnownCommitedTxID);
         TxIDHashMapWrapper map = readHashMapOfTx(documentSafeService, userIDAuth, lastKnownCommitedTxID);
-        map.lastCommitedTxID = new LastCommitedTxID(map.currentTxID.getValue());
+        map.lastCommitedTxID = map.currentTxID;
         map.currentTxID = currentTxID;
         map.beginTx = beginTxDate;
         map.endTx = null;
         return map;
     }
 
-    public static TxIDHashMapWrapper readHashMapOfTx(DocumentSafeService documentSafeService, UserIDAuth userIDAuth, LastCommitedTxID lastCommitedTxID) {
+    public static TxIDHashMapWrapper readHashMapOfTx(DocumentSafeService documentSafeService, UserIDAuth userIDAuth, TxID lastCommitedTxID) {
         DocumentFQN file = TransactionalDocumentSafeServiceImpl.modifyTxMetaDocumentName(filenamebase, lastCommitedTxID);
         if (!documentSafeService.documentExists(userIDAuth, file)) {
             throw new TxNotFoundException(file, lastCommitedTxID);
@@ -84,7 +86,7 @@ public class TxIDHashMapWrapper {
         return new Class2JsonHelper().txidHashMapFromContent(dsDocument.getDocumentContent());
     }
 
-    public static void deleteHashMapOfTx(DocumentSafeService documentSafeService, UserIDAuth userIDAuth, LastCommitedTxID lastCommitedTxID) {
+    public static void deleteHashMapOfTx(DocumentSafeService documentSafeService, UserIDAuth userIDAuth, TxID lastCommitedTxID) {
         DocumentFQN file = TransactionalDocumentSafeServiceImpl.modifyTxMetaDocumentName(filenamebase, lastCommitedTxID);
         if (!documentSafeService.documentExists(userIDAuth, file)) {
             throw new TxNotFoundException(file, lastCommitedTxID);
