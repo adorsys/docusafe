@@ -10,13 +10,22 @@ import java.io.IOException;
 /**
  * Created by peter on 12.06.18 at 13:29.
  */
-public class TxIDJsonAdapter  extends TypeAdapter<TxID> {
+public class TxIDJsonAdapter extends TypeAdapter<TxID> {
     @Override
     public void write(JsonWriter out, TxID txid) throws IOException {
-        out.value(txid.getValue());
+        if (txid != null) {
+            out.value(txid.getValue());
+        } else {
+            out.value("null");
+        }
     }
+
     @Override
     public TxID read(JsonReader in) throws IOException {
-        return new TxID(in.nextString());
+        String s = in.nextString();
+        if (s.equalsIgnoreCase("null")) {
+            return null;
+        }
+        return new TxID(s);
     }
 }

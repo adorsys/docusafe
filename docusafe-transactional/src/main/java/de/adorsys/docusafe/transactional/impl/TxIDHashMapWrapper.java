@@ -18,9 +18,8 @@ import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Created by peter on 11.06.18 at 15:12.
@@ -34,12 +33,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@ToString
 public class TxIDHashMapWrapper {
     private final static Logger LOGGER = LoggerFactory.getLogger(TxIDHashMapWrapper.class);
     private final static DocumentFQN filenamebase = new DocumentFQN("TransactionalHashMap.txt");
 
-    private TxID mergedTxID = new LastCommitedTxID("NULL");
+    private TxID mergedTxID = null;
     private LastCommitedTxID lastCommitedTxID;
     private TxID currentTxID;
     private Date beginTx;
@@ -151,5 +149,53 @@ public class TxIDHashMapWrapper {
         if (endTx != null) {
             throw new TxAlreadyClosedException(currentTxID);
         }
+    }
+
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n");
+        sb.append("TxIDHashMapWrapper {");
+        sb.append("\n");
+        sb.append("  merged tx        : " + mergedTxID);
+        sb.append("\n");
+        sb.append("  last commited tx : " + lastCommitedTxID);
+        sb.append("\n");
+        sb.append("  current tx       : " + currentTxID);
+        sb.append("\n");
+        sb.append("  begin - end      : " + getString(beginTx) + " - " + getString(endTx));
+        sb.append("\n");
+        sb.append(getString(map));
+        sb.append("}\n");
+
+        return sb.toString();
+    }
+
+    static class DocumentFQNComparator implements Comparator< DocumentFQN> {
+        @Override
+        public int compare(DocumentFQN o1, DocumentFQN o2) {
+            return o1.getValue().compareTo(o2.getValue());
+        }
+    }
+
+    private String getString(Date date) {
+        if (date == null) {
+            return "";
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH.mm.ss,SSS");
+        return sdf.format(date);
+    }
+
+    public static String getString(TxIDHashMap map) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n");
+        List<DocumentFQN> list = new ArrayList<>();
+        list.addAll(map.keySet());
+        Collections.sort(list, new DocumentFQNComparator());
+        for (DocumentFQN documentFQN : list) {
+            sb.append("  " + documentFQN.getValue() + "." + map.get(documentFQN).getValue());
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 }

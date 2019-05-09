@@ -21,6 +21,7 @@ public class ParallelTransactionLogicTest {
 
     @Test
     public void parallelCreationSameFile() {
+        log.info("parallelCreationSameFile");
         TxIDHashMapWrapper stateAtBeginOfCurrentTx = new TxIDHashMapWrapper().toBuilder()
                 .currentTxID(CURRENT_TX_ID)
                 .build();
@@ -51,6 +52,7 @@ public class ParallelTransactionLogicTest {
 
     @Test
     public void parallelCreationDifferentFiles() {
+        log.info("parallelCreationDifferentFiles");
         TxIDHashMapWrapper stateAtBeginOfCurrentTx = new TxIDHashMapWrapper().toBuilder()
                 .currentTxID(CURRENT_TX_ID)
                 .build();
@@ -79,12 +81,11 @@ public class ParallelTransactionLogicTest {
 
         TxIDHashMapWrapper result = ParallelTransactionLogic.join(stateLastCommittedTx, stateAtBeginOfCurrentTx,
                 stateAtEndOfCurrentTx, documentsReadInTx);
-
-        log.info(result.toString());
     }
 
     @Test
     public void readFileUpdatedInParallelTx() {
+        log.info("readFileUpdatedInParallelTx");
         TxIDHashMap beginStateMap = new TxIDHashMap();
         beginStateMap.put(new DocumentFQN("A"), OLD_TX_ID);
         beginStateMap.put(new DocumentFQN("B"), OLD_TX_ID);
@@ -123,6 +124,7 @@ public class ParallelTransactionLogicTest {
 
     @Test
     public void readFileDeletedInParallelTx() {
+        log.info("readFileDeletedInParallelTx");
         TxIDHashMap beginStateMap = new TxIDHashMap();
         beginStateMap.put(new DocumentFQN("A"), OLD_TX_ID);
         beginStateMap.put(new DocumentFQN("B"), OLD_TX_ID);
@@ -161,6 +163,7 @@ public class ParallelTransactionLogicTest {
 
     @Test
     public void createFileCreatedAndDeletedInParallelTx() {
+        log.info("createFileCreatedAndDeletedInParallelTx");
         TxIDHashMap beginStateMap = new TxIDHashMap();
         beginStateMap.put(new DocumentFQN("B"), OLD_TX_ID);
         beginStateMap.put(new DocumentFQN("C"), OLD_TX_ID);
@@ -195,12 +198,11 @@ public class ParallelTransactionLogicTest {
 
         TxIDHashMapWrapper result = ParallelTransactionLogic.join(stateLastCommittedTx, stateAtBeginOfCurrentTx,
                 stateAtEndOfCurrentTx, documentsReadInTx);
-
-        log.info(result.toString());
     }
 
     @Test
     public void createFileCreatedInParallelTx() {
+        log.info("createFileCreatedInParallelTx");
         TxIDHashMap beginStateMap = new TxIDHashMap();
         beginStateMap.put(new DocumentFQN("A"), OLD_TX_ID);
         beginStateMap.put(new DocumentFQN("B"), OLD_TX_ID);

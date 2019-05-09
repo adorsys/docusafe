@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ParallelTransactionLogic {
 
-    public static TxIDHashMapWrapper join(TxIDHashMapWrapper stateLastCommittedTx, TxIDHashMapWrapper stateAtBeginOfCurrentTx, TxIDHashMapWrapper stateAtEndOfCurrentTx, TxIDHashMap documentsReadInTx) {
+    public static TxIDHashMapWrapper join(TxIDHashMapWrapper stateLastCommittedTx, TxIDHashMapWrapper stateAtBeginOfCurrentTx, TxIDHashMapWrapper stateAtEndOfCurrentTx, TxIDHashMap documentsTouchedInTx) {
 
         // if no parallel commits
         TxID lastCommitedTxID = stateLastCommittedTx.getCurrentTxID();
@@ -31,7 +31,7 @@ public class ParallelTransactionLogic {
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
         // add read
-        docsTouched.addAll(documentsReadInTx.keySet());
+        docsTouched.addAll(documentsTouchedInTx.keySet());
         // add deleted
         MapDifference<DocumentFQN, TxID> currentTxDiff = Maps.difference(stateAtBeginOfCurrentTx.getMap(), stateAtEndOfCurrentTx.getMap());
         docsTouched.addAll(currentTxDiff.entriesOnlyOnLeft().keySet());
@@ -41,9 +41,15 @@ public class ParallelTransactionLogic {
         docsTouchedInParallel.addAll(parallelTxDiff.entriesOnlyOnLeft().keySet());
         docsTouchedInParallel.addAll(parallelTxDiff.entriesOnlyOnRight().keySet());
 
-        for(DocumentFQN d : docsTouched) {
-            if(docsTouchedInParallel.contains(d)) {
-                throw new TxParallelCommittingException(stateAtBeginOfCurrentTx.getCurrentTxID(), stateLastCommittedTx.getCurrentTxID(), d.getValue());
+        for (DocumentFQN d : docsTouched) {
+            if (docsTouchedInParallel.contains(d)) {
+                TxParallelCommittingException txParallelCommittingException = new TxParallelCommittingException(stateAtBeginOfCurrentTx.getCurrentTxID(), stateLastCommittedTx.getCurrentTxID(), d.getValue());
+                log.error("join begin of tx        : " + stateAtBeginOfCurrentTx.toString());
+                log.error("join end of tx          : " + stateAtEndOfCurrentTx.toString());
+                log.error("join last committed tx  : " + stateLastCommittedTx.toString());
+                log.error("join read in current tx : " + TxIDHashMapWrapper.getString(documentsTouchedInTx));
+                log.error("join result of tx       : " + txParallelCommittingException.getMessage());
+                throw txParallelCommittingException;
             }
         }
 
@@ -58,33 +64,14 @@ public class ParallelTransactionLogic {
                 .build();
 
         if (log.isDebugEnabled()) {
-            log.debug("join input state of last committed tx: " + show(stateLastCommittedTx));
-            log.debug("join input state at begin of tx      : " + show(stateAtBeginOfCurrentTx));
-            log.debug("join input state of current tx       : " + show(stateAtBeginOfCurrentTx));
-            log.debug("join result state of tx              : " + show(build));
+            log.debug("join begin of tx        : " + stateAtBeginOfCurrentTx.toString());
+            log.debug("join end of tx          : " + stateAtEndOfCurrentTx.toString());
+            log.debug("join last committed tx  : " + stateLastCommittedTx.toString());
+            log.debug("join read in current tx : " + TxIDHashMapWrapper.getString(documentsTouchedInTx));
+            log.debug("join result of tx       : " + build.toString());
         }
         return build;
 
     }
 
-    private static String show(TxIDHashMapWrapper stateLastCommittedTx) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n");
-        List<DocumentFQN> list = new ArrayList<>();
-        list.addAll(stateLastCommittedTx.getMap().keySet());
-        Collections.sort(list, new DocumentFQNComparator());
-        for (DocumentFQN documentFQN : list) {
-            sb.append(documentFQN.getValue() + "." + stateLastCommittedTx.getMap().get(documentFQN).getValue());
-            sb.append("\n");
-        }
-        return sb.toString();
-    }
-
-    public static class DocumentFQNComparator implements Comparator < DocumentFQN> {
-
-        @Override
-        public int compare(DocumentFQN o1, DocumentFQN o2) {
-            return o1.getValue().compareTo(o2.getValue());
-        }
-    }
 }

@@ -40,6 +40,7 @@ public class TxIDLog {
     public static void saveJustFinishedTx(DocumentSafeService documentSafeService, UserIDAuth userIDAuth, CurrentTransactionData currentTransactionData) {
 
         // we synchonize not all methods, but those, refering to the same user
+        // very important the String.intern() call, otherwise Strings with the same value my be different objects!
         synchronized (userIDAuth.getUserID().getValue().intern()) {
             LOGGER.debug("start synchronized for " + userIDAuth.getUserID().getValue());
             TxIDHashMapWrapper joinedTx = null;
