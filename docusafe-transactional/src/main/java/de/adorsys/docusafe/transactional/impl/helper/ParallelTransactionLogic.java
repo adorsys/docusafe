@@ -26,24 +26,38 @@ public class ParallelTransactionLogic {
         }
 
         // changed files have same TxID as currentTxID
+        // so docsTouched contains all files that have been created or updated in the current tx
         Set<DocumentFQN> docsTouched = stateAtEndOfCurrentTx.getMap().entrySet().stream()
                 .filter(e -> e.getValue().equals(stateAtEndOfCurrentTx.getCurrentTxID()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
+
+
         // add read
+        // now docsTouched contains all files that have been created or updated or read in the current tx
         docsTouched.addAll(documentsTouchedInTx.keySet());
+
         // add deleted
+        // now docsTouched contains all files that have been created or updated or read or deleted in the current tx
         MapDifference<DocumentFQN, TxID> currentTxDiff = Maps.difference(stateAtBeginOfCurrentTx.getMap(), stateAtEndOfCurrentTx.getMap());
         docsTouched.addAll(currentTxDiff.entriesOnlyOnLeft().keySet());
 
+        // parallelTxDiff is created with all files that have been created or updated in parallel to the current tx
         MapDifference<DocumentFQN, TxID> parallelTxDiff = Maps.difference(stateLastCommittedTx.getMap(), stateAtBeginOfCurrentTx.getMap());
+
+        // docsTouchedInParallel contains the filenames only that existed in the last committed tx
         List<DocumentFQN> docsTouchedInParallel = new ArrayList<>(parallelTxDiff.entriesDiffering().keySet());
+
+        // now all files of the last committed tx are added
         docsTouchedInParallel.addAll(parallelTxDiff.entriesOnlyOnLeft().keySet());
+
+        // now all files of the state at the beginning of the current tx are added
         docsTouchedInParallel.addAll(parallelTxDiff.entriesOnlyOnRight().keySet());
 
+        // if there is one file that has been created, deleted, updated in parallel, an exception is raised
         for (DocumentFQN d : docsTouched) {
             if (docsTouchedInParallel.contains(d)) {
-                TxParallelCommittingException txParallelCommittingException = new TxParallelCommittingException(stateAtBeginOfCurrentTx.getCurrentTxID(), stateLastCommittedTx.getCurrentTxID(), d.getValue());
+                TxParallelCommittingException txParallelCommittingException = new TxParallelCommittingException(stateAtEndOfCurrentTx.getCurrentTxID(), stateLastCommittedTx.getCurrentTxID(), d);
                 log.error("join begin of tx        : " + stateAtBeginOfCurrentTx.toString());
                 log.error("join end of tx          : " + stateAtEndOfCurrentTx.toString());
                 log.error("join last committed tx  : " + stateLastCommittedTx.toString());
@@ -53,14 +67,18 @@ public class ParallelTransactionLogic {
             }
         }
 
+        // now join the the result
+        TxIDHashMap joinedMap = new TxIDHashMap();
+        joinedMap.putAll(stateAtEndOfCurrentTx.getMap());
+        joinedMap.putAll(stateLastCommittedTx.getMap());
 
         TxIDHashMapWrapper build = TxIDHashMapWrapper.builder()
-                .lastCommitedTxID(new LastCommitedTxID(stateLastCommittedTx.getCurrentTxID().getValue()))
+                .lastCommitedTxID(new LastCommitedTxID(stateAtEndOfCurrentTx.getCurrentTxID().getValue()))
                 .currentTxID(new TxID())
                 .beginTx(new Date())
                 .endTx(new Date())
-                .map(stateAtEndOfCurrentTx.getMap())
-                .mergedTxID(stateAtEndOfCurrentTx.getCurrentTxID())
+                .map(joinedMap)
+                .mergedTxID(new LastCommitedTxID(stateLastCommittedTx.getCurrentTxID().getValue()))
                 .build();
 
         if (log.isDebugEnabled()) {
