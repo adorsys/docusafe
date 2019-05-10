@@ -1,6 +1,7 @@
 package de.adorsys.docusafe.spring.factory;
 
 import de.adorsys.common.exceptions.BaseException;
+import de.adorsys.dfs.connection.api.complextypes.BucketPath;
 import de.adorsys.dfs.connection.api.filesystem.FilesystemConnectionPropertiesImpl;
 import de.adorsys.dfs.connection.api.service.api.DFSConnection;
 import de.adorsys.dfs.connection.api.types.connection.AmazonS3RootBucketName;
@@ -43,7 +44,7 @@ public class SpringDFSConnectionFactory {
             FilesystemConnectionPropertiesImpl properties = new FilesystemConnectionPropertiesImpl(wiredProperties.getFilesystem());
             if (basedir != null) {
                 String origName = properties.getFilesystemRootBucketName().getValue();
-                String newName = origName + "." + basedir;
+                String newName = origName + BucketPath.BUCKET_SEPARATOR + basedir;
                 properties.setFilesystemRootBucketName(new FilesystemRootBucketName(newName));
             }
             LOGGER.debug("jetzt filesystem");
@@ -52,7 +53,7 @@ public class SpringDFSConnectionFactory {
             AmazonS3ConnectionProperitesImpl properties = new AmazonS3ConnectionProperitesImpl(wiredProperties.getAmazons3());
             if (basedir != null) {
                 String origName = properties.getAmazonS3RootBucketName().getValue();
-                String newName = origName + "." + basedir;
+                String newName = origName + BucketPath.BUCKET_SEPARATOR + basedir;
                 properties.setAmazonS3RootBucketName(new AmazonS3RootBucketName(newName));
             }
             LOGGER.debug("jetzt amazon");
