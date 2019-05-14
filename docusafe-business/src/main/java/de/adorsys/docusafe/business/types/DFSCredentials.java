@@ -41,29 +41,19 @@ public class DFSCredentials {
     }
 
     public void addRootBucket(TYPE type) {
-
-        if (getFilesystem() != null) {
-            String root = getFilesystem().getFilesystemRootBucketName().getValue();
-            root += BucketPath.BUCKET_SEPARATOR + type.toString();
-            getFilesystem().setFilesystemRootBucketName(new FilesystemRootBucketName(root));
-        }
-        if (getAmazons3() != null) {
-            String root = getAmazons3().getAmazonS3RootBucketName().getValue();
-            root += BucketPath.BUCKET_SEPARATOR + type.toString();
-            getAmazons3().setAmazonS3RootBucketName(new AmazonS3RootBucketName(root));
-        }
+        addSubDirToRoot(type.toString());
     }
 
-    public void addRootBucket(UserID userID) {
+    public void addSubDirToRoot(String subdir) {
 
         if (getFilesystem() != null) {
             String root = getFilesystem().getFilesystemRootBucketName().getValue();
-            root += BucketPath.BUCKET_SEPARATOR + "bp-" + userID.getValue();
+            root += BucketPath.BUCKET_SEPARATOR +  subdir;
             getFilesystem().setFilesystemRootBucketName(new FilesystemRootBucketName(root));
         }
         if (getAmazons3() != null) {
             String root = getAmazons3().getAmazonS3RootBucketName().getValue();
-            root += BucketPath.BUCKET_SEPARATOR + "bp-" + userID.getValue();
+            root += BucketPath.BUCKET_SEPARATOR + subdir;
             getAmazons3().setAmazonS3RootBucketName(new AmazonS3RootBucketName(root));
         }
     }
