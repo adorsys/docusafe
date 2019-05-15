@@ -85,64 +85,68 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
 
     @Override
     public void createUser(UserIDAuth userIDAuth) {
-        try {
-            // create userspace in systemdfs
-            if (userExists(userIDAuth.getUserID())) {
-                throw new UserExistsException(userIDAuth.getUserID());
-            }
-            // create and persist public keystore
-            KeyStoreAccess publicKeyStoreAccess = null;
-            {
-                KeyStoreAuth keyStoreAuth = new KeyStoreAuth(new ReadStorePassword(userIDAuth.getReadKeyPassword().getValue()), userIDAuth.getReadKeyPassword());
-                KeyStore usersSystemKeyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, new KeyStoreCreationConfig(1, 0, 0));
-                persistKeystore(userIDAuth, usersSystemKeyStore, systemDFS);
-                publicKeyStoreAccess = new KeyStoreAccess(usersSystemKeyStore, keyStoreAuth);
-            }
+        synchronized (userIDAuth.getUserID().getValue().intern()) {
+            try {
+                // create userspace in systemdfs
+                if (userExists(userIDAuth.getUserID())) {
+                    throw new UserExistsException(userIDAuth.getUserID());
+                }
+                // create and persist public keystore
+                KeyStoreAccess publicKeyStoreAccess = null;
+                {
+                    KeyStoreAuth keyStoreAuth = new KeyStoreAuth(new ReadStorePassword(userIDAuth.getReadKeyPassword().getValue()), userIDAuth.getReadKeyPassword());
+                    KeyStore usersSystemKeyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, new KeyStoreCreationConfig(1, 0, 0));
+                    persistKeystore(userIDAuth, usersSystemKeyStore, systemDFS);
+                    publicKeyStoreAccess = new KeyStoreAccess(usersSystemKeyStore, keyStoreAuth);
+                }
 
-            // create and persist encrypted dfscredentials
-            DFSCredentials userDFSCredentials = null;
-            {
-                userDFSCredentials = new DFSCredentials(defaultUserDFSCredentials);
-                // retrieve public key of public keystore once to encrypt DFSCredentials
-                storeUserDFSCredentials(userIDAuth, publicKeyStoreAccess, userDFSCredentials);
-                userDFSCredentialsCache.put(new UserAuthCacheKey(userIDAuth), userDFSCredentials);
+                // create and persist encrypted dfscredentials
+                DFSCredentials userDFSCredentials = null;
+                {
+                    userDFSCredentials = new DFSCredentials(defaultUserDFSCredentials);
+                    // retrieve public key of public keystore once to encrypt DFSCredentials
+                    storeUserDFSCredentials(userIDAuth, publicKeyStoreAccess, userDFSCredentials);
+                    userDFSCredentialsCache.put(new UserAuthCacheKey(userIDAuth), userDFSCredentials);
+                }
+
+                // create users DFS
+                DFSConnection usersDFSConnection = null;
+                {
+                    usersDFSConnection = DFSConnectionFactory.get(userDFSCredentials.getProperties());
+                }
+
+                // create and persist private keystore
+                KeyStoreAccess privateKeyStoreAccess = null;
+                {
+                    KeyStoreAuth keyStoreAuth = new KeyStoreAuth(new ReadStorePassword(userIDAuth.getReadKeyPassword().getValue()), userIDAuth.getReadKeyPassword());
+                    KeyStore usersSystemKeyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, new KeyStoreCreationConfig(5, 0, 1));
+                    persistKeystore(userIDAuth, usersSystemKeyStore, usersDFSConnection);
+                    privateKeyStoreAccess = new KeyStoreAccess(usersSystemKeyStore, keyStoreAuth);
+                    usersPrivateKeyStoreCache.put(new UserAuthCacheKey(userIDAuth), privateKeyStoreAccess);
+                }
+
+                // extract public keys and store them in userspace of systemdfs
+                {
+                    List<PublicKeyIDWithPublicKey> publicKeys = keyStoreService.getPublicKeys(privateKeyStoreAccess);
+                    Payload payload = class2JsonHelper.keyListToContent(publicKeys);
+                    systemDFS.putBlob(FolderHelper.getPublicKeyListPath(userIDAuth.getUserID()), payload);
+                    userPublicKeyListCache.put(userIDAuth.getUserID(), new PublicKeyList(publicKeys));
+                }
+
+
+            } catch (Exception e) {
+                throw BaseExceptionHandler.handle(e);
             }
-
-            // create users DFS
-            DFSConnection usersDFSConnection = null;
-            {
-                usersDFSConnection = DFSConnectionFactory.get(userDFSCredentials.getProperties());
-            }
-
-            // create and persist private keystore
-            KeyStoreAccess privateKeyStoreAccess = null;
-            {
-                KeyStoreAuth keyStoreAuth = new KeyStoreAuth(new ReadStorePassword(userIDAuth.getReadKeyPassword().getValue()), userIDAuth.getReadKeyPassword());
-                KeyStore usersSystemKeyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, new KeyStoreCreationConfig(5, 0, 1));
-                persistKeystore(userIDAuth, usersSystemKeyStore, usersDFSConnection);
-                privateKeyStoreAccess = new KeyStoreAccess(usersSystemKeyStore, keyStoreAuth);
-                usersPrivateKeyStoreCache.put(new UserAuthCacheKey(userIDAuth), privateKeyStoreAccess);
-            }
-
-            // extract public keys and store them in userspace of systemdfs
-            {
-                List<PublicKeyIDWithPublicKey> publicKeys = keyStoreService.getPublicKeys(privateKeyStoreAccess);
-                Payload payload = class2JsonHelper.keyListToContent(publicKeys);
-                systemDFS.putBlob(FolderHelper.getPublicKeyListPath(userIDAuth.getUserID()), payload);
-                userPublicKeyListCache.put(userIDAuth.getUserID(), new PublicKeyList(publicKeys));
-            }
-
-
-        } catch (Exception e) {
-            throw BaseExceptionHandler.handle(e);
         }
     }
 
     @Override
     public void destroyUser(UserIDAuth userIDAuth) {
-        final DFSConnection usersDFSConnection = getUsersDFS(userIDAuth);
-        usersDFSConnection.removeBlobFolder(FolderHelper.getRootDirectory(userIDAuth.getUserID()));
-        systemDFS.removeBlobFolder(FolderHelper.getRootDirectory(userIDAuth.getUserID()));
+        synchronized (userIDAuth.getUserID().getValue().intern()) {
+            final DFSConnection usersDFSConnection = getUsersDFS(userIDAuth);
+            usersDFSConnection.removeBlobFolder(FolderHelper.getRootDirectory(userIDAuth.getUserID()));
+            systemDFS.removeBlobFolder(FolderHelper.getRootDirectory(userIDAuth.getUserID()));
+        }
     }
 
     @Override
