@@ -29,13 +29,13 @@ public class DocusafeSpringBeans {
 
     @Bean
     public SpringDFSConnectionFactory springDFSConnectionFactory(SpringDFSConnectionProperties properties) {
-        LOGGER.info(SpringDFSConnectionFactory.class.getName() + " is required as @Bean");
+        LOGGER.info(SpringDFSConnectionFactory.class.getName() + " is provided as @Bean");
         return new SpringDFSConnectionFactory(properties);
     }
 
     @Bean
     public SpringCachedTransactionalDocusafeServiceFactory springCachedTransactionalDocusafeServiceFactory(SpringDFSConnectionFactory connectionFactory) {
-        LOGGER.info(SpringCachedTransactionalDocusafeServiceFactory.class.getName() + " is required as @Bean");
+        LOGGER.info(SpringCachedTransactionalDocusafeServiceFactory.class.getName() + " is provided as @Bean");
         return new SpringCachedTransactionalDocusafeServiceFactory(connectionFactory);
     }
 
@@ -44,7 +44,7 @@ public class DocusafeSpringBeans {
             SpringCachedTransactionalDocusafeServiceFactory springCachedTransactionalDocusafeServiceFactory,
             @Value("${docusafe.cache:true}") Boolean withCache
     ) {
-        LOGGER.info(CachedTransactionalDocumentSafeService.class.getName() + " is required as @Bean");
+        LOGGER.info(CachedTransactionalDocumentSafeService.class.getName() + " is provided as @Bean");
         return springCachedTransactionalDocusafeServiceFactory.getCachedTransactionalDocumentSafeServiceWithSubdir(null);
     }
 }

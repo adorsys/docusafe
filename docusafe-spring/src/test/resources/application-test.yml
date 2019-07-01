@@ -1,0 +1,4 @@
+docusafe:
+  storeconnection:
+    filesystem:
+      rootbucket: target/test-filesystem

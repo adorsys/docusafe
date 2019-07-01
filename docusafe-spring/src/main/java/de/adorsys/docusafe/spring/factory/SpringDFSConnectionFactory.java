@@ -59,7 +59,7 @@ public class SpringDFSConnectionFactory {
             LOGGER.debug("jetzt amazon");
             map.put(basedir, DFSConnectionFactory.get(properties));
         } else {
-            String emessage = "at least filesystem, amazons3, minio or mongo has to be specified with ";
+            String emessage = "at least filesystem or amazons3 has to be specified with ";
             String message = emessage +
                     SpringFilesystemConnectionProperties.template +
                     SpringAmazonS3ConnectionProperties.template;

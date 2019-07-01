@@ -18,7 +18,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version.swagger>1.5.5</version.swagger>
         <deploy.disabled>false</deploy.disabled>
-        <spring-boot.version>2.0.1.RELEASE</spring-boot.version>
+        <spring-boot.version>5.1.2.RELEASE</spring-boot.version>
+        <spring-boot-dependencies.version>2.1.3.RELEASE</spring-boot-dependencies.version>
+        <spring-boot-test-starter.version>2.1.6.RELEASE</spring-boot-test-starter.version>
         <slf4j-simple.version>1.7.25</slf4j-simple.version>
         <catch.exception.version>2.0.0-beta-1</catch.exception.version>
         <junit.version>4.12</junit.version>
