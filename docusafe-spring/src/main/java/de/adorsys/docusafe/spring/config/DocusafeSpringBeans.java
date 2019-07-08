@@ -44,7 +44,7 @@ public class DocusafeSpringBeans {
     @Bean
     public DocumentSafeService documentSafeService(SpringDFSConnectionFactory dfsFactory) {
         LOGGER.info(SpringDFSConnectionProperties.class.getName() + " is provided as @Bean");
-        return new DocumentSafeServiceImpl(dfsFactory.getDFSConnectionWithSubDir(""));
+        return new DocumentSafeServiceImpl(dfsFactory.getDFSConnectionWithSubDir(null));
     }
 
     @Bean

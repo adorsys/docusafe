@@ -1,5 +1,6 @@
 package de.adorsys.docusafe.service.impl.bucketpathencryption;
 
+import de.adorsys.common.exceptions.BaseException;
 import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.common.utils.HexUtil;
 import de.adorsys.dfs.connection.api.complextypes.BucketDirectory;
@@ -119,9 +120,17 @@ public class BucketPathEncryptionServiceImpl implements BucketPathEncryptionServ
     }
 
     private static boolean isActive() {
-        if (System.getProperty(NO_BUCKETPATH_ENCRYPTION) != null) {
-            log.info("encryption is off");
-            return false;
+        String value = System.getProperty(NO_BUCKETPATH_ENCRYPTION);
+        if (value != null) {
+            if (value.equalsIgnoreCase("true")) {
+                log.info("encryption is off");
+                return false;
+            }
+            if (value.equalsIgnoreCase("false")) {
+                log.info("encryption is on");
+                return true;
+            }
+            throw new BaseException("value " + value + " for systemproperty " + NO_BUCKETPATH_ENCRYPTION + " unknown");
         }
         log.info("encryption is on");
         return true;
