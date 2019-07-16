@@ -13,6 +13,7 @@ import de.adorsys.docusafe.service.api.keystore.types.KeyStoreAccess;
 import de.adorsys.docusafe.service.impl.cmsencryption.exceptions.AsymmetricEncryptionException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.cms.*;
 import org.bouncycastle.cms.jcajce.*;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -32,6 +33,7 @@ import java.util.Iterator;
  */
 @Slf4j
 public class CMSEncryptionServiceImpl implements CMSEncryptionService {
+    private ASN1ObjectIdentifier algorithm = CMSAlgorithm.AES256_CBC;
 
     public CMSEncryptionServiceImpl() {
     }
@@ -47,7 +49,7 @@ public class CMSEncryptionServiceImpl implements CMSEncryptionService {
 
             cmsEnvelopedDataGenerator.addRecipientInfoGenerator(jceKey);
             CMSTypedData msg = new CMSProcessableByteArray(payload.getData());
-            OutputEncryptor encryptor = new JceCMSContentEncryptorBuilder(CMSAlgorithm.AES128_CBC)
+            OutputEncryptor encryptor = new JceCMSContentEncryptorBuilder(algorithm)
                     .setProvider(BouncyCastleProvider.PROVIDER_NAME)
                     .build();
             return cmsEnvelopedDataGenerator.generate(msg, encryptor);
@@ -166,7 +168,7 @@ public class CMSEncryptionServiceImpl implements CMSEncryptionService {
             throws CMSException, IOException {
         CMSEnvelopedDataStreamGenerator gen = new CMSEnvelopedDataStreamGenerator();
         gen.addRecipientInfoGenerator(rec);
-        return gen.open(dataContentStream, new JceCMSContentEncryptorBuilder(CMSAlgorithm.AES128_CBC)
+        return gen.open(dataContentStream, new JceCMSContentEncryptorBuilder(algorithm)
                 .setProvider(BouncyCastleProvider.PROVIDER_NAME).build());
     }
 
