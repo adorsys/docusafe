@@ -5,6 +5,7 @@ import com.googlecode.catchexception.CatchException;
 import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
+import de.adorsys.docusafe.service.impl.keystore.generator.ProviderUtils;
 import lombok.extern.slf4j.Slf4j;
 import de.adorsys.docusafe.business.DocumentSafeService;
 import de.adorsys.docusafe.business.types.DSDocument;
@@ -35,6 +36,7 @@ public class DocumentServiceTest {
 
     @Before
     public void before() {
+        Provider bcProvider = ProviderUtils.bcProvider;
         service.createUser(userIDAuth);
     }
 

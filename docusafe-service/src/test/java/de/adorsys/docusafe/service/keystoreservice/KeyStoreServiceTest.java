@@ -86,7 +86,6 @@ public class KeyStoreServiceTest {
     @Test
     public void getPrivateKey() {
         try {
-            Provider bcProvider = ProviderUtils.bcProvider;
             KeyStore keyStore = KeyStoreServiceImplBaseFunctions.newKeyStore(KeyStoreType.DEFAULT); // UBER
 
             ReadKeyPassword readKeyPassword = new ReadKeyPassword("keypass");
@@ -152,8 +151,8 @@ public class KeyStoreServiceTest {
             KeyStore keyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, config);
             KeyStoreAccess oldKeyStoreAccess = new KeyStoreAccess(keyStore, keyStoreAuth);
 
-            String oldSecretKeyID = keyStore.aliases().nextElement();
-            byte[] oldSecretKey = keyStoreService.getSecretKey(oldKeyStoreAccess, new KeyID(oldSecretKeyID)).getEncoded();
+            SecretKeyIDWithKey oldSecretKeyIDWithKey = keyStoreService.getRandomSecretKeyID(oldKeyStoreAccess);
+            byte[] oldSecretKey = oldSecretKeyIDWithKey.getSecretKey().getEncoded();
 
             PublicKeyList publicKeys = keyStoreService.getPublicKeys(oldKeyStoreAccess);
             String oldPublicKeyID = publicKeys.get(0).getKeyID().getValue();
@@ -177,7 +176,7 @@ public class KeyStoreServiceTest {
             byte[] newPrivateKey = keyStoreService.getPrivateKey(newKeyStoreAccess, new KeyID(oldPublicKeyID)).getEncoded();
             Assert.assertArrayEquals(oldPrivateKey, newPrivateKey);
 
-            byte[] newSecretKey = keyStoreService.getSecretKey(newKeyStoreAccess, new KeyID(oldSecretKeyID)).getEncoded();
+            byte[] newSecretKey = keyStoreService.getSecretKey(newKeyStoreAccess, oldSecretKeyIDWithKey.getKeyID()).getEncoded();
 
             Assert.assertArrayEquals(oldSecretKey, newSecretKey);
 
