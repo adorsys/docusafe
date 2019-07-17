@@ -3,6 +3,7 @@ package de.adorsys.docusafe.transactional.impl;
 import de.adorsys.docusafe.business.DocumentSafeService;
 import de.adorsys.docusafe.business.types.DFSCredentials;
 import de.adorsys.docusafe.business.types.DocumentFQN;
+import de.adorsys.docusafe.service.api.keystore.types.ReadKeyPassword;
 import de.adorsys.docusafe.service.api.types.UserID;
 import de.adorsys.docusafe.service.api.types.UserIDAuth;
 import de.adorsys.docusafe.transactional.NonTransactionalDocumentSafeService;
@@ -28,6 +29,11 @@ public class NonTransactionalDocumentSafeServiceImpl implements NonTransactional
     @Override
     public void createUser(UserIDAuth userIDAuth) {
         documentSafeService.createUser(userIDAuth);
+    }
+
+    @Override
+    public void changeUserPassword(UserIDAuth userIDAuth, ReadKeyPassword newPassword) {
+        documentSafeService.changeUserPassword(userIDAuth, newPassword);
     }
 
     @Override

@@ -2,6 +2,7 @@ package de.adorsys.docusafe.transactional;
 
 import de.adorsys.docusafe.business.types.DFSCredentials;
 import de.adorsys.docusafe.business.types.DocumentFQN;
+import de.adorsys.docusafe.service.api.keystore.types.ReadKeyPassword;
 import de.adorsys.docusafe.service.api.types.UserID;
 import de.adorsys.docusafe.service.api.types.UserIDAuth;
 
@@ -14,6 +15,7 @@ public interface NonTransactionalDocumentSafeService {
 
     // NON-TRANSACTIONAL FOR OWNER
     void createUser(UserIDAuth userIDAuth);
+    void changeUserPassword(UserIDAuth userIDAuth, ReadKeyPassword newPassword);
     void destroyUser(UserIDAuth userIDAuth);
     boolean userExists(UserID userID);
     void registerDFSCredentials (UserIDAuth userIDAuth, DFSCredentials dfsCredentials);

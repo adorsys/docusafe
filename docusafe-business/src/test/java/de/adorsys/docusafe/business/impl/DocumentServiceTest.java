@@ -113,10 +113,14 @@ public class DocumentServiceTest {
         Assert.assertArrayEquals(dsDocument.getDocumentContent().getValue(), dsDocument1.getDocumentContent().getValue());
 
         ReadKeyPassword newReadKeyPassword = new ReadKeyPassword(UUID.randomUUID().toString());
-        service.changeUserPassword(userIDAuth, newReadKeyPassword);
 
+        // --------------------
+        service.changeUserPassword(userIDAuth, newReadKeyPassword);
         UserIDAuth newUserIDAuth = new UserIDAuth(userIDAuth.getUserID(), newReadKeyPassword);
         CatchException.catchException(() -> service.readDocument(userIDAuth, documentFQN));
+        boolean exception1 = "java.io.IOException: javax.crypto.BadPaddingException: pad block corrupted".equals(CatchException.caughtException().getMessage());
+        boolean exception2 = "java.security.UnrecoverableKeyException: no match".equals(CatchException.caughtException().getMessage());
+        Assert.assertTrue(exception1 || exception2);
         Assert.assertTrue(CatchException.caughtException() != null);
         DSDocument dsDocument2 = service.readDocument(newUserIDAuth, documentFQN);
         Assert.assertArrayEquals(dsDocument.getDocumentContent().getValue(), dsDocument2.getDocumentContent().getValue());

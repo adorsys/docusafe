@@ -2,6 +2,7 @@ package de.adorsys.docusafe.cached.transactional.impl;
 
 import de.adorsys.docusafe.business.DocumentSafeService;
 import de.adorsys.docusafe.business.types.*;
+import de.adorsys.docusafe.service.api.keystore.types.ReadKeyPassword;
 import de.adorsys.docusafe.service.api.types.UserID;
 import de.adorsys.docusafe.cached.transactional.CachedTransactionalDocumentSafeService;
 import de.adorsys.docusafe.cached.transactional.exceptions.CacheException;
@@ -50,6 +51,11 @@ public class CachedTransactionalDocumentSafeServiceImpl implements CachedTransac
     @Override
     public void createUser(UserIDAuth userIDAuth) {
         transactionalDocumentSafeService.createUser(userIDAuth);
+    }
+
+    @Override
+    public void changeUserPassword(UserIDAuth userIDAuth, ReadKeyPassword newPassword) {
+        transactionalDocumentSafeService.changeUserPassword(userIDAuth, newPassword);
     }
 
     @Override

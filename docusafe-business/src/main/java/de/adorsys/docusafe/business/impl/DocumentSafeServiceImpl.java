@@ -144,22 +144,25 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     public void changeUserPassword(UserIDAuth userIDAuth, ReadKeyPassword newReadKeyPassword) {
         try {
             synchronized (userIDAuth.getUserID().getValue().intern()) {
-                KeyStoreAccess publicKeyStoreAccess = getKeyStoreAccess(systemDFS, userIDAuth);
-
-                // retrieve DFS
-                Payload encryptedPayload = systemDFS.getBlob(FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID()));
-                CMSEnvelopedData cmsEnvelopedData = new CMSEnvelopedData(encryptedPayload.getData());
-                Payload decrypt = cmsEncryptionService.decrypt(cmsEnvelopedData, publicKeyStoreAccess);
-                DFSCredentials userDFSCredentials = class2JsonHelper.contentToDFSConnection(decrypt);
-                DFSConnection usersDFS = DFSConnectionFactory.get(userDFSCredentials.getProperties());
-                KeyStoreAccess privateKeyStoreAccess = getKeyStoreAccess(usersDFS, userIDAuth);
-
                 KeyStoreAuth newKeyStoreAuth = new KeyStoreAuth(new ReadStorePassword(newReadKeyPassword.getValue()), newReadKeyPassword);
-                KeyStoreAccess newPublicKeyStoreAccess = new KeyStoreServiceImpl().createNewKeyStoreWithKeysOfOldKeyStore(publicKeyStoreAccess, newKeyStoreAuth);
-                persistKeystore(userIDAuth, newPublicKeyStoreAccess.getKeyStore(), systemDFS);
+                UserIDAuth newUserIDAuth = new UserIDAuth(userIDAuth.getUserID(), newReadKeyPassword);
 
-                KeyStoreAccess newPrivateKeyStoreAccess = new KeyStoreServiceImpl().createNewKeyStoreWithKeysOfOldKeyStore(privateKeyStoreAccess, newKeyStoreAuth);
-                persistKeystore(userIDAuth, newPrivateKeyStoreAccess.getKeyStore(), usersDFS);
+                KeyStoreAccess oldPublicKeyStoreAccess = getKeyStoreAccess(systemDFS, userIDAuth);
+                {
+                    oldPublicKeyStoreAccess = getKeyStoreAccess(systemDFS, userIDAuth);
+                    KeyStoreAccess newPublicKeyStoreAccess = new KeyStoreServiceImpl().createNewKeyStoreWithKeysOfOldKeyStore(oldPublicKeyStoreAccess, newKeyStoreAuth);
+                    persistKeystore(newUserIDAuth, newPublicKeyStoreAccess.getKeyStore(), systemDFS);
+                }
+                {
+                    Payload encryptedPayload = systemDFS.getBlob(FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID()));
+                    CMSEnvelopedData cmsEnvelopedData = new CMSEnvelopedData(encryptedPayload.getData());
+                    Payload decrypt = cmsEncryptionService.decrypt(cmsEnvelopedData, oldPublicKeyStoreAccess);
+                    DFSCredentials userDFSCredentials = class2JsonHelper.contentToDFSConnection(decrypt);
+                    DFSConnection usersDFS = DFSConnectionFactory.get(userDFSCredentials.getProperties());
+                    KeyStoreAccess oldPrivateKeyStoreAccess = getKeyStoreAccess(usersDFS, userIDAuth);
+                    KeyStoreAccess newPrivateKeyStoreAccess = new KeyStoreServiceImpl().createNewKeyStoreWithKeysOfOldKeyStore(oldPrivateKeyStoreAccess, newKeyStoreAuth);
+                    persistKeystore(newUserIDAuth, newPrivateKeyStoreAccess.getKeyStore(), usersDFS);
+                }
 
                 usersPrivateKeyStoreCache.remove(new UserAuthCacheKey(userIDAuth));
                 userPublicKeyListCache.remove(userIDAuth.getUserID());
