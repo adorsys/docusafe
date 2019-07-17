@@ -5,9 +5,14 @@ import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.common.utils.HexUtil;
 import de.adorsys.docusafe.service.api.keystore.KeyStoreService;
 import de.adorsys.docusafe.service.api.keystore.types.*;
+import de.adorsys.docusafe.service.api.keystore.types.KeyPairGenerator;
 import de.adorsys.docusafe.service.impl.keystore.generator.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x509.KeyUsage;
 
 import javax.crypto.SecretKey;
 import javax.security.auth.callback.CallbackHandler;
@@ -122,20 +127,42 @@ public class KeyStoreServiceImpl implements KeyStoreService {
                 for (SecretKeyIDWithKey oldSecretKeyIDWithKey : secretKeyIDWithKeyList) {
                     String algorithm = oldSecretKeyIDWithKey.getSecretKey().getAlgorithm();
                     SecretKeyEntry newEntry = SecretKeyData.builder().secretKey(oldSecretKeyIDWithKey.getSecretKey()).alias(oldSecretKeyIDWithKey.getKeyID().getValue()).passwordSource(newPassword).keyAlgo(algorithm).build();
-                    newKeyStoreBuilder = newKeyStoreBuilder.withKeyEntry(newEntry);
+                    newKeyStoreBuilder.withKeyEntry(newEntry);
                 }
             }
             {
                 // migrate public keys
                 PublicKeyList publicKeys = getPublicKeys(oldKeyStoreAccess);
-                List<PrivateKey> privateKeys = new ArrayList<>();
+                Map<KeyID, KeyPair> keyPairs = new HashMap<>();
                 for (PublicKeyIDWithPublicKey publicKeyIDWithPublicKey : publicKeys) {
                     PrivateKey privateKey = getPrivateKey(oldKeyStoreAccess, publicKeyIDWithPublicKey.getKeyID());
-                    privateKeys.add(privateKey);
+                    keyPairs.put(publicKeyIDWithPublicKey.getKeyID(), new KeyPair(publicKeyIDWithPublicKey.getPublicKey(), privateKey));
                 }
 
+                CallbackHandler newPassword = new PasswordCallbackHandler(oldKeyStoreAccess.getKeyStoreAuth().getReadKeyPassword().getValue().toCharArray());
+                for (KeyID keyID : keyPairs.keySet()) {
+
+                    KeyPair oldKeyPair = keyPairs.get(keyID);
+                    X509Certificate cert = (X509Certificate) oldKeyStoreAccess.getKeyStore().getCertificate(keyID.getValue());
+                    String algorithm = oldKeyPair.getPublic().getAlgorithm();
+
+                    int[] keyUsageEncryption = {KeyUsage.keyEncipherment, KeyUsage.dataEncipherment, KeyUsage.keyAgreement};
+
+                    SelfSignedKeyPairData keyPairData = new SingleKeyUsageSelfSignedCertBuilder()
+                            .withSubjectDN(new X500Name(cert.getSubjectDN().getName()))
+                            .withSignatureAlgo(algorithm)
+                            .withNotAfterInDays(900)
+                            .withCa(false)
+                            .withKeyUsages(keyUsageEncryption)
+                            .build(oldKeyPair);
+
+                    // KeyPairData.builder().keyPair(keyPair).alias(keyID.getValue()).passwordSource(newPassword).build();
+                    KeyPairData newPublicKeyPair = KeyPairData.builder().keyPair(keyPairData).alias(keyID.getValue()).passwordSource(newPassword).build();
+                    newKeyStoreBuilder.withKeyEntry(newPublicKeyPair);
+                }
             }
-            return null;
+            KeyStore newKeyStore = newKeyStoreBuilder.build();
+            return new KeyStoreAccess(newKeyStore, oldKeyStoreAccess.getKeyStoreAuth());
 
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);

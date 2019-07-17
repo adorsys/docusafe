@@ -156,6 +156,7 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
                 KeyStoreAccess privateKeyStoreAccess = getKeyStoreAccess(usersDFS, userIDAuth);
 
                 KeyStoreAccess newPublicKeyStoreAccess = new KeyStoreServiceImpl().createNewKeyStoreWithKeysOfOldKeyStore(publicKeyStoreAccess);
+                throw new RuntimeException("nyi2");
             }
         }
         catch(Exception e) {

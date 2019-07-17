@@ -1,6 +1,8 @@
 package de.adorsys.docusafe.service.keystoreservice;
 
 import com.googlecode.catchexception.CatchException;
+import de.adorsys.common.exceptions.BaseException;
+import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.docusafe.service.api.keystore.KeyStoreService;
 import de.adorsys.docusafe.service.api.keystore.types.*;
 import de.adorsys.docusafe.service.impl.keystore.generator.KeyStoreCreationConfigImpl;
@@ -35,33 +37,42 @@ public class KeyStoreServiceTest {
     }
 
     @Test
-    public void createKeyStore() throws Exception {
-        KeyStoreCreationConfig config = new KeyStoreCreationConfig(1, 0, 1);
-        KeyStore keyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, config);
+    public void createKeyStore() {
+        try {
+            KeyStoreCreationConfig config = new KeyStoreCreationConfig(1, 0, 1);
+            KeyStore keyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, config);
 
-        Assert.assertNotNull(keyStore);
+            Assert.assertNotNull(keyStore);
 
-        List<String> list = Collections.list(keyStore.aliases());
-        Assert.assertEquals(2, list.size());
+            List<String> list = Collections.list(keyStore.aliases());
+            Assert.assertEquals(2, list.size());
 
-        Assert.assertEquals("UBER", keyStore.getType());
-        Assert.assertEquals(Security.getProvider("BC"), keyStore.getProvider());
+            Assert.assertEquals("UBER", keyStore.getType());
+            Assert.assertEquals(Security.getProvider("BC"), keyStore.getProvider());
+        } catch (Exception e) {
+            throw new BaseExceptionHandler().handle(e);
+        }
     }
 
     @Test
-    public void createKeyStoreEmptyConfig() throws Exception {
-        KeyStore keyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, null);
-        Assert.assertNotNull(keyStore);
-        List<String> list = Collections.list(keyStore.aliases());
-        Assert.assertEquals(15, list.size());
+    public void createKeyStoreEmptyConfig() {
+        try {
+            KeyStore keyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, null);
+            Assert.assertNotNull(keyStore);
+            List<String> list = Collections.list(keyStore.aliases());
+            Assert.assertEquals(15, list.size());
+        } catch (Exception e) {
+            throw new BaseExceptionHandler().handle(e);
+        }
+
     }
 
     @Test
     public void createKeyStoreException() {
         KeyStoreCreationConfig config = new KeyStoreCreationConfig(0, 0, 0);
 
-            CatchException.catchException(() ->keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, config));
-            Assert.assertTrue(CatchException.caughtException() != null);
+        CatchException.catchException(() -> keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, config));
+        Assert.assertTrue(CatchException.caughtException() != null);
     }
 
     @Test
@@ -73,36 +84,46 @@ public class KeyStoreServiceTest {
     }
 
     @Test
-    public void getPrivateKey() throws Exception {
-        Provider bcProvider = ProviderUtils.bcProvider;
-        KeyStore keyStore = KeyStoreServiceImplBaseFunctions.newKeyStore(KeyStoreType.DEFAULT); // UBER
+    public void getPrivateKey() {
+        try {
+            Provider bcProvider = ProviderUtils.bcProvider;
+            KeyStore keyStore = KeyStoreServiceImplBaseFunctions.newKeyStore(KeyStoreType.DEFAULT); // UBER
 
-        ReadKeyPassword readKeyPassword = new ReadKeyPassword("keypass");
-        CallbackHandler readKeyHandler = new PasswordCallbackHandler(readKeyPassword.getValue().toCharArray());
-        KeyStoreCreationConfigImpl keyStoreCreationConfig = new KeyStoreCreationConfigImpl(null);
-        KeyPairGenerator encKeyPairGenerator = keyStoreCreationConfig.getEncKeyPairGenerator("KEYSTORE-ID-0");
-        String alias = "KEYSTORE-ID-0" + UUID.randomUUID().toString();
-        KeyPairEntry keyPairEntry = encKeyPairGenerator.generateEncryptionKey(alias, readKeyHandler);
-        KeyStoreServiceImplBaseFunctions.addToKeyStore(keyStore, keyPairEntry);
+            ReadKeyPassword readKeyPassword = new ReadKeyPassword("keypass");
+            CallbackHandler readKeyHandler = new PasswordCallbackHandler(readKeyPassword.getValue().toCharArray());
+            KeyStoreCreationConfigImpl keyStoreCreationConfig = new KeyStoreCreationConfigImpl(null);
+            KeyPairGenerator encKeyPairGenerator = keyStoreCreationConfig.getEncKeyPairGenerator("KEYSTORE-ID-0");
+            String alias = "KEYSTORE-ID-0" + UUID.randomUUID().toString();
+            KeyPairEntry keyPairEntry = encKeyPairGenerator.generateEncryptionKey(alias, readKeyHandler);
+            KeyStoreServiceImplBaseFunctions.addToKeyStore(keyStore, keyPairEntry);
 
-        KeyStoreAccess keyStoreAccess = new KeyStoreAccess(keyStore, keyStoreAuth);
+            KeyStoreAccess keyStoreAccess = new KeyStoreAccess(keyStore, keyStoreAuth);
 
-        String keyID = keyStore.aliases().nextElement();
-        PrivateKey privateKey = keyStoreService.getPrivateKey(keyStoreAccess, new KeyID(keyID));
-        System.out.println(privateKey);
-        System.out.println(keyID);
-        Assert.assertEquals(alias, keyID);
+            String keyID = keyStore.aliases().nextElement();
+            PrivateKey privateKey = keyStoreService.getPrivateKey(keyStoreAccess, new KeyID(keyID));
+            System.out.println(privateKey);
+            System.out.println(keyID);
+            Assert.assertEquals(alias, keyID);
+        } catch (Exception e) {
+            throw new BaseExceptionHandler().handle(e);
+        }
+
     }
 
     @Test
-    public void getSecretKey() throws Exception {
-        KeyStoreCreationConfig config = new KeyStoreCreationConfig(0, 0, 1);
-        KeyStore keyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, config);
-        KeyStoreAccess keyStoreAccess = new KeyStoreAccess(keyStore, keyStoreAuth);
+    public void getSecretKey() {
+        try {
+            KeyStoreCreationConfig config = new KeyStoreCreationConfig(0, 0, 1);
+            KeyStore keyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, config);
+            KeyStoreAccess keyStoreAccess = new KeyStoreAccess(keyStore, keyStoreAuth);
 
-        String keyID = keyStore.aliases().nextElement();
-        SecretKey secretKey = keyStoreService.getSecretKey(keyStoreAccess, new KeyID(keyID));
-        Assert.assertNotNull(secretKey);
+            String keyID = keyStore.aliases().nextElement();
+            SecretKey secretKey = keyStoreService.getSecretKey(keyStoreAccess, new KeyID(keyID));
+            Assert.assertNotNull(secretKey);
+        } catch (Exception e) {
+            throw new BaseExceptionHandler().handle(e);
+        }
+
     }
 
     @Test
@@ -119,8 +140,27 @@ public class KeyStoreServiceTest {
         KeyStoreCreationConfig config = new KeyStoreCreationConfig(10, 10, 0);
         KeyStore keyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, config);
         KeyStoreAccess keyStoreAccess = new KeyStoreAccess(keyStore, keyStoreAuth);
-        CatchException.catchException(() ->keyStoreService.getRandomSecretKeyID(keyStoreAccess));
+        CatchException.catchException(() -> keyStoreService.getRandomSecretKeyID(keyStoreAccess));
         Assert.assertTrue(CatchException.caughtException() != null);
 
     }
+
+    @Test
+    public void changePassword() {
+        try {
+            KeyStoreCreationConfig config = new KeyStoreCreationConfig(1, 0, 1);
+            KeyStore keyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, config);
+            KeyStoreAccess keyStoreAccess = new KeyStoreAccess(keyStore, keyStoreAuth);
+
+            String keyID = keyStore.aliases().nextElement();
+            KeyStoreAccess newKeyStoreAccess = keyStoreService.createNewKeyStoreWithKeysOfOldKeyStore(keyStoreAccess);
+            SecretKey secretKey = keyStoreService.getSecretKey(newKeyStoreAccess, new KeyID(keyID));
+
+            Assert.assertNotNull(secretKey);
+        } catch (Exception e) {
+            throw new BaseExceptionHandler().handle(e);
+        }
+
+    }
+
 }
