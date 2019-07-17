@@ -114,6 +114,9 @@ public class DocumentServiceTest {
 
         ReadKeyPassword newReadKeyPassword = new ReadKeyPassword(UUID.randomUUID().toString());
 
+        DocumentSafeService service2 = new DocumentSafeServiceImpl(DFSConnectionFactory.get());
+        service2.readDocument(userIDAuth, documentFQN);
+
         // --------------------
         service.changeUserPassword(userIDAuth, newReadKeyPassword);
         UserIDAuth newUserIDAuth = new UserIDAuth(userIDAuth.getUserID(), newReadKeyPassword);
@@ -124,6 +127,12 @@ public class DocumentServiceTest {
         Assert.assertTrue(CatchException.caughtException() != null);
         DSDocument dsDocument2 = service.readDocument(newUserIDAuth, documentFQN);
         Assert.assertArrayEquals(dsDocument.getDocumentContent().getValue(), dsDocument2.getDocumentContent().getValue());
+
+        // ------
+        // Service 2 has its own cache and thus will fail in the first
+        DSDocument dsDocument3 = service2.readDocument(newUserIDAuth, documentFQN);
+        Assert.assertArrayEquals(dsDocument.getDocumentContent().getValue(), dsDocument3.getDocumentContent().getValue());
+
 
         userIDAuth = newUserIDAuth;
     }
