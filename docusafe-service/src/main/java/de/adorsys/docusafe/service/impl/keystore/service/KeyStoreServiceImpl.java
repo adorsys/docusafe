@@ -5,9 +5,7 @@ import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.common.utils.HexUtil;
 import de.adorsys.docusafe.service.api.keystore.KeyStoreService;
 import de.adorsys.docusafe.service.api.keystore.types.*;
-import de.adorsys.docusafe.service.impl.keystore.generator.KeyStoreGenerator;
-import de.adorsys.docusafe.service.impl.keystore.generator.KeystoreBuilder;
-import de.adorsys.docusafe.service.impl.keystore.generator.PasswordCallbackHandler;
+import de.adorsys.docusafe.service.impl.keystore.generator.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
 
@@ -113,37 +111,35 @@ public class KeyStoreServiceImpl implements KeyStoreService {
 
     @Override
     public KeyStoreAccess createNewKeyStoreWithKeysOfOldKeyStore(KeyStoreAccess oldKeyStoreAccess) {
-        PublicKeyList publicKeys = getPublicKeys(oldKeyStoreAccess);
-        List<PrivateKey> privateKeys = new ArrayList<>();
-        for (PublicKeyIDWithPublicKey publicKeyIDWithPublicKey : publicKeys) {
-            PrivateKey privateKey = getPrivateKey(oldKeyStoreAccess, publicKeyIDWithPublicKey.getKeyID());
-            privateKeys.add(privateKey);
-        }
-        List<SecretKeyIDWithKey> secretKeyIDWithKeyList = getAllSecretKeysWithID(oldKeyStoreAccess);
-
-
-
-        KeyStore newKeyStore = null;
-
         try {
-            KeystoreBuilder keystoreBuilder = new KeystoreBuilder().withStoreType(oldKeyStoreAccess.getKeyStore().getType());
-
+            KeystoreBuilder newKeyStoreBuilder = new KeystoreBuilder().withStoreType(new KeyStoreType(oldKeyStoreAccess.getKeyStore().getType()));
             {
-                    KeyPairEntry signatureKeyPair = encKeyPairGenerator.generateEncryptionKey(
-                            serverKeyPairAliasPrefix + UUID.randomUUID().toString(),
-                            readKeyHandler
-                    );
+                // migrate secret keys
+                List<SecretKeyIDWithKey> secretKeyIDWithKeyList = getAllSecretKeysWithID(oldKeyStoreAccess);
 
-                    keystoreBuilder = keystoreBuilder.withKeyEntry(signatureKeyPair);
+                CallbackHandler newPassword = new PasswordCallbackHandler(oldKeyStoreAccess.getKeyStoreAuth().getReadKeyPassword().getValue().toCharArray());
+
+                for (SecretKeyIDWithKey oldSecretKeyIDWithKey : secretKeyIDWithKeyList) {
+                    String algorithm = oldSecretKeyIDWithKey.getSecretKey().getAlgorithm();
+                    SecretKeyEntry newEntry = SecretKeyData.builder().secretKey(oldSecretKeyIDWithKey.getSecretKey()).alias(oldSecretKeyIDWithKey.getKeyID().getValue()).passwordSource(newPassword).keyAlgo(algorithm).build();
+                    newKeyStoreBuilder = newKeyStoreBuilder.withKeyEntry(newEntry);
                 }
             }
+            {
+                // migrate public keys
+                PublicKeyList publicKeys = getPublicKeys(oldKeyStoreAccess);
+                List<PrivateKey> privateKeys = new ArrayList<>();
+                for (PublicKeyIDWithPublicKey publicKeyIDWithPublicKey : publicKeys) {
+                    PrivateKey privateKey = getPrivateKey(oldKeyStoreAccess, publicKeyIDWithPublicKey.getKeyID());
+                    privateKeys.add(privateKey);
+                }
 
+            }
+            return null;
 
-
-
-
-                return null;
-
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
     }
 
     private List<SecretKeyIDWithKey> getAllSecretKeysWithID(KeyStoreAccess keyStoreAccess) {
