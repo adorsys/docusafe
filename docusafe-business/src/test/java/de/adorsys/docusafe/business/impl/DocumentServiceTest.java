@@ -1,6 +1,7 @@
 package de.adorsys.docusafe.business.impl;
 
 import com.amazonaws.util.IOUtils;
+import com.googlecode.catchexception.CatchException;
 import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import de.adorsys.dfs.connection.impl.factory.DFSConnectionFactory;
@@ -14,14 +15,18 @@ import de.adorsys.docusafe.service.api.keystore.types.ReadKeyPassword;
 import de.adorsys.docusafe.service.api.types.DocumentContent;
 import de.adorsys.docusafe.service.api.types.UserID;
 import de.adorsys.docusafe.service.api.types.UserIDAuth;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
+import java.security.Provider;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 public class DocumentServiceTest {
@@ -92,4 +97,29 @@ public class DocumentServiceTest {
             throw BaseExceptionHandler.handle(e);
         }
     }
+
+
+    @Test
+    public void storeAndReadOneDocumentChangePasswordAndReadAgain() {
+        Security.addProvider(new BouncyCastleProvider());
+
+        DocumentFQN documentFQN = new DocumentFQN("file1.txt");
+        DocumentContent documentContent = new DocumentContent("affe".getBytes());
+        DSDocument dsDocument = new DSDocument(documentFQN, documentContent);
+        service.storeDocument(userIDAuth, dsDocument);
+        DSDocument dsDocument1 = service.readDocument(userIDAuth, documentFQN);
+        Assert.assertArrayEquals(dsDocument.getDocumentContent().getValue(), dsDocument1.getDocumentContent().getValue());
+
+        ReadKeyPassword newReadKeyPassword = new ReadKeyPassword(UUID.randomUUID().toString());
+        service.changeUserPassword(userIDAuth, newReadKeyPassword);
+
+        UserIDAuth newUserIDAuth = new UserIDAuth(userIDAuth.getUserID(), newReadKeyPassword);
+        CatchException.catchException(() -> service.readDocument(userIDAuth, documentFQN));
+        Assert.assertTrue(CatchException.caughtException() != null);
+        DSDocument dsDocument2 = service.readDocument(newUserIDAuth, documentFQN);
+        Assert.assertArrayEquals(dsDocument.getDocumentContent().getValue(), dsDocument2.getDocumentContent().getValue());
+
+        userIDAuth = newUserIDAuth;
+    }
+
 }

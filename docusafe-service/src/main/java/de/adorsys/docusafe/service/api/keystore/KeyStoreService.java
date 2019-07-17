@@ -23,6 +23,6 @@ public interface KeyStoreService {
 
     SecretKeyIDWithKey getRandomSecretKeyID(KeyStoreAccess keyStoreAccess);
 
-    KeyStoreAccess createNewKeyStoreWithKeysOfOldKeyStore(KeyStoreAccess oldKeyStore);
+    KeyStoreAccess createNewKeyStoreWithKeysOfOldKeyStore(KeyStoreAccess oldKeyStore, KeyStoreAuth newKeyStoreAuth);
 
 }

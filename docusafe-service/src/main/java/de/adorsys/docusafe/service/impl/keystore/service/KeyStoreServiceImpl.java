@@ -5,13 +5,10 @@ import de.adorsys.common.exceptions.BaseExceptionHandler;
 import de.adorsys.common.utils.HexUtil;
 import de.adorsys.docusafe.service.api.keystore.KeyStoreService;
 import de.adorsys.docusafe.service.api.keystore.types.*;
-import de.adorsys.docusafe.service.api.keystore.types.KeyPairGenerator;
 import de.adorsys.docusafe.service.impl.keystore.generator.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
 import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x500.X500NameBuilder;
-import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x509.KeyUsage;
 
 import javax.crypto.SecretKey;
@@ -115,14 +112,14 @@ public class KeyStoreServiceImpl implements KeyStoreService {
     }
 
     @Override
-    public KeyStoreAccess createNewKeyStoreWithKeysOfOldKeyStore(KeyStoreAccess oldKeyStoreAccess) {
+    public KeyStoreAccess createNewKeyStoreWithKeysOfOldKeyStore(KeyStoreAccess oldKeyStoreAccess, KeyStoreAuth newKeyStoreAuth) {
         try {
             KeystoreBuilder newKeyStoreBuilder = new KeystoreBuilder().withStoreType(new KeyStoreType(oldKeyStoreAccess.getKeyStore().getType()));
             {
                 // migrate secret keys
                 List<SecretKeyIDWithKey> secretKeyIDWithKeyList = getAllSecretKeysWithID(oldKeyStoreAccess);
 
-                CallbackHandler newPassword = new PasswordCallbackHandler(oldKeyStoreAccess.getKeyStoreAuth().getReadKeyPassword().getValue().toCharArray());
+                CallbackHandler newPassword = new PasswordCallbackHandler(newKeyStoreAuth.getReadKeyPassword().getValue().toCharArray());
 
                 for (SecretKeyIDWithKey oldSecretKeyIDWithKey : secretKeyIDWithKeyList) {
                     String algorithm = oldSecretKeyIDWithKey.getSecretKey().getAlgorithm();
@@ -139,7 +136,7 @@ public class KeyStoreServiceImpl implements KeyStoreService {
                     keyPairs.put(publicKeyIDWithPublicKey.getKeyID(), new KeyPair(publicKeyIDWithPublicKey.getPublicKey(), privateKey));
                 }
 
-                CallbackHandler newPassword = new PasswordCallbackHandler(oldKeyStoreAccess.getKeyStoreAuth().getReadKeyPassword().getValue().toCharArray());
+                CallbackHandler newPassword = new PasswordCallbackHandler(newKeyStoreAuth.getReadKeyPassword().getValue().toCharArray());
                 for (KeyID keyID : keyPairs.keySet()) {
 
                     KeyPair oldKeyPair = keyPairs.get(keyID);
@@ -162,7 +159,7 @@ public class KeyStoreServiceImpl implements KeyStoreService {
                 }
             }
             KeyStore newKeyStore = newKeyStoreBuilder.build();
-            return new KeyStoreAccess(newKeyStore, oldKeyStoreAccess.getKeyStoreAuth());
+            return new KeyStoreAccess(newKeyStore, newKeyStoreAuth);
 
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);

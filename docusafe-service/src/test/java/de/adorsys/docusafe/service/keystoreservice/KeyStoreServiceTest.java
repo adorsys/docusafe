@@ -146,17 +146,41 @@ public class KeyStoreServiceTest {
     }
 
     @Test
-    public void changePassword() {
+    public void changePasswordTest() {
         try {
             KeyStoreCreationConfig config = new KeyStoreCreationConfig(1, 0, 1);
             KeyStore keyStore = keyStoreService.createKeyStore(keyStoreAuth, KeyStoreType.DEFAULT, config);
-            KeyStoreAccess keyStoreAccess = new KeyStoreAccess(keyStore, keyStoreAuth);
+            KeyStoreAccess oldKeyStoreAccess = new KeyStoreAccess(keyStore, keyStoreAuth);
 
-            String keyID = keyStore.aliases().nextElement();
-            KeyStoreAccess newKeyStoreAccess = keyStoreService.createNewKeyStoreWithKeysOfOldKeyStore(keyStoreAccess);
-            SecretKey secretKey = keyStoreService.getSecretKey(newKeyStoreAccess, new KeyID(keyID));
+            String oldSecretKeyID = keyStore.aliases().nextElement();
+            byte[] oldSecretKey = keyStoreService.getSecretKey(oldKeyStoreAccess, new KeyID(oldSecretKeyID)).getEncoded();
 
-            Assert.assertNotNull(secretKey);
+            PublicKeyList publicKeys = keyStoreService.getPublicKeys(oldKeyStoreAccess);
+            String oldPublicKeyID = publicKeys.get(0).getKeyID().getValue();
+            byte[] oldPublicKey = publicKeys.get(0).getPublicKey().getEncoded();
+
+            byte[] oldPrivateKey = keyStoreService.getPrivateKey(oldKeyStoreAccess, new KeyID(oldPublicKeyID)).getEncoded();
+
+            KeyStoreAuth newKeyStoreAuth = new KeyStoreAuth(new ReadStorePassword(UUID.randomUUID().toString()), new ReadKeyPassword(UUID.randomUUID().toString()));
+
+            // ----------------------
+            KeyStoreAccess newKeyStoreAccess = keyStoreService.createNewKeyStoreWithKeysOfOldKeyStore(oldKeyStoreAccess, newKeyStoreAuth);
+            Assert.assertNotEquals(oldKeyStoreAccess.getKeyStoreAuth().getReadStorePassword().getValue(), newKeyStoreAccess.getKeyStoreAuth().getReadStorePassword().getValue());
+            Assert.assertNotEquals(oldKeyStoreAccess.getKeyStoreAuth().getReadKeyPassword().getValue(), newKeyStoreAccess.getKeyStoreAuth().getReadKeyPassword().getValue());
+
+            PublicKeyList newPublicKeyList = keyStoreService.getPublicKeys(newKeyStoreAccess);
+            String newPublicKeyID = newPublicKeyList.get(0).getKeyID().getValue();
+            Assert.assertEquals(oldPublicKeyID, newPublicKeyID);
+            byte[] newPublicKey = newPublicKeyList.get(0).getPublicKey().getEncoded();
+            Assert.assertArrayEquals(oldPublicKey, newPublicKey);
+
+            byte[] newPrivateKey = keyStoreService.getPrivateKey(newKeyStoreAccess, new KeyID(oldPublicKeyID)).getEncoded();
+            Assert.assertArrayEquals(oldPrivateKey, newPrivateKey);
+
+            byte[] newSecretKey = keyStoreService.getSecretKey(newKeyStoreAccess, new KeyID(oldSecretKeyID)).getEncoded();
+
+            Assert.assertArrayEquals(oldSecretKey, newSecretKey);
+
         } catch (Exception e) {
             throw new BaseExceptionHandler().handle(e);
         }

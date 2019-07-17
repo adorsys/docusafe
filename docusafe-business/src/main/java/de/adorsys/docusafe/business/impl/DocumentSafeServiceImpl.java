@@ -141,10 +141,9 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     }
 
     @Override
-    public void changeUserPassword(UserIDAuth userIDAuth, ReadKeyPassword newPassword) {
+    public void changeUserPassword(UserIDAuth userIDAuth, ReadKeyPassword newReadKeyPassword) {
         try {
             synchronized (userIDAuth.getUserID().getValue().intern()) {
-
                 KeyStoreAccess publicKeyStoreAccess = getKeyStoreAccess(systemDFS, userIDAuth);
 
                 // retrieve DFS
@@ -155,8 +154,17 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
                 DFSConnection usersDFS = DFSConnectionFactory.get(userDFSCredentials.getProperties());
                 KeyStoreAccess privateKeyStoreAccess = getKeyStoreAccess(usersDFS, userIDAuth);
 
-                KeyStoreAccess newPublicKeyStoreAccess = new KeyStoreServiceImpl().createNewKeyStoreWithKeysOfOldKeyStore(publicKeyStoreAccess);
-                throw new RuntimeException("nyi2");
+                KeyStoreAuth newKeyStoreAuth = new KeyStoreAuth(new ReadStorePassword(newReadKeyPassword.getValue()), newReadKeyPassword);
+                KeyStoreAccess newPublicKeyStoreAccess = new KeyStoreServiceImpl().createNewKeyStoreWithKeysOfOldKeyStore(publicKeyStoreAccess, newKeyStoreAuth);
+                persistKeystore(userIDAuth, newPublicKeyStoreAccess.getKeyStore(), systemDFS);
+
+                KeyStoreAccess newPrivateKeyStoreAccess = new KeyStoreServiceImpl().createNewKeyStoreWithKeysOfOldKeyStore(privateKeyStoreAccess, newKeyStoreAuth);
+                persistKeystore(userIDAuth, newPrivateKeyStoreAccess.getKeyStore(), usersDFS);
+
+                usersPrivateKeyStoreCache.remove(new UserAuthCacheKey(userIDAuth));
+                userPublicKeyListCache.remove(userIDAuth.getUserID());
+                userPathSecretKeyCache.remove(new UserAuthCacheKey(userIDAuth));
+                userDFSCredentialsCache.remove(new UserAuthCacheKey(userIDAuth));
             }
         }
         catch(Exception e) {
