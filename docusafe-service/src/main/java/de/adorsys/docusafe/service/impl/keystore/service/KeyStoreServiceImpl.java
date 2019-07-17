@@ -6,10 +6,13 @@ import de.adorsys.common.utils.HexUtil;
 import de.adorsys.docusafe.service.api.keystore.KeyStoreService;
 import de.adorsys.docusafe.service.api.keystore.types.*;
 import de.adorsys.docusafe.service.impl.keystore.generator.KeyStoreGenerator;
+import de.adorsys.docusafe.service.impl.keystore.generator.KeystoreBuilder;
+import de.adorsys.docusafe.service.impl.keystore.generator.PasswordCallbackHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
 
 import javax.crypto.SecretKey;
+import javax.security.auth.callback.CallbackHandler;
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.util.*;
@@ -97,26 +100,72 @@ public class KeyStoreServiceImpl implements KeyStoreService {
     @Override
     public SecretKeyIDWithKey getRandomSecretKeyID(KeyStoreAccess keyStoreAccess) {
         try {
-            KeyStore keyStore = keyStoreAccess.getKeyStore();
-            Key key = null;
-            String randomAlias = null;
-            Enumeration<String> aliases = keyStore.aliases();
-            List<String> keyIDs = new ArrayList<>();
-            for (String keyAlias : Collections.list(aliases)) {
-                if (keyStore.entryInstanceOf(keyAlias, KeyStore.SecretKeyEntry.class)) {
-                    keyIDs.add(keyAlias);
-                }
-            }
-            if (keyIDs.size() == 0) {
+            List<SecretKeyIDWithKey> secretKeyIDWithKeyList = getAllSecretKeysWithID(keyStoreAccess);
+            if (secretKeyIDWithKeyList.size() == 0) {
                 throw new BaseException("No secret keys in the keystore");
             }
-            int randomIndex = RandomUtils.nextInt(0, keyIDs.size());
-            randomAlias = keyIDs.get(randomIndex);
-            char[] password = keyStoreAccess.getKeyStoreAuth().getReadKeyPassword().getValue().toCharArray();
-            key = keyStore.getKey(randomAlias, password);
-            return new SecretKeyIDWithKey(new KeyID(randomAlias), (SecretKey) key);
+            int randomIndex = RandomUtils.nextInt(0, secretKeyIDWithKeyList.size());
+            return secretKeyIDWithKeyList.get(randomIndex);
+        } catch (Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
+    }
+
+    @Override
+    public KeyStoreAccess createNewKeyStoreWithKeysOfOldKeyStore(KeyStoreAccess oldKeyStoreAccess) {
+        PublicKeyList publicKeys = getPublicKeys(oldKeyStoreAccess);
+        List<PrivateKey> privateKeys = new ArrayList<>();
+        for (PublicKeyIDWithPublicKey publicKeyIDWithPublicKey : publicKeys) {
+            PrivateKey privateKey = getPrivateKey(oldKeyStoreAccess, publicKeyIDWithPublicKey.getKeyID());
+            privateKeys.add(privateKey);
+        }
+        List<SecretKeyIDWithKey> secretKeyIDWithKeyList = getAllSecretKeysWithID(oldKeyStoreAccess);
+
+
+
+        KeyStore newKeyStore = null;
+
+        try {
+            KeystoreBuilder keystoreBuilder = new KeystoreBuilder().withStoreType(oldKeyStoreAccess.getKeyStore().getType());
+
+            {
+                    KeyPairEntry signatureKeyPair = encKeyPairGenerator.generateEncryptionKey(
+                            serverKeyPairAliasPrefix + UUID.randomUUID().toString(),
+                            readKeyHandler
+                    );
+
+                    keystoreBuilder = keystoreBuilder.withKeyEntry(signatureKeyPair);
+                }
+            }
+
+
+
+
+
+                return null;
+
+    }
+
+    private List<SecretKeyIDWithKey> getAllSecretKeysWithID(KeyStoreAccess keyStoreAccess) {
+        try {
+            List<SecretKeyIDWithKey> resultList = new ArrayList<>();
+
+            KeyStore keyStore = keyStoreAccess.getKeyStore();
+            Enumeration<String> aliases = keyStore.aliases();
+            for (String keyAlias : Collections.list(aliases)) {
+                if (keyStore.entryInstanceOf(keyAlias, KeyStore.SecretKeyEntry.class)) {
+                    String keyID = keyAlias;
+
+                    char[] password = keyStoreAccess.getKeyStoreAuth().getReadKeyPassword().getValue().toCharArray();
+                    Key key = keyStore.getKey(keyID, password);
+                    SecretKeyIDWithKey secretKeyIDWithKey = new SecretKeyIDWithKey(new KeyID(keyID), (SecretKey) key);
+                    resultList.add(secretKeyIDWithKey);
+                }
+            }
+            return resultList;
         } catch (KeyStoreException | UnrecoverableKeyException | NoSuchAlgorithmException e) {
             throw BaseExceptionHandler.handle(e);
         }
     }
+
 }

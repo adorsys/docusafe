@@ -141,6 +141,29 @@ public class DocumentSafeServiceImpl implements DocumentSafeService {
     }
 
     @Override
+    public void changeUserPassword(UserIDAuth userIDAuth, ReadKeyPassword newPassword) {
+        try {
+            synchronized (userIDAuth.getUserID().getValue().intern()) {
+
+                KeyStoreAccess publicKeyStoreAccess = getKeyStoreAccess(systemDFS, userIDAuth);
+
+                // retrieve DFS
+                Payload encryptedPayload = systemDFS.getBlob(FolderHelper.getDFSCredentialsPath(userIDAuth.getUserID()));
+                CMSEnvelopedData cmsEnvelopedData = new CMSEnvelopedData(encryptedPayload.getData());
+                Payload decrypt = cmsEncryptionService.decrypt(cmsEnvelopedData, publicKeyStoreAccess);
+                DFSCredentials userDFSCredentials = class2JsonHelper.contentToDFSConnection(decrypt);
+                DFSConnection usersDFS = DFSConnectionFactory.get(userDFSCredentials.getProperties());
+                KeyStoreAccess privateKeyStoreAccess = getKeyStoreAccess(usersDFS, userIDAuth);
+
+                KeyStoreAccess newPublicKeyStoreAccess = new KeyStoreServiceImpl().createNewKeyStoreWithKeysOfOldKeyStore(publicKeyStoreAccess);
+            }
+        }
+        catch(Exception e) {
+            throw BaseExceptionHandler.handle(e);
+        }
+    }
+
+    @Override
     public void destroyUser(UserIDAuth userIDAuth) {
         synchronized (userIDAuth.getUserID().getValue().intern()) {
             final DFSConnection usersDFSConnection = getUsersDFS(userIDAuth);

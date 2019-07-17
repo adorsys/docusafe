@@ -2,6 +2,7 @@ package de.adorsys.docusafe.business;
 
 import de.adorsys.dfs.connection.api.types.ListRecursiveFlag;
 import de.adorsys.docusafe.business.types.*;
+import de.adorsys.docusafe.service.api.keystore.types.ReadKeyPassword;
 import de.adorsys.docusafe.service.api.types.UserID;
 import de.adorsys.docusafe.service.api.types.UserIDAuth;
 
@@ -15,6 +16,8 @@ public interface DocumentSafeService {
      * User
      */
     void createUser(UserIDAuth userIDAuth);
+
+    void changeUserPassword(UserIDAuth userIDAuth, ReadKeyPassword newPassword);
 
     void destroyUser(UserIDAuth userIDAuth);
 
