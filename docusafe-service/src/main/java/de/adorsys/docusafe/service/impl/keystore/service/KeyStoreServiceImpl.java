@@ -8,11 +8,7 @@ import de.adorsys.docusafe.service.api.keystore.types.*;
 import de.adorsys.docusafe.service.impl.keystore.generator.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
-import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x509.KeyUsage;
-
 import javax.crypto.SecretKey;
-import javax.security.auth.callback.CallbackHandler;
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.util.*;
@@ -114,53 +110,22 @@ public class KeyStoreServiceImpl implements KeyStoreService {
     @Override
     public KeyStoreAccess createNewKeyStoreWithKeysOfOldKeyStore(KeyStoreAccess oldKeyStoreAccess, KeyStoreAuth newKeyStoreAuth) {
         try {
-            KeystoreBuilder newKeyStoreBuilder = new KeystoreBuilder().withStoreType(new KeyStoreType(oldKeyStoreAccess.getKeyStore().getType()));
-            {
-                // migrate secret keys
-                List<SecretKeyIDWithKey> secretKeyIDWithKeyList = getAllSecretKeysWithID(oldKeyStoreAccess);
+            KeyStore newKeystore = KeyStore.getInstance(oldKeyStoreAccess.getKeyStore().getType());
+            newKeystore.load(null, null);
+            Enumeration<String> aliases = oldKeyStoreAccess.getKeyStore().aliases();
 
-                CallbackHandler newPassword = new PasswordCallbackHandler(newKeyStoreAuth.getReadKeyPassword().getValue().toCharArray());
-
-                for (SecretKeyIDWithKey oldSecretKeyIDWithKey : secretKeyIDWithKeyList) {
-                    String algorithm = oldSecretKeyIDWithKey.getSecretKey().getAlgorithm();
-                    SecretKeyEntry newEntry = SecretKeyData.builder().secretKey(oldSecretKeyIDWithKey.getSecretKey()).alias(oldSecretKeyIDWithKey.getKeyID().getValue()).passwordSource(newPassword).keyAlgo(algorithm).build();
-                    newKeyStoreBuilder.withKeyEntry(newEntry);
-                }
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                Key currentKey = oldKeyStoreAccess.getKeyStore().getKey(alias, oldKeyStoreAccess.getKeyStoreAuth().getReadKeyPassword().getValue().toCharArray());
+                newKeystore.setKeyEntry(
+                        alias,
+                        currentKey,
+                        newKeyStoreAuth.getReadKeyPassword().getValue().toCharArray(),
+                        oldKeyStoreAccess.getKeyStore().getCertificateChain(alias)
+                );
             }
-            {
-                // migrate public keys
-                PublicKeyList publicKeys = getPublicKeys(oldKeyStoreAccess);
-                Map<KeyID, KeyPair> keyPairs = new HashMap<>();
-                for (PublicKeyIDWithPublicKey publicKeyIDWithPublicKey : publicKeys) {
-                    PrivateKey privateKey = getPrivateKey(oldKeyStoreAccess, publicKeyIDWithPublicKey.getKeyID());
-                    keyPairs.put(publicKeyIDWithPublicKey.getKeyID(), new KeyPair(publicKeyIDWithPublicKey.getPublicKey(), privateKey));
-                }
 
-                CallbackHandler newPassword = new PasswordCallbackHandler(newKeyStoreAuth.getReadKeyPassword().getValue().toCharArray());
-                for (KeyID keyID : keyPairs.keySet()) {
-
-                    KeyPair oldKeyPair = keyPairs.get(keyID);
-                    X509Certificate cert = (X509Certificate) oldKeyStoreAccess.getKeyStore().getCertificate(keyID.getValue());
-                    String algorithm = oldKeyPair.getPublic().getAlgorithm();
-
-                    int[] keyUsageEncryption = {KeyUsage.keyEncipherment, KeyUsage.dataEncipherment, KeyUsage.keyAgreement};
-
-                    SelfSignedKeyPairData keyPairData = new SingleKeyUsageSelfSignedCertBuilder()
-                            .withSubjectDN(new X500Name(cert.getSubjectDN().getName()))
-                            .withSignatureAlgo(algorithm)
-                            .withNotAfterInDays(900)
-                            .withCa(false)
-                            .withKeyUsages(keyUsageEncryption)
-                            .build(oldKeyPair);
-
-                    // KeyPairData.builder().keyPair(keyPair).alias(keyID.getValue()).passwordSource(newPassword).build();
-                    KeyPairData newPublicKeyPair = KeyPairData.builder().keyPair(keyPairData).alias(keyID.getValue()).passwordSource(newPassword).build();
-                    newKeyStoreBuilder.withKeyEntry(newPublicKeyPair);
-                }
-            }
-            KeyStore newKeyStore = newKeyStoreBuilder.build();
-            return new KeyStoreAccess(newKeyStore, newKeyStoreAuth);
-
+            return new KeyStoreAccess(newKeystore, newKeyStoreAuth);
         } catch (Exception e) {
             throw BaseExceptionHandler.handle(e);
         }
